@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-palacio-black text-gray-100 font-poppins;
+  }
+
+  h1, h2, h3 {
+    @apply font-playfair;
+  }
+
+  h4, h5, h6 {
+    @apply font-cinzel;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-glass border border-white/20 rounded-lg shadow-glass;
+  }
+
+  .gold-glow-btn {
+    @apply relative px-6 py-3 bg-palacio-gold text-palacio-black font-cinzel font-semibold rounded transition-all duration-300 hover:shadow-gold-glow-lg hover:scale-105;
+  }
+
+  .gold-text-glow {
+    @apply text-palacio-gold drop-shadow-lg;
+  }
+
+  .hero-title {
+    @apply text-5xl md:text-7xl font-playfair font-bold text-palacio-gold drop-shadow-lg;
+  }
+
+  .section-title {
+    @apply text-4xl md:text-5xl font-playfair font-bold text-palacio-gold mb-4 text-center;
+  }
+
+  .smooth-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .card-hover {
+    @apply hover:shadow-gold-glow hover:-translate-y-2 smooth-transition;
+  }
+}
