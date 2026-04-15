@@ -7,7 +7,7 @@ export default function Footer() {
             <h3 className="font-playfair text-lg font-bold text-palacio-gold mb-4">
               Palacio de Oro
             </h3>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm italic">
               Where Gold Meets Comfort. Experience luxury like never before.
             </p>
           </div>
@@ -61,17 +61,22 @@ export default function Footer() {
             </h4>
             <p className="text-sm text-gray-400">
               <a
-                href="mailto:info@palaciodeoro.com"
+                href="mailto:vincentecaldre25@gmail.com"
                 className="hover:text-palacio-gold smooth-transition"
               >
-                info@palaciodeoro.com
+                vincentecaldre25@gmail.com
               </a>
             </p>
           </div>
         </div>
+
+        {/* Updated Copyright and Disclaimer Section */}
         <div className="border-t border-palacio-gold/20 pt-8 text-center">
           <p className="text-sm text-gray-400">
-            © 2024 Palacio de Oro. All rights reserved.
+            © 2026 Palacio de Oro. All rights reserved.
+          </p>
+          <p className="mt-2 text-[10px] font-cinzel text-gray-500 uppercase tracking-widest">
+            For Educational Purposes and School Projects Only
           </p>
         </div>
       </div>
