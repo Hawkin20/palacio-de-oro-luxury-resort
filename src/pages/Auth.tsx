@@ -103,7 +103,7 @@ export default function Auth({ onClose }: AuthProps) {
               <label className="block text-sm font-cinzel text-palacio-gold mb-2">
                 Full Name
               </label>
-              <input
+<input
   type="text"
   value={name}
   onChange={(e) => setName(e.target.value)}
@@ -111,10 +111,11 @@ export default function Auth({ onClose }: AuthProps) {
   minLength={5}
   maxLength={18}
   pattern="^[A-Z][a-zA-Z0-9_ ]*$"
-  title="Dapat magsimula sa Capital Letter at hanggang 18 characters lang."
+  title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
   className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold"
   placeholder="Your name"
 />
+
             </div>
           )}
 
