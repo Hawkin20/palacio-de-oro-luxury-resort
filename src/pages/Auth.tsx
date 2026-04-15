@@ -76,19 +76,20 @@ export default function Auth({ onClose }: AuthProps) {
     } finally {
       setLoading(false);
     }
-    return (
-   <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
-     {/* Background Image Layer */}
+  }; // <--- Heto ang missing bracket na dahilan ng error kanina
+
+  return (
+    <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
+      {/* Background Image Layer */}
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-       style={{ 
-         backgroundImage: 'url("https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80")',
-         filter: 'brightness(0.2) grayscale(0.3)' 
+        style={{ 
+          backgroundImage: 'url("https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80")',
+          filter: 'brightness(0.2) grayscale(0.3)' 
         }}
       />
 
       <GlassCard className="relative z-10 w-full max-w-md p-8">
-
         <h1 className="font-playfair text-3xl text-palacio-gold mb-2 text-center">
           Palacio de Oro
         </h1>
@@ -111,19 +112,18 @@ export default function Auth({ onClose }: AuthProps) {
               <label className="block text-sm font-cinzel text-palacio-gold mb-2">
                 Full Name
               </label>
-<input
-  type="text"
-  value={name}
-  onChange={(e) => setName(e.target.value)}
-  required
-  minLength={5}
-  maxLength={18}
-  pattern="^[A-Z][a-zA-Z0-9_ ]*$"
-  title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
-  className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold"
-  placeholder="Your name"
-/>
-
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                minLength={5}
+                maxLength={18}
+                pattern="^[A-Z][a-zA-Z0-9_ ]*$"
+                title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
+                className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold"
+                placeholder="Your name"
+              />
             </div>
           )}
 
