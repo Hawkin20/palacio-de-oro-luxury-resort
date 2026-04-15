@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Users, X } from 'lucide-react';
+import { Calendar, Users, X, Info } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, Booking } from '../lib/types';
 import GlassCard from '../components/GlassCard';
@@ -95,19 +95,12 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
         bookingPayload.cottage_id = room.id;
       }
 
-      const { error } = await supabase
-        .from('bookings')
-        .insert([bookingPayload]);
-
+      const { error } = await supabase.from('bookings').insert([bookingPayload]);
       if (error) throw error;
 
       setBookingSuccess(true);
       setBookingData({
-        checkIn: '',
-        checkOut: '',
-        guestCount: 1,
-        paymentMethod: 'card',
-        downpayment: false,
+        checkIn: '', checkOut: '', guestCount: 1, paymentMethod: 'card', downpayment: false,
       });
 
       setTimeout(() => {
@@ -120,124 +113,116 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
     }
   };
 
-  const getFilteredItems = () => {
-    if (filter === 'all') {
-      return [
-        ...rooms.map((r) => ({ ...r, type: 'room' })),
-        ...cottages.map((c) => ({ ...c, type: 'cottage' })),
-      ];
-    } else if (filter.startsWith('room_')) {
-      return rooms
-        .filter((r) => r.room_type === filter.replace('room_', ''))
-        .map((r) => ({ ...r, type: 'room' }));
-    } else {
-      return cottages
-        .filter((c) => c.cottage_type === filter.replace('cottage_', ''))
-        .map((c) => ({ ...c, type: 'cottage' }));
-    }
-  };
-
-  const filtered = getFilteredItems();
+  const filtered = filter === 'all' 
+    ? [...rooms.map(r => ({ ...r, type: 'room' })), ...cottages.map(c => ({ ...c, type: 'cottage' }))]
+    : filter.startsWith('room_') 
+      ? rooms.filter(r => r.room_type === filter.replace('room_', '')).map(r => ({ ...r, type: 'room' }))
+      : cottages.filter(c => c.cottage_type === filter.replace('cottage_', '')).map(c => ({ ...c, type: 'cottage' }));
 
   return (
-    <div className="min-h-screen pt-24 pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="section-title mb-8">Our Accommodations</h1>
+    <div className="relative min-h-screen pt-24 pb-20 overflow-hidden">
+      {/* Summer Background Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center fixed"
+        style={{ 
+          backgroundImage: 'url("https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80")', // Luxury resort pool view
+          filter: 'brightness(0.15) saturate(1.1)' 
+        }}
+      />
 
-        <div className="mb-8 flex flex-wrap gap-2">
-          {[
-            { label: 'All', value: 'all' },
-            { label: 'Standard Room', value: 'room_standard' },
-            { label: 'Deluxe Room', value: 'room_deluxe' },
-            { label: 'Suite', value: 'room_suite' },
-            { label: 'Luxury Villa', value: 'room_luxury_villa' },
-            { label: 'Small Cottage', value: 'cottage_small' },
-            { label: 'Family Cottage', value: 'cottage_family' },
-            { label: 'Barkada Cottage', value: 'cottage_barkada' },
-          ].map((btn) => (
-            <button
-              key={btn.value}
-              onClick={() => setFilter(btn.value)}
-              className={`px-4 py-2 rounded-lg font-cinzel text-sm smooth-transition ${
-                filter === btn.value
-                  ? 'bg-palacio-gold text-palacio-black'
-                  : 'bg-palacio-gold/10 text-palacio-gold hover:bg-palacio-gold/20'
-              }`}
-            >
-              {btn.label}
-            </button>
-          ))}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+          <div className="max-w-xl">
+            <h1 className="section-title text-left mb-4 text-palacio-gold">Accommodations</h1>
+            <p className="text-gray-300 font-poppins text-sm leading-relaxed italic">
+              From majestic villas to cozy beachside cottages, discover your perfect sanctuary under the golden sun.
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap gap-2 justify-end">
+            {[
+              { label: 'All', value: 'all' },
+              { label: 'Rooms', value: 'room_standard' },
+              { label: 'Luxury', value: 'room_luxury_villa' },
+              { label: 'Cottages', value: 'cottage_family' },
+            ].map((btn) => (
+              <button
+                key={btn.value}
+                onClick={() => setFilter(btn.value)}
+                className={`px-6 py-2 rounded-full font-cinzel text-[10px] tracking-widest smooth-transition border ${
+                  filter === btn.value
+                    ? 'bg-palacio-gold text-palacio-black border-palacio-gold'
+                    : 'bg-white/5 text-palacio-gold border-palacio-gold/30 hover:bg-palacio-gold/20'
+                }`}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
           <LoadingSpinner />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filtered.map((item: any) => (
               <GlassCard
                 key={item.id}
-                className="overflow-hidden cursor-pointer"
+                className="overflow-hidden group hover:border-palacio-gold/50 transition-all duration-500 flex flex-col h-full"
                 onClick={() => {
                   setSelectedRoom(item);
                   setShowBookingModal(true);
                 }}
               >
-                <img
-                  src={item.image_url}
-                  alt={item.name}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="font-playfair text-xl text-palacio-gold mb-2">
+                <div className="relative h-64 overflow-hidden">
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                    <StatusBadge status={item.status} size="sm" />
+                    <div className="text-right">
+                      <p className="text-[10px] text-gray-400 uppercase font-cinzel tracking-tighter">Starts at</p>
+                      <p className="text-palacio-gold font-cinzel font-bold text-xl">${item.price_per_night}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 flex-grow flex flex-col">
+                  <h3 className="font-playfair text-2xl text-white mb-3 group-hover:text-palacio-gold transition-colors">
                     {item.name}
                   </h3>
-                  <p className="text-gray-400 text-sm mb-4">
+                  <p className="text-gray-400 text-xs mb-6 line-clamp-2 italic leading-relaxed">
                     {item.description}
                   </p>
 
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Capacity:</span>
-                      <span className="text-palacio-gold font-cinzel">
-                        {item.capacity} guests
-                      </span>
+                  <div className="mt-auto space-y-4 pt-4 border-t border-white/5">
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <Users size={14} className="text-palacio-gold" />
+                        <span className="text-[11px] font-cinzel tracking-widest">{item.capacity} Guests</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <Info size={14} className="text-palacio-gold" />
+                        <span className="text-[11px] font-cinzel tracking-widest uppercase">{item.type}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Price:</span>
-                      <span className="text-palacio-gold font-cinzel font-bold">
-                        ${item.price_per_night}/night
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <h4 className="text-xs font-cinzel text-palacio-gold mb-2 uppercase">
-                      Amenities
-                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {item.amenities?.slice(0, 3).map((amenity: string) => (
-                        <span
-                          key={amenity}
-                          className="text-xs bg-palacio-gold/10 text-gray-300 px-2 py-1 rounded"
-                        >
+                        <span key={amenity} className="text-[9px] font-cinzel tracking-widest bg-white/5 text-gray-400 px-3 py-1 rounded-full border border-white/10">
                           {amenity}
                         </span>
                       ))}
-                      {item.amenities?.length > 3 && (
-                        <span className="text-xs text-gray-500">
-                          +{item.amenities.length - 3} more
-                        </span>
-                      )}
                     </div>
-                  </div>
 
-                  <div className="flex justify-between items-center">
-                    <StatusBadge status={item.status} size="sm" />
                     <button
                       disabled={item.status !== 'available'}
-                      className="px-3 py-2 bg-palacio-gold/20 text-palacio-gold rounded font-cinzel text-sm hover:bg-palacio-gold/30 disabled:opacity-50 disabled:cursor-not-allowed smooth-transition"
+                      className="w-full py-3 bg-palacio-gold text-palacio-black rounded-lg font-cinzel text-xs font-bold hover:bg-white smooth-transition shadow-lg shadow-palacio-gold/10 disabled:opacity-30"
                     >
-                      {item.status === 'available' ? 'Book Now' : 'Unavailable'}
+                      {item.status === 'available' ? 'RESERVE NOW' : 'FULLY BOOKED'}
                     </button>
                   </div>
                 </div>
@@ -247,144 +232,112 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
         )}
       </div>
 
+      {/* Booking Modal */}
       <Modal
         isOpen={showBookingModal}
         onClose={() => {
-          setShowBookingModal(false);
-          setSelectedRoom(null);
-          setBookingError('');
-          setBookingSuccess(false);
+          setShowBookingModal(false); setSelectedRoom(null); setBookingError(''); setBookingSuccess(false);
         }}
-        title={selectedRoom ? `Book ${selectedRoom.name}` : 'Booking'}
+        title={selectedRoom ? `Reserve ${selectedRoom.name}` : 'Reservation'}
         footer={
           <div className="flex gap-3 w-full">
             <button
-              onClick={() => {
-                setShowBookingModal(false);
-                setSelectedRoom(null);
-                setBookingError('');
-                setBookingSuccess(false);
-              }}
-              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition"
+              onClick={() => { setShowBookingModal(false); setSelectedRoom(null); }}
+              className="flex-1 px-4 py-3 bg-white/5 text-gray-400 rounded-lg font-cinzel text-xs hover:bg-white/10"
             >
-              Cancel
+              Back
             </button>
             <button
               onClick={handleBooking}
               disabled={bookingSuccess}
-              className="flex-1 px-4 py-2 bg-palacio-gold text-palacio-black rounded font-cinzel font-semibold hover:bg-palacio-gold/80 disabled:opacity-50 smooth-transition"
+              className="flex-1 px-4 py-3 bg-palacio-gold text-palacio-black rounded-lg font-cinzel text-xs font-bold hover:bg-white shadow-xl shadow-palacio-gold/20"
             >
-              {bookingSuccess ? 'Booking Confirmed!' : 'Confirm Booking'}
+              {bookingSuccess ? 'Confirmed!' : 'Confirm Reservation'}
             </button>
           </div>
         }
       >
         {bookingSuccess ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">✓</div>
-            <h3 className="font-playfair text-xl text-palacio-gold mb-2">
-              Booking Confirmed!
-            </h3>
-            <p className="text-gray-400">
-              Your reservation has been submitted. Our team will contact you shortly.
-            </p>
+          <div className="text-center py-12">
+            <div className="text-5xl mb-6">🌞</div>
+            <h3 className="font-playfair text-2xl text-palacio-gold mb-3">Reservation Placed!</h3>
+            <p className="text-gray-400 text-sm italic">Get your beach gear ready, we'll see you soon at Palacio de Oro.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {bookingError && (
-              <div className="p-4 bg-red-900/40 border border-red-500 rounded text-red-300 text-sm">
+              <div className="p-3 bg-red-900/40 border border-red-500 rounded text-red-300 text-[10px] font-bold tracking-widest uppercase text-center">
                 {bookingError}
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-cinzel text-palacio-gold mb-2">
-                Check-in Date
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 text-palacio-gold" size={18} />
-                <input
-                  type="date"
-                  value={bookingData.checkIn}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, checkIn: e.target.value })
-                  }
-                  className="w-full pl-10 pr-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white focus:border-palacio-gold focus:outline-none"
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Check-in</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-2.5 text-palacio-gold opacity-50" size={14} />
+                  <input
+                    type="date"
+                    value={bookingData.checkIn}
+                    onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
+                    className="w-full pl-9 pr-4 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold outline-none"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Check-out</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-2.5 text-palacio-gold opacity-50" size={14} />
+                  <input
+                    type="date"
+                    value={bookingData.checkOut}
+                    onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
+                    className="w-full pl-9 pr-4 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold outline-none"
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-cinzel text-palacio-gold mb-2">
-                Check-out Date
-              </label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 text-palacio-gold" size={18} />
-                <input
-                  type="date"
-                  value={bookingData.checkOut}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, checkOut: e.target.value })
-                  }
-                  className="w-full pl-10 pr-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white focus:border-palacio-gold focus:outline-none"
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Guests</label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-2.5 text-palacio-gold opacity-50" size={14} />
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedRoom?.capacity || 10}
+                    value={bookingData.guestCount}
+                    onChange={(e) => setBookingData({ ...bookingData, guestCount: parseInt(e.target.value) || 1 })}
+                    className="w-full pl-9 pr-4 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold outline-none"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Payment</label>
+                <select
+                  value={bookingData.paymentMethod}
+                  onChange={(e) => setBookingData({ ...bookingData, paymentMethod: e.target.value as any })}
+                  className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold outline-none"
+                >
+                  <option value="card">Credit Card</option>
+                  <option value="gcash">GCash</option>
+                  <option value="cash">Cash</option>
+                </select>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-cinzel text-palacio-gold mb-2">
-                Number of Guests
-              </label>
-              <div className="relative">
-                <Users className="absolute left-3 top-3 text-palacio-gold" size={18} />
-                <input
-                  type="number"
-                  min="1"
-                  max={selectedRoom?.capacity || 10}
-                  value={bookingData.guestCount}
-                  onChange={(e) =>
-                    setBookingData({
-                      ...bookingData,
-                      guestCount: parseInt(e.target.value) || 1,
-                    })
-                  }
-                  className="w-full pl-10 pr-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white focus:border-palacio-gold focus:outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-cinzel text-palacio-gold mb-2">
-                Payment Method
-              </label>
-              <select
-                value={bookingData.paymentMethod}
-                onChange={(e) =>
-                  setBookingData({
-                    ...bookingData,
-                    paymentMethod: e.target.value as any,
-                  })
-                }
-                className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white focus:border-palacio-gold focus:outline-none"
-              >
-                <option value="card">Credit Card</option>
-                <option value="gcash">GCash</option>
-                <option value="cash">Cash</option>
-              </select>
-            </div>
-
-            <label className="flex items-center space-x-3 cursor-pointer">
+            <label className="flex items-center gap-3 p-4 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 smooth-transition">
               <input
                 type="checkbox"
                 checked={bookingData.downpayment}
-                onChange={(e) =>
-                  setBookingData({ ...bookingData, downpayment: e.target.checked })
-                }
-                className="w-4 h-4 rounded"
+                onChange={(e) => setBookingData({ ...bookingData, downpayment: e.target.checked })}
+                className="w-4 h-4 rounded accent-palacio-gold"
               />
-              <span className="text-sm text-gray-400">
-                Pay 50% downpayment now
-              </span>
+              <div className="flex flex-col">
+                <span className="text-[11px] font-cinzel text-white tracking-wider">Secure with Downpayment</span>
+                <span className="text-[9px] text-gray-500 uppercase tracking-tighter italic">Pay 50% now to confirm your slot</span>
+              </div>
             </label>
           </div>
         )}
