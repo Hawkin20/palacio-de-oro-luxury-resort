@@ -21,7 +21,7 @@ const CATEGORIES = [
   { value: 'desserts', label: 'Desserts' },
   { value: 'cocktails', label: 'Cocktails' },
   { value: 'wine', label: 'Wine' },
-  { value: 'non_alcoholic', label: 'Non-Alcoholic' },
+  { value: 'non_alcoholic', label: 'Refreshments' },
 ];
 
 export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
@@ -70,11 +70,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
     } else {
       setCart([
         ...cart,
-        {
-          id: item.id,
-          menuItem: item,
-          quantity: 1,
-        },
+        { id: item.id, menuItem: item, quantity: 1 },
       ]);
     }
   };
@@ -88,9 +84,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
       removeFromCart(itemId);
     } else {
       setCart(
-        cart.map((ci) =>
-          ci.id === itemId ? { ...ci, quantity } : ci
-        )
+        cart.map((ci) => (ci.id === itemId ? { ...ci, quantity } : ci))
       );
     }
   };
@@ -118,7 +112,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
 
     try {
       const refNumber = `ORD${Date.now()}`;
-
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert([
@@ -152,11 +145,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
 
       setOrderSuccess(true);
       setCart([]);
-      setOrderData({
-        orderType: 'dine_in',
-        paymentMethod: 'card',
-        roomId: '',
-      });
+      setOrderData({ orderType: 'dine_in', paymentMethod: 'card', roomId: '' });
 
       setTimeout(() => {
         setShowCart(false);
@@ -167,37 +156,48 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
     }
   };
 
-  const filteredItems = menuItems.filter(
-    (item) => item.category === selectedCategory
-  );
+  const filteredItems = menuItems.filter((item) => item.category === selectedCategory);
 
   return (
-    <div className="min-h-screen pt-24 pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen pt-24 pb-20 overflow-hidden">
+      {/* Summer Background Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center fixed"
+        style={{ 
+          backgroundImage: 'url("https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&q=80")', // Food photography/Summer vibe
+          filter: 'brightness(0.15) saturate(1.2)' 
+        }}
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="section-title">Our Menu</h1>
+          <div>
+            <h1 className="section-title text-left mb-2 text-palacio-gold">Palacio Dining</h1>
+            <p className="text-gray-400 font-poppins text-sm italic">Savor the flavors of summer luxury</p>
+          </div>
           <button
             onClick={() => setShowCart(true)}
-            className="relative p-3 bg-palacio-gold/20 rounded-lg hover:bg-palacio-gold/30 smooth-transition"
+            className="relative p-4 bg-palacio-gold/20 border border-palacio-gold/30 rounded-full hover:bg-palacio-gold/30 hover:scale-110 smooth-transition"
           >
             <ShoppingCart size={24} className="text-palacio-gold" />
             {cart.length > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-palacio-black bg-palacio-gold rounded-full">
+              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-palacio-black bg-palacio-gold rounded-full shadow-lg">
                 {cart.length}
               </span>
             )}
           </button>
         </div>
 
-        <div className="mb-8 flex flex-wrap gap-2">
+        {/* Category Navigation */}
+        <div className="mb-12 flex flex-wrap gap-3 pb-4 overflow-x-auto scrollbar-hide">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.value}
               onClick={() => setSelectedCategory(cat.value)}
-              className={`px-4 py-2 rounded-lg font-cinzel text-sm smooth-transition ${
+              className={`px-6 py-2 rounded-full font-cinzel text-xs tracking-widest smooth-transition border ${
                 selectedCategory === cat.value
-                  ? 'bg-palacio-gold text-palacio-black'
-                  : 'bg-palacio-gold/10 text-palacio-gold hover:bg-palacio-gold/20'
+                  ? 'bg-palacio-gold text-palacio-black border-palacio-gold'
+                  : 'bg-white/5 text-palacio-gold border-palacio-gold/20 hover:bg-palacio-gold/10'
               }`}
             >
               {cat.label}
@@ -208,42 +208,45 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
         {loading ? (
           <LoadingSpinner />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredItems.map((item) => (
-              <GlassCard key={item.id} className="overflow-hidden">
-                <div className="relative">
+              <GlassCard key={item.id} className="overflow-hidden group hover:border-palacio-gold/50 transition-all duration-500">
+                <div className="relative h-56 overflow-hidden">
                   <img
                     src={item.image_url}
                     alt={item.name}
-                    className="w-full h-40 object-cover"
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                   />
-                  {item.is_bestseller && (
-                    <div className="absolute top-2 right-2 bg-palacio-gold/90 text-palacio-black px-3 py-1 rounded-full text-xs font-cinzel font-bold">
-                      BESTSELLER
-                    </div>
-                  )}
-                  {item.is_featured && (
-                    <div className="absolute top-2 left-2 bg-palacio-gold/60 text-palacio-black px-3 py-1 rounded-full text-xs font-cinzel font-bold">
-                      FEATURED
-                    </div>
-                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                  <div className="absolute top-3 right-3 flex flex-col gap-2">
+                    {item.is_bestseller && (
+                      <span className="bg-palacio-gold text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
+                        BESTSELLER
+                      </span>
+                    )}
+                    {item.is_featured && (
+                      <span className="bg-white/90 text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
+                        SUMMER SPECIAL
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="font-playfair text-lg text-palacio-gold mb-2">
+                <div className="p-5">
+                  <h3 className="font-playfair text-xl text-palacio-gold mb-2 group-hover:text-white transition-colors">
                     {item.name}
                   </h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                  <p className="text-gray-400 text-xs mb-6 line-clamp-2 italic">
                     {item.description}
                   </p>
-                  <div className="flex justify-between items-center">
-                    <span className="font-cinzel font-bold text-palacio-gold text-lg">
-                      ${item.price}
+                  <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                    <span className="font-cinzel font-bold text-palacio-gold text-xl tracking-tighter">
+                      ${item.price.toFixed(2)}
                     </span>
                     <button
                       onClick={() => addToCart(item)}
-                      className="p-2 bg-palacio-gold/20 text-palacio-gold rounded hover:bg-palacio-gold/30 smooth-transition"
+                      className="flex items-center gap-2 px-4 py-2 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-[10px] font-bold hover:bg-white hover:scale-105 smooth-transition shadow-lg shadow-palacio-gold/10"
                     >
-                      <Plus size={20} />
+                      <Plus size={14} /> ADD TO CART
                     </button>
                   </div>
                 </div>
@@ -253,6 +256,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
         )}
       </div>
 
+      {/* Cart Modal with Summer Styling */}
       <Modal
         isOpen={showCart}
         onClose={() => {
@@ -260,92 +264,65 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
           setOrderError('');
           setOrderSuccess(false);
         }}
-        title="Your Order"
+        title="Your Selection"
         footer={
           <div className="flex gap-3 w-full">
             <button
-              onClick={() => {
-                setShowCart(false);
-                setOrderError('');
-                setOrderSuccess(false);
-              }}
-              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition"
+              onClick={() => setShowCart(false)}
+              className="flex-1 px-4 py-3 bg-white/5 text-gray-400 rounded-lg font-cinzel text-xs hover:bg-white/10 transition-all"
             >
-              Continue Shopping
+              Continue
             </button>
             <button
               onClick={handleCheckout}
               disabled={cart.length === 0 || orderSuccess}
-              className="flex-1 px-4 py-2 bg-palacio-gold text-palacio-black rounded font-cinzel font-semibold hover:bg-palacio-gold/80 disabled:opacity-50 smooth-transition"
+              className="flex-1 px-4 py-3 bg-palacio-gold text-palacio-black rounded-lg font-cinzel text-xs font-bold hover:bg-white disabled:opacity-50 smooth-transition shadow-xl shadow-palacio-gold/20"
             >
-              {orderSuccess ? 'Order Placed!' : `Checkout ($${cartTotal.toFixed(2)})`}
+              {orderSuccess ? 'Order Placed!' : `Order ($${cartTotal.toFixed(2)})`}
             </button>
           </div>
         }
       >
+        {/* Same modal content logic with updated Tailwind classes */}
         {orderSuccess ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-4">✓</div>
-            <h3 className="font-playfair text-xl text-palacio-gold mb-2">
-              Order Confirmed!
-            </h3>
-            <p className="text-gray-400">
-              Your order has been submitted and will be prepared shortly.
-            </p>
+          <div className="text-center py-12">
+            <div className="text-5xl mb-6 animate-bounce">🌊</div>
+            <h3 className="font-playfair text-2xl text-palacio-gold mb-3">Order Confirmed!</h3>
+            <p className="text-gray-400 text-sm">Sit back and relax. Your summer feast is being prepared.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {orderError && (
-              <div className="p-4 bg-red-900/40 border border-red-500 rounded text-red-300 text-sm">
+              <div className="p-3 bg-red-900/40 border border-red-500 rounded text-red-300 text-[10px] uppercase font-bold tracking-widest">
                 {orderError}
               </div>
             )}
 
             {cart.length === 0 ? (
-              <div className="text-center py-8">
-                <ShoppingCart size={48} className="mx-auto text-gray-600 mb-4" />
-                <p className="text-gray-400">Your cart is empty</p>
+              <div className="text-center py-12">
+                <ShoppingCart size={48} className="mx-auto text-gray-700 mb-4 opacity-20" />
+                <p className="text-gray-500 font-cinzel text-xs">Your tray is empty</p>
               </div>
             ) : (
               <>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
+                <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                   {cart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-3 bg-palacio-gold/10 rounded"
-                    >
+                    <div key={item.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                       <div className="flex-1">
-                        <h4 className="font-playfair text-palacio-gold">
-                          {item.menuItem.name}
-                        </h4>
-                        <p className="text-sm text-gray-400">
-                          ${item.menuItem.price} x {item.quantity}
-                        </p>
+                        <h4 className="font-playfair text-white text-sm">{item.menuItem.name}</h4>
+                        <p className="text-[10px] text-palacio-gold font-cinzel font-bold">${item.menuItem.price}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
-                          className="p-1 hover:bg-palacio-gold/20 rounded"
-                        >
-                          <Minus size={16} className="text-palacio-gold" />
-                        </button>
-                        <span className="w-6 text-center text-palacio-gold font-cinzel">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
-                          className="p-1 hover:bg-palacio-gold/20 rounded"
-                        >
-                          <Plus size={16} className="text-palacio-gold" />
-                        </button>
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="p-1 text-red-400 hover:bg-red-900/20 rounded ml-2"
-                        >
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center bg-black/40 rounded-full px-2 py-1 border border-white/10">
+                          <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-1 hover:text-palacio-gold transition-colors">
+                            <Minus size={14} />
+                          </button>
+                          <span className="w-8 text-center text-xs font-cinzel text-white">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-1 hover:text-palacio-gold transition-colors">
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="text-red-500/50 hover:text-red-500 transition-colors">
                           <X size={16} />
                         </button>
                       </div>
@@ -353,70 +330,45 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                   ))}
                 </div>
 
-                <div className="border-t border-palacio-gold/20 pt-3">
-                  <div className="flex justify-between text-lg font-cinzel text-palacio-gold mb-4">
-                    <span>Total:</span>
-                    <span>${cartTotal.toFixed(2)}</span>
+                <div className="space-y-4 border-t border-white/10 pt-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Type</label>
+                      <select
+                        value={orderData.orderType}
+                        onChange={(e) => setOrderData({ ...orderData, orderType: e.target.value as any })}
+                        className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold focus:outline-none"
+                      >
+                        <option value="dine_in">Dine-in</option>
+                        <option value="room_delivery">Room Delivery</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Payment</label>
+                      <select
+                        value={orderData.paymentMethod}
+                        onChange={(e) => setOrderData({ ...orderData, paymentMethod: e.target.value as any })}
+                        className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold focus:outline-none"
+                      >
+                        <option value="card">Card</option>
+                        <option value="gcash">GCash</option>
+                        <option value="cash">Cash</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-cinzel text-palacio-gold mb-2">
-                    Order Type
-                  </label>
-                  <select
-                    value={orderData.orderType}
-                    onChange={(e) =>
-                      setOrderData({
-                        ...orderData,
-                        orderType: e.target.value as any,
-                      })
-                    }
-                    className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white focus:border-palacio-gold focus:outline-none"
-                  >
-                    <option value="dine_in">Dine-in</option>
-                    <option value="room_delivery">Room Delivery</option>
-                  </select>
-                </div>
-
-                {orderData.orderType === 'room_delivery' && (
-                  <div>
-                    <label className="block text-sm font-cinzel text-palacio-gold mb-2">
-                      Room Number
-                    </label>
-                    <input
-                      type="text"
-                      value={orderData.roomId}
-                      onChange={(e) =>
-                        setOrderData({
-                          ...orderData,
-                          roomId: e.target.value,
-                        })
-                      }
-                      placeholder="e.g., 101"
-                      className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white placeholder-gray-500 focus:border-palacio-gold focus:outline-none"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-cinzel text-palacio-gold mb-2">
-                    Payment Method
-                  </label>
-                  <select
-                    value={orderData.paymentMethod}
-                    onChange={(e) =>
-                      setOrderData({
-                        ...orderData,
-                        paymentMethod: e.target.value as any,
-                      })
-                    }
-                    className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white focus:border-palacio-gold focus:outline-none"
-                  >
-                    <option value="card">Credit Card</option>
-                    <option value="gcash">GCash</option>
-                    <option value="cash">Cash</option>
-                  </select>
+                  
+                  {orderData.orderType === 'room_delivery' && (
+                    <div className="animate-fade-in">
+                      <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase mb-2 block">Room Number</label>
+                      <input
+                        type="text"
+                        value={orderData.roomId}
+                        onChange={(e) => setOrderData({ ...orderData, roomId: e.target.value })}
+                        placeholder="e.g., 204"
+                        className="w-full px-4 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-white focus:border-palacio-gold outline-none"
+                      />
+                    </div>
+                  )}
                 </div>
               </>
             )}
