@@ -104,13 +104,17 @@ export default function Auth({ onClose }: AuthProps) {
                 Full Name
               </label>
               <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white placeholder-gray-500 focus:border-palacio-gold focus:outline-none"
-                placeholder="Your name"
-              />
+  type="text"
+  value={name}
+  onChange={(e) => setName(e.target.value)}
+  required
+  minLength={5}
+  maxLength={18}
+  pattern="^[A-Z][a-zA-Z0-9_ ]*$"
+  title="Dapat magsimula sa Capital Letter at hanggang 18 characters lang."
+  className="w-full px-4 py-2 bg-white/10 border border-palacio-gold/30 rounded text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold"
+  placeholder="Your name"
+/>
             </div>
           )}
 
