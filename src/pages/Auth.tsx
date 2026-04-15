@@ -76,11 +76,19 @@ export default function Auth({ onClose }: AuthProps) {
     } finally {
       setLoading(false);
     }
-  };
+    return (
+   <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
+     {/* Background Image Layer */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+       style={{ 
+         backgroundImage: 'url("https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80")',
+         filter: 'brightness(0.2) grayscale(0.3)' 
+        }}
+      />
 
-  return (
-    <div className="min-h-screen pt-24 pb-20 flex items-center justify-center px-4">
-      <GlassCard className="w-full max-w-md p-8">
+      <GlassCard className="relative z-10 w-full max-w-md p-8">
+
         <h1 className="font-playfair text-3xl text-palacio-gold mb-2 text-center">
           Palacio de Oro
         </h1>
