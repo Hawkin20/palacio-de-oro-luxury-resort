@@ -13,6 +13,7 @@ export default function Auth({ onClose }: AuthProps) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false); // New state for luxury alert
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +30,18 @@ export default function Auth({ onClose }: AuthProps) {
       if (signUpError) throw signUpError;
 
       if (data.user) {
+        // Double check insert sa public table (optional if trigger is working)
         await supabase.from('users').insert([
           { id: data.user.id, email, name, role: 'guest' },
         ]);
-        alert('Sign up successful! Please check your email.');
-        onClose();
+        
+        // Luxury Alert Trigger
+        setShowSuccess(true);
+        
+        // Auto-close after 3 seconds for smooth UX
+        setTimeout(() => {
+          onClose();
+        }, 3000);
       }
     } catch (err: any) {
       setError(err.message || 'Sign up failed');
@@ -59,12 +67,12 @@ export default function Auth({ onClose }: AuthProps) {
 
   return (
     <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
-      {/* Summer Background Layer - Mas maliwanag at makulay */}
+      {/* Summer Background Layer */}
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
         style={{ 
           backgroundImage: 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80")',
-          filter: 'brightness(0.6) saturate(1.2)' // Binawasan ang dilim para magmukhang summer
+          filter: 'brightness(0.6) saturate(1.2)' 
         }}
       />
 
@@ -92,8 +100,8 @@ export default function Auth({ onClose }: AuthProps) {
                 onChange={(e) => setName(e.target.value)}
                 required
                 minLength={5}
-                maxLength={18} // Limit sa 18 characters
-                pattern="^[A-Z][a-zA-Z0-9_ ]*$" // Dapat Capital ang simula
+                maxLength={18}
+                pattern="^[A-Z][a-zA-Z0-9_ ]*$"
                 title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
                 className="w-full px-4 py-2 bg-black/30 border border-palacio-gold/50 rounded text-white placeholder-gray-300 focus:outline-none focus:border-palacio-gold"
                 placeholder="Ex: Vincent Ecaldre"
@@ -147,7 +155,24 @@ export default function Auth({ onClose }: AuthProps) {
           Close
         </button>
       </GlassCard>
+
+      {/* LUXURY SUCCESS OVERLAY - Lalabas ito pag success ang signup */}
+      {showSuccess && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md transition-all duration-500">
+          <GlassCard className="p-10 border-palacio-gold/50 flex flex-col items-center text-center shadow-[0_0_50px_rgba(212,175,55,0.3)] animate-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-palacio-gold/20 rounded-full flex items-center justify-center mb-6 border border-palacio-gold animate-bounce">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-palacio-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="font-playfair text-3xl text-palacio-gold mb-2">Welcome to Paradise</h2>
+            <p className="text-white/90 font-cinzel text-sm tracking-widest uppercase">
+              {name || 'Guest'}, your luxury journey begins.
+            </p>
+            <div className="mt-8 w-16 h-1 bg-palacio-gold animate-pulse"></div>
+          </GlassCard>
+        </div>
+      )}
     </div>
   );
 }
-
