@@ -1,4 +1,4 @@
- import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, MenuItem } from '../lib/types';
@@ -61,32 +61,44 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="min-h-screen">
-      {/* Summer Hero Section */}
+      {/* Hero Section - DARKER OVERLAY for better readability */}
       <div
-        className="relative w-full h-screen bg-cover bg-center flex items-center justify-center transition-all duration-1000"
+        className="relative w-full min-h-[100vh] bg-cover bg-center flex items-center justify-center"
         style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&q=80")', // Light tropical beach resort
+          backgroundImage: 'url("https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&q=80")',
           backgroundAttachment: 'fixed',
         }}
       >
-        {/* Lighter Overlay for Summer Feel */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-palacio-black/70" />
+        {/* DARKER Multi-layer Overlay */}
+        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/80" />
+        <div className="absolute inset-0 bg-palacio-black/30" />
         
-        <div className="relative text-center px-4 animate-fade-in">
-          <h1 className="hero-title mb-4 drop-shadow-2xl">Palacio de Oro</h1>
-          <p className="text-2xl md:text-3xl text-white font-poppins mb-8 drop-shadow-lg italic">
+        <div className="relative text-center px-6 py-20 max-w-4xl mx-auto">
+          {/* Larger Title */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-playfair text-palacio-gold mb-6 drop-shadow-2xl tracking-wide">
+            Palacio de Oro
+          </h1>
+          
+          {/* Better contrast subtitle */}
+          <p className="text-xl md:text-2xl lg:text-3xl text-white/90 font-poppins mb-12 drop-shadow-lg italic font-light">
             Where Gold Meets Summer Paradise
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          
+          {/* IMPROVED BUTTONS - Larger, better spacing */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            {/* Primary CTA Button - BIGGER */}
             <button
               onClick={() => onNavigate('rooms')}
-              className="gold-glow-btn transform hover:scale-105 active:scale-95 transition-all"
+              className="w-full sm:w-auto px-10 py-5 bg-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-lg shadow-2xl hover:bg-palacio-gold/90 hover:scale-105 active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[300px] border-2 border-palacio-gold/50"
             >
               Book Your Summer Stay
             </button>
+            
+            {/* Secondary Button - BIGGER with better contrast */}
             <button
               onClick={() => onNavigate('menu')}
-              className="px-6 py-3 bg-white/10 backdrop-blur-md border-2 border-palacio-gold text-palacio-gold font-cinzel font-semibold rounded hover:bg-palacio-gold hover:text-palacio-black smooth-transition shadow-lg"
+              className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-md border-2 border-white/80 text-white font-cinzel font-bold text-lg md:text-xl rounded-lg hover:bg-white/20 hover:border-white hover:scale-105 active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[300px] shadow-xl"
             >
               Summer Menu
             </button>
@@ -95,7 +107,7 @@ export default function Home({ onNavigate }: HomeProps) {
       </div>
 
       {/* Highlights Section */}
-      <div className="py-20 bg-gradient-to-b from-palacio-black/80 to-palacio-black">
+      <div className="py-20 bg-gradient-to-b from-palacio-black/90 to-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="section-title text-palacio-gold">Summer Highlights</h2>
 
@@ -135,7 +147,7 @@ export default function Home({ onNavigate }: HomeProps) {
                           </span>
                           <button
                             onClick={() => onNavigate('menu')}
-                            className="px-4 py-1.5 bg-palacio-gold/20 text-palacio-gold border border-palacio-gold/50 rounded-full text-xs font-cinzel hover:bg-palacio-gold hover:text-palacio-black smooth-transition"
+                            className="px-4 py-2 bg-palacio-gold/20 text-palacio-gold border border-palacio-gold/50 rounded-full text-sm font-cinzel hover:bg-palacio-gold hover:text-palacio-black smooth-transition"
                           >
                             Add to Order
                           </button>
@@ -146,18 +158,18 @@ export default function Home({ onNavigate }: HomeProps) {
                 </div>
               </div>
 
-              {/* Navigation Arrows */}
+              {/* Navigation Arrows - LARGER touch targets */}
               <button
                 onClick={prevSlide}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 md:-translate-x-16 p-3 bg-black/50 hover:bg-palacio-gold/40 rounded-full smooth-transition border border-palacio-gold/30"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 p-4 bg-black/60 hover:bg-palacio-gold/50 rounded-full smooth-transition border border-palacio-gold/50 shadow-lg"
               >
-                <ChevronLeft size={24} className="text-palacio-gold" />
+                <ChevronLeft size={28} className="text-palacio-gold" />
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-6 md:translate-x-16 p-3 bg-black/50 hover:bg-palacio-gold/40 rounded-full smooth-transition border border-palacio-gold/30"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 p-4 bg-black/60 hover:bg-palacio-gold/50 rounded-full smooth-transition border border-palacio-gold/50 shadow-lg"
               >
-                <ChevronRight size={24} className="text-palacio-gold" />
+                <ChevronRight size={28} className="text-palacio-gold" />
               </button>
             </div>
           )}
@@ -198,7 +210,7 @@ export default function Home({ onNavigate }: HomeProps) {
                       </div>
                       <button 
                         onClick={() => onNavigate('rooms')}
-                        className="text-[10px] font-cinzel text-palacio-gold border-b border-palacio-gold hover:text-white transition-colors"
+                        className="text-xs font-cinzel text-palacio-gold border-b border-palacio-gold hover:text-white transition-colors pb-1"
                       >
                         VIEW DETAILS
                       </button>
@@ -235,4 +247,4 @@ export default function Home({ onNavigate }: HomeProps) {
       </div>
     </div>
   );
-              }
+           }
