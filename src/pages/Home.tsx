@@ -235,4 +235,4 @@ export default function Home({ onNavigate }: HomeProps) {
       </div>
     </div>
   );
-}
+          }
