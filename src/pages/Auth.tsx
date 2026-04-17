@@ -1,250 +1,178 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Room, MenuItem } from '../lib/types';
 import GlassCard from '../components/GlassCard';
-import LoadingSpinner from '../components/LoadingSpinner';
-import StatusBadge from '../components/StatusBadge';
 
-interface HomeProps {
-  onNavigate: (page: string) => void;
+interface AuthProps {
+  onClose: () => void;
 }
 
-export default function Home({ onNavigate }: HomeProps) {
-  const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([]);
-  const [bestsellers, setBestsellers] = useState<MenuItem[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [loading, setLoading] = useState(true);
+export default function Auth({ onClose }: AuthProps) {
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false); // New state for luxury alert
 
-  useEffect(() => {
-    fetchData();
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % 3);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  const fetchData = async () => {
     try {
-      setLoading(true);
-      const [menuRes, roomsRes] = await Promise.all([
-        supabase.from('menu_items').select('*').eq('available', true).limit(10),
-        supabase.from('rooms').select('*').limit(4),
-      ]);
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      });
 
-      if (menuRes.data) {
-        const featured = menuRes.data.filter((item) => item.is_featured);
-        const best = menuRes.data.filter((item) => item.is_bestseller);
-        setFeaturedItems(featured.slice(0, 3));
-        setBestsellers(best.slice(0, 3));
-      }
+      if (signUpError) throw signUpError;
 
-      if (roomsRes.data) {
-        setRooms(roomsRes.data);
+      if (data.user) {
+        // Double check insert sa public table (optional if trigger is working)
+        await supabase.from('users').insert([
+          { id: data.user.id, email, name, role: 'guest' },
+        ]);
+        
+        // Luxury Alert Trigger
+        setShowSuccess(true);
+        
+        // Auto-close after 3 seconds for smooth UX
+        setTimeout(() => {
+          onClose();
+        }, 3000);
       }
-    } catch (error) {
-      console.error('Error fetching data:', error);
+    } catch (err: any) {
+      setError(err.message || 'Sign up failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const slides = [
-    { title: 'Summer Featured Dishes', items: featuredItems },
-    { title: 'Seasonal Best Sellers', items: bestsellers },
-    { title: 'Luxury Promotions', items: featuredItems },
-  ];
-
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % 3);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + 3) % 3);
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) throw signInError;
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Sign in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section - DARKER OVERLAY for better readability */}
-      <div
-        className="relative w-full min-h-[100vh] bg-cover bg-center flex items-center justify-center"
-        style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&q=80")',
-          backgroundAttachment: 'fixed',
+    <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
+      {/* Summer Background Layer */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
+        style={{ 
+          backgroundImage: 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80")',
+          filter: 'brightness(0.6) saturate(1.2)' 
         }}
-      >
-        {/* DARKER Multi-layer Overlay */}
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/80" />
-        <div className="absolute inset-0 bg-palacio-black/30" />
-        
-        <div className="relative text-center px-6 py-20 max-w-4xl mx-auto">
-          {/* Larger Title */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-playfair text-palacio-gold mb-6 drop-shadow-2xl tracking-wide">
-            Palacio de Oro
-          </h1>
-          
-          {/* Better contrast subtitle */}
-          <p className="text-xl md:text-2xl lg:text-3xl text-white/90 font-poppins mb-12 drop-shadow-lg italic font-light">
-            Where Gold Meets Summer Paradise
-          </p>
-          
-          {/* IMPROVED BUTTONS - Larger, better spacing */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            {/* Primary CTA Button - BIGGER */}
-            <button
-              onClick={() => onNavigate('rooms')}
-              className="w-full sm:w-auto px-10 py-5 bg-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-lg shadow-2xl hover:bg-palacio-gold/90 hover:scale-105 active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[300px] border-2 border-palacio-gold/50"
-            >
-              Book Your Summer Stay
-            </button>
-            
-            {/* Secondary Button - BIGGER with better contrast */}
-            <button
-              onClick={() => onNavigate('menu')}
-              className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-md border-2 border-white/80 text-white font-cinzel font-bold text-lg md:text-xl rounded-lg hover:bg-white/20 hover:border-white hover:scale-105 active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[300px] shadow-xl"
-            >
-              Summer Menu
-            </button>
-          </div>
-        </div>
-      </div>
+      />
 
-      {/* Highlights Section */}
-      <div className="py-20 bg-gradient-to-b from-palacio-black/90 to-palacio-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-title text-palacio-gold">Summer Highlights</h2>
+      <GlassCard className="relative z-10 w-full max-w-md p-8 border border-white/20">
+        <h1 className="font-playfair text-3xl text-palacio-gold mb-2 text-center drop-shadow-md">
+          Palacio de Oro
+        </h1>
+        <p className="text-white/80 text-center mb-8 italic">
+          {isSignUp ? 'Experience Summer Luxury' : 'Welcome back to Paradise'}
+        </p>
 
-          {loading ? (
-            <LoadingSpinner />
-          ) : (
-            <div className="relative">
-              <div className="glass-card p-8 min-h-[400px] border border-white/10 backdrop-blur-xl">
-                <div>
-                  <h3 className="text-2xl font-playfair text-palacio-gold mb-6 border-b border-palacio-gold/30 pb-2 inline-block">
-                    {slides[currentSlide]?.title}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {slides[currentSlide]?.items?.map((item) => (
-                      <div key={item.id} className="animate-carousel-slide group">
-                        <div className="relative overflow-hidden rounded-lg shadow-xl">
-                          <img
-                            src={item.image_url}
-                            alt={item.name}
-                            className="w-full h-56 object-cover transform group-hover:scale-110 transition-transform duration-500"
-                          />
-                          {item.is_bestseller && (
-                            <div className="absolute top-2 right-2 bg-palacio-gold text-palacio-black px-3 py-1 rounded-full text-xs font-cinzel font-bold shadow-lg">
-                              BESTSELLER
-                            </div>
-                          )}
-                        </div>
-                        <h4 className="font-playfair text-xl text-palacio-gold mt-4">
-                          {item.name}
-                        </h4>
-                        <p className="text-gray-300 text-sm mb-3 line-clamp-2">
-                          {item.description}
-                        </p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-palacio-gold font-cinzel font-bold text-lg">
-                            ${item.price}
-                          </span>
-                          <button
-                            onClick={() => onNavigate('menu')}
-                            className="px-4 py-2 bg-palacio-gold/20 text-palacio-gold border border-palacio-gold/50 rounded-full text-sm font-cinzel hover:bg-palacio-gold hover:text-palacio-black smooth-transition"
-                          >
-                            Add to Order
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Arrows - LARGER touch targets */}
-              <button
-                onClick={prevSlide}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 p-4 bg-black/60 hover:bg-palacio-gold/50 rounded-full smooth-transition border border-palacio-gold/50 shadow-lg"
-              >
-                <ChevronLeft size={28} className="text-palacio-gold" />
-              </button>
-              <button
-                onClick={nextSlide}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 p-4 bg-black/60 hover:bg-palacio-gold/50 rounded-full smooth-transition border border-palacio-gold/50 shadow-lg"
-              >
-                <ChevronRight size={28} className="text-palacio-gold" />
-              </button>
+        <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-900/60 border border-red-500 rounded text-white text-sm">
+              {error}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Featured Rooms Section */}
-      <div className="py-20 bg-palacio-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-title">Luxury Accommodations</h2>
-          {loading ? (
-            <LoadingSpinner />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {rooms.map((room) => (
-                <GlassCard key={room.id} className="overflow-hidden hover:border-palacio-gold/50 transition-colors group">
-                  <div className="overflow-hidden">
-                    <img
-                      src={room.image_url}
-                      alt={room.name}
-                      className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="p-4 bg-gradient-to-b from-transparent to-black/20">
-                    <h3 className="font-playfair text-lg text-palacio-gold mb-2">
-                      {room.name}
-                    </h3>
-                    <div className="flex justify-between items-center mb-4">
-                      <StatusBadge status={room.status} size="sm" />
-                      <span className="text-gray-400 text-xs font-cinzel">
-                        {room.capacity} GUESTS
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="text-palacio-gold font-cinzel font-bold">
-                        ${room.price_per_night}
-                        <span className="text-gray-500 text-[10px] ml-1 uppercase">/ night</span>
-                      </div>
-                      <button 
-                        onClick={() => onNavigate('rooms')}
-                        className="text-xs font-cinzel text-palacio-gold border-b border-palacio-gold hover:text-white transition-colors pb-1"
-                      >
-                        VIEW DETAILS
-                      </button>
-                    </div>
-                  </div>
-                </GlassCard>
-              ))}
+          {isSignUp && (
+            <div>
+              <label className="block text-sm font-cinzel text-palacio-gold mb-2">Full Name</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                minLength={5}
+                maxLength={18}
+                pattern="^[A-Z][a-zA-Z0-9_ ]*$"
+                title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
+                className="w-full px-4 py-2 bg-black/30 border border-palacio-gold/50 rounded text-white placeholder-gray-300 focus:outline-none focus:border-palacio-gold"
+                placeholder="Ex: Vincent Ecaldre"
+              />
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Services Footer Section */}
-      <div className="py-20 bg-palacio-dark-green/10 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-8">
-              <div className="text-4xl mb-4 shadow-gold inline-block p-4 rounded-full bg-palacio-gold/10">🏖️</div>
-              <h3 className="font-playfair text-xl text-palacio-gold mb-2">Summer Paradise</h3>
-              <p className="text-gray-400 text-sm">Experience the ultimate beach getaway with our seasonal packages.</p>
-            </div>
-            <div className="text-center p-8 border-x border-white/5">
-              <div className="text-4xl mb-4 inline-block p-4 rounded-full bg-palacio-gold/10">🍸</div>
-              <h3 className="font-playfair text-xl text-palacio-gold mb-2">Sky Lounge</h3>
-              <p className="text-gray-400 text-sm">Cool off with our signature summer cocktails and gourmet appetizers.</p>
-            </div>
-            <div className="text-center p-8">
-              <div className="text-4xl mb-4 inline-block p-4 rounded-full bg-palacio-gold/10">✨</div>
-              <h3 className="font-playfair text-xl text-palacio-gold mb-2">Gold Standard</h3>
-              <p className="text-gray-400 text-sm">Uncompromising luxury and personalized service for every guest.</p>
-            </div>
+          <div>
+            <label className="block text-sm font-cinzel text-palacio-gold mb-2">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-2 bg-black/30 border border-palacio-gold/50 rounded text-white placeholder-gray-300 focus:outline-none"
+              placeholder="your@email.com"
+            />
           </div>
+
+          <div>
+            <label className="block text-sm font-cinzel text-palacio-gold mb-2">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-2 bg-black/30 border border-palacio-gold/50 rounded text-white placeholder-gray-300 focus:outline-none"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-palacio-gold text-palacio-black font-cinzel font-semibold rounded hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
+          >
+            {loading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
+            className="text-white hover:text-palacio-gold underline text-sm font-cinzel transition-colors"
+          >
+            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+          </button>
         </div>
-      </div>
+
+        <button onClick={onClose} className="w-full mt-4 py-2 bg-white/10 text-white rounded hover:bg-white/20 transition-all text-sm">
+          Close
+        </button>
+      </GlassCard>
+
+      {/* LUXURY SUCCESS OVERLAY - Lalabas ito pag success ang signup */}
+      {showSuccess && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md transition-all duration-500">
+          <GlassCard className="p-10 border-palacio-gold/50 flex flex-col items-center text-center shadow-[0_0_50px_rgba(212,175,55,0.3)] animate-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-palacio-gold/20 rounded-full flex items-center justify-center mb-6 border border-palacio-gold animate-bounce">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-palacio-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="font-playfair text-3xl text-palacio-gold mb-2">Welcome to Paradise</h2>
+            <p className="text-white/90 font-cinzel text-sm tracking-widest uppercase">
+              {name || 'Guest'}, your luxury journey begins.
+            </p>
+            <div className="mt-8 w-16 h-1 bg-palacio-gold animate-pulse"></div>
+          </GlassCard>
+        </div>
+      )}
     </div>
   );
-           }
+}
