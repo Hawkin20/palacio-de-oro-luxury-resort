@@ -13,7 +13,7 @@ export default function Auth({ onClose }: AuthProps) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showSuccess, setShowSuccess] = useState(false); // New state for luxury alert
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,15 +30,12 @@ export default function Auth({ onClose }: AuthProps) {
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        // Double check insert sa public table (optional if trigger is working)
         await supabase.from('users').insert([
           { id: data.user.id, email, name, role: 'guest' },
         ]);
         
-        // Luxury Alert Trigger
         setShowSuccess(true);
         
-        // Auto-close after 3 seconds for smooth UX
         setTimeout(() => {
           onClose();
         }, 3000);
@@ -67,33 +64,35 @@ export default function Auth({ onClose }: AuthProps) {
 
   return (
     <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
-      {/* Summer Background Layer */}
+      {/* DARKER Background - Mas madaling basahin */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-700"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ 
           backgroundImage: 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80")',
-          filter: 'brightness(0.6) saturate(1.2)' 
+          filter: 'brightness(0.3) saturate(1.1)' 
         }}
       />
+      {/* Extra dark overlay */}
+      <div className="absolute inset-0 z-0 bg-black/50" />
 
-      <GlassCard className="relative z-10 w-full max-w-md p-8 border border-white/20">
-        <h1 className="font-playfair text-3xl text-palacio-gold mb-2 text-center drop-shadow-md">
+      <GlassCard className="relative z-10 w-full max-w-md p-8 md:p-10 border border-white/20 shadow-2xl">
+        <h1 className="font-playfair text-4xl md:text-5xl text-palacio-gold mb-3 text-center drop-shadow-lg">
           Palacio de Oro
         </h1>
-        <p className="text-white/80 text-center mb-8 italic">
+        <p className="text-white/90 text-center mb-10 italic text-lg">
           {isSignUp ? 'Experience Summer Luxury' : 'Welcome back to Paradise'}
         </p>
 
-        <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+        <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-6">
           {error && (
-            <div className="p-3 bg-red-900/60 border border-red-500 rounded text-white text-sm">
+            <div className="p-4 bg-red-900/70 border border-red-500 rounded-lg text-white text-sm">
               {error}
             </div>
           )}
 
           {isSignUp && (
             <div>
-              <label className="block text-sm font-cinzel text-palacio-gold mb-2">Full Name</label>
+              <label className="block text-base font-cinzel text-palacio-gold mb-3">Full Name</label>
               <input
                 type="text"
                 value={name}
@@ -103,73 +102,79 @@ export default function Auth({ onClose }: AuthProps) {
                 maxLength={18}
                 pattern="^[A-Z][a-zA-Z0-9_ ]*$"
                 title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
-                className="w-full px-4 py-2 bg-black/30 border border-palacio-gold/50 rounded text-white placeholder-gray-300 focus:outline-none focus:border-palacio-gold"
+                className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
                 placeholder="Ex: Vincent Ecaldre"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-cinzel text-palacio-gold mb-2">Email</label>
+            <label className="block text-base font-cinzel text-palacio-gold mb-3">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 bg-black/30 border border-palacio-gold/50 rounded text-white placeholder-gray-300 focus:outline-none"
+              className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
               placeholder="your@email.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-cinzel text-palacio-gold mb-2">Password</label>
+            <label className="block text-base font-cinzel text-palacio-gold mb-3">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 bg-black/30 border border-palacio-gold/50 rounded text-white placeholder-gray-300 focus:outline-none"
+              className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
               placeholder="••••••••"
             />
           </div>
 
+          {/* MAIN BUTTON - MAS MALAKI AT MAS MADALING PINDUTIN */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2 bg-palacio-gold text-palacio-black font-cinzel font-semibold rounded hover:scale-105 active:scale-95 transition-transform disabled:opacity-50"
+            className="w-full py-5 bg-palacio-gold text-palacio-black font-cinzel font-bold text-lg rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 shadow-lg border-2 border-palacio-gold/50 mt-4"
           >
             {loading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        {/* TOGGLE BUTTON - MAS MALAKI */}
+        <div className="mt-8 text-center">
           <button
             onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-            className="text-white hover:text-palacio-gold underline text-sm font-cinzel transition-colors"
+            className="text-white hover:text-palacio-gold underline text-base font-cinzel transition-colors py-2 px-4"
           >
             {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
           </button>
         </div>
 
-        <button onClick={onClose} className="w-full mt-4 py-2 bg-white/10 text-white rounded hover:bg-white/20 transition-all text-sm">
+        {/* CLOSE BUTTON - MAS PROMINENT */}
+        <button 
+          onClick={onClose} 
+          className="w-full mt-6 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all text-base font-cinzel border border-white/30"
+        >
           Close
         </button>
       </GlassCard>
 
-      {/* LUXURY SUCCESS OVERLAY - Lalabas ito pag success ang signup */}
+      {/* Success Overlay - Same pero slightly larger */}
       {showSuccess && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md transition-all duration-500">
-          <GlassCard className="p-10 border-palacio-gold/50 flex flex-col items-center text-center shadow-[0_0_50px_rgba(212,175,55,0.3)] animate-in zoom-in duration-300">
-            <div className="w-20 h-20 bg-palacio-gold/20 rounded-full flex items-center justify-center mb-6 border border-palacio-gold animate-bounce">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-palacio-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md transition-all duration-500">
+          <GlassCard className="p-12 border-palacio-gold/50 flex flex-col items-center text-center shadow-[0_0_60px_rgba(212,175,55,0.4)] animate-in zoom-in duration-300">
+            <div className="w-24 h-24 bg-palacio-gold/20 rounded-full flex items-center justify-center mb-6 border-2 border-palacio-gold animate-bounce">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-palacio-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="font-playfair text-3xl text-palacio-gold mb-2">Welcome to Paradise</h2>
-            <p className="text-white/90 font-cinzel text-sm tracking-widest uppercase">
+            <h2 className="font-playfair text-4xl text-palacio-gold mb-3">Welcome to Paradise</h2>
+            <p className="text-white/90 font-cinzel text-base tracking-widest uppercase">
               {name || 'Guest'}, your luxury journey begins.
             </p>
-            <div className="mt-8 w-16 h-1 bg-palacio-gold animate-pulse"></div>
+            <div className="mt-8 w-20 h-1 bg-palacio-gold animate-pulse"></div>
           </GlassCard>
         </div>
       )}
