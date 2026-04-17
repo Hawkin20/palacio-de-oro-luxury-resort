@@ -64,18 +64,18 @@ export default function Auth({ onClose }: AuthProps) {
 
   return (
     <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
-      {/* DARKER Background - Mas madaling basahin */}
+      {/* LUXURY SUNSET BEACH BACKGROUND */}
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ 
-          backgroundImage: 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80")',
-          filter: 'brightness(0.3) saturate(1.1)' 
+          backgroundImage: 'url("https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80")', // Luxury beach sunset
+          filter: 'brightness(0.4) saturate(1.3)' 
         }}
       />
-      {/* Extra dark overlay */}
-      <div className="absolute inset-0 z-0 bg-black/50" />
+      {/* Warm sunset overlay */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-orange-900/40 via-purple-900/20 to-black/60" />
 
-      <GlassCard className="relative z-10 w-full max-w-md p-8 md:p-10 border border-white/20 shadow-2xl">
+      <GlassCard className="relative z-10 w-full max-w-md p-8 md:p-10 border border-palacio-gold/30 shadow-2xl bg-black/40 backdrop-blur-xl">
         <h1 className="font-playfair text-4xl md:text-5xl text-palacio-gold mb-3 text-center drop-shadow-lg">
           Palacio de Oro
         </h1>
@@ -102,7 +102,7 @@ export default function Auth({ onClose }: AuthProps) {
                 maxLength={18}
                 pattern="^[A-Z][a-zA-Z0-9_ ]*$"
                 title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
-                className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
+                className="w-full px-5 py-4 bg-black/50 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/70 transition-all"
                 placeholder="Ex: Vincent Ecaldre"
               />
             </div>
@@ -115,7 +115,7 @@ export default function Auth({ onClose }: AuthProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
+              className="w-full px-5 py-4 bg-black/50 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/70 transition-all"
               placeholder="your@email.com"
             />
           </div>
@@ -127,22 +127,22 @@ export default function Auth({ onClose }: AuthProps) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
+              className="w-full px-5 py-4 bg-black/50 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/70 transition-all"
               placeholder="••••••••"
             />
           </div>
 
-          {/* MAIN BUTTON - MAS MALAKI AT MAS MADALING PINDUTIN */}
+          {/* MAIN BUTTON - GOLD LUXURY */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-5 bg-palacio-gold text-palacio-black font-cinzel font-bold text-lg rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 shadow-lg border-2 border-palacio-gold/50 mt-4"
+            className="w-full py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 shadow-[0_0_20px_rgba(212,175,55,0.4)] border-2 border-palacio-gold mt-4"
           >
             {loading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
           </button>
         </form>
 
-        {/* TOGGLE BUTTON - MAS MALAKI */}
+        {/* TOGGLE BUTTON */}
         <div className="mt-8 text-center">
           <button
             onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
@@ -152,7 +152,7 @@ export default function Auth({ onClose }: AuthProps) {
           </button>
         </div>
 
-        {/* CLOSE BUTTON - MAS PROMINENT */}
+        {/* CLOSE BUTTON */}
         <button 
           onClick={onClose} 
           className="w-full mt-6 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all text-base font-cinzel border border-white/30"
@@ -161,12 +161,12 @@ export default function Auth({ onClose }: AuthProps) {
         </button>
       </GlassCard>
 
-      {/* Success Overlay - Same pero slightly larger */}
+      {/* Success Overlay - LUXURY GOLD */}
       {showSuccess && (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md transition-all duration-500">
-          <GlassCard className="p-12 border-palacio-gold/50 flex flex-col items-center text-center shadow-[0_0_60px_rgba(212,175,55,0.4)] animate-in zoom-in duration-300">
-            <div className="w-24 h-24 bg-palacio-gold/20 rounded-full flex items-center justify-center mb-6 border-2 border-palacio-gold animate-bounce">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-palacio-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <GlassCard className="p-12 border-palacio-gold/50 flex flex-col items-center text-center shadow-[0_0_60px_rgba(212,175,55,0.4)] animate-in zoom-in duration-300 bg-gradient-to-b from-black/60 to-orange-900/20">
+            <div className="w-24 h-24 bg-gradient-to-br from-palacio-gold to-orange-400 rounded-full flex items-center justify-center mb-6 border-2 border-white animate-bounce shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -174,7 +174,7 @@ export default function Auth({ onClose }: AuthProps) {
             <p className="text-white/90 font-cinzel text-base tracking-widest uppercase">
               {name || 'Guest'}, your luxury journey begins.
             </p>
-            <div className="mt-8 w-20 h-1 bg-palacio-gold animate-pulse"></div>
+            <div className="mt-8 w-20 h-1 bg-gradient-to-r from-transparent via-palacio-gold to-transparent animate-pulse"></div>
           </GlassCard>
         </div>
       )}
