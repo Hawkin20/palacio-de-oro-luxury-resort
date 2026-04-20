@@ -62,7 +62,8 @@ export interface Booking {
 }
 
 export interface Order {
-  id: string;
+  id: string;              // Original orders table ID (UUID)
+  order_id?: string;       // ✅ From full_order_tracking view (same as id, but exposed as order_id)
   guest_id: string;
   total_amount: number;
   payment_method: 'cash' | 'gcash' | 'card';
@@ -71,6 +72,14 @@ export interface Order {
   status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
   reference_number: string;
   created_at: string;
+  // ✅ Additional fields from full_order_tracking view
+  username?: string;
+  user_email?: string;
+  product_name?: string;
+  category?: string;
+  quantity?: number;
+  unit_price?: number;
+  subtotal?: number;
 }
 
 export interface OrderItem {
