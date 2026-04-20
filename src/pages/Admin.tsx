@@ -119,32 +119,28 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     }
   };
 
-  const handleUpdateBookingStatus = async (id: string, newStatus: string) => {
-    console.log('🔧 Updating booking:', id, '→', newStatus);
+  const handleUpdateBookingStatus = async (referenceNumber: string, newStatus: string) => {
+    console.log('🔧 Updating booking:', referenceNumber, '→', newStatus);
     setUpdateError(null);
 
     try {
       const { data, error } = await supabase
         .from('bookings')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', id)
+        .eq('reference_number', referenceNumber)
         .select();
 
       if (error) {
         console.error('❌ Booking update error:', error);
         setUpdateError(`Booking update failed: ${error.message}`);
-        alert(`Failed to update booking status: ${error.message}\n\nCheck RLS policies in Supabase.`);
+        alert(`Failed to update booking status: ${error.message}`);
         return;
       }
 
       console.log('✅ Booking update success:', data);
-      
-      // Update local state
       setBookings(prev => 
-        prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
+        prev.map((b) => (b.reference_number === referenceNumber ? { ...b, status: newStatus } : b))
       );
-      
-      // Refresh data from server to ensure sync
       await fetchAllData();
       
     } catch (err: any) {
@@ -154,32 +150,28 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     }
   };
 
-  const handleUpdateOrderStatus = async (id: string, newStatus: string) => {
-    console.log('🔧 Updating order:', id, '→', newStatus);
+  const handleUpdateOrderStatus = async (referenceNumber: string, newStatus: string) => {
+    console.log('🔧 Updating order:', referenceNumber, '→', newStatus);
     setUpdateError(null);
 
     try {
       const { data, error } = await supabase
         .from('orders')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', id)
+        .eq('reference_number', referenceNumber)
         .select();
 
       if (error) {
         console.error('❌ Order update error:', error);
         setUpdateError(`Order update failed: ${error.message}`);
-        alert(`Failed to update order status: ${error.message}\n\nCheck RLS policies in Supabase.`);
+        alert(`Failed to update order status: ${error.message}`);
         return;
       }
 
       console.log('✅ Order update success:', data);
-      
-      // Update local state
       setOrders(prev => 
-        prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
+        prev.map((o) => (o.reference_number === referenceNumber ? { ...o, status: newStatus } : o))
       );
-      
-      // Refresh data from server to ensure sync
       await fetchAllData();
       
     } catch (err: any) {
@@ -387,7 +379,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'bookings' && (
               <div className="space-y-4">
                 {bookings.map((booking) => (
-                  <GlassCard key={booking.id} className="p-6">
+                  <GlassCard key={booking.reference_number} className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <p className="text-gray-400 text-sm">Customer</p>
@@ -431,7 +423,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <StatusBadge status={booking.status} size="md" />
                       <select
                         value={booking.status}
-                        onChange={(e) => handleUpdateBookingStatus(booking.id, e.target.value)}
+                        onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
                         className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
                       >
                         <option value="pending">Pending</option>
@@ -448,7 +440,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'orders' && (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <GlassCard key={order.id} className="p-6">
+                  <GlassCard key={order.reference_number} className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <p className="text-gray-400 text-sm">Customer</p>
@@ -492,7 +484,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <StatusBadge status={order.status} size="md" />
                       <select
                         value={order.status}
-                        onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                        onChange={(e) => handleUpdateOrderStatus(order.reference_number, e.target.value)}
                         className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
                       >
                         <option value="pending">Pending</option>
