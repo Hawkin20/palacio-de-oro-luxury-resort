@@ -36,8 +36,8 @@ export default function Admin({ isLoggedIn }: AdminProps) {
           supabase.from('rooms').select('*'),
           supabase.from('cottages').select('*'),
           supabase.from('menu_items').select('*'),
-          supabase.from('bookings').select('*'),
-          supabase.from('orders').select('*'),
+          supabase.from('full_bookings').select('*').order('created_at', { ascending: false }),
+          supabase.from('full_order_tracking').select('*').order('created_at', { ascending: false }),
         ]);
 
       if (roomsRes.data) setRooms(roomsRes.data);
@@ -290,6 +290,13 @@ export default function Admin({ isLoggedIn }: AdminProps) {
                   <GlassCard key={booking.id} className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
+                        <p className="text-gray-400 text-sm">Customer</p>
+                        <p className="font-cinzel text-palacio-gold">
+                          {booking.username || 'Unknown'}
+                        </p>
+                        <p className="text-gray-500 text-xs">{booking.user_email}</p>
+                      </div>
+                      <div>
                         <p className="text-gray-400 text-sm">Reference</p>
                         <p className="font-cinzel text-palacio-gold">
                           {booking.reference_number}
@@ -305,6 +312,18 @@ export default function Admin({ isLoggedIn }: AdminProps) {
                         <p className="text-gray-400 text-sm">Total</p>
                         <p className="font-cinzel text-palacio-gold">
                           ${booking.total_price}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Room</p>
+                        <p className="font-cinzel text-palacio-gold">
+                          {booking.room_name || 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Cottage</p>
+                        <p className="font-cinzel text-palacio-gold">
+                          {booking.cottage_name || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -334,6 +353,13 @@ export default function Admin({ isLoggedIn }: AdminProps) {
                   <GlassCard key={order.id} className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
+                        <p className="text-gray-400 text-sm">Customer</p>
+                        <p className="font-cinzel text-palacio-gold">
+                          {order.username || 'Unknown'}
+                        </p>
+                        <p className="text-gray-500 text-xs">{order.user_email}</p>
+                      </div>
+                      <div>
                         <p className="text-gray-400 text-sm">Reference</p>
                         <p className="font-cinzel text-palacio-gold">
                           {order.reference_number}
@@ -349,6 +375,18 @@ export default function Admin({ isLoggedIn }: AdminProps) {
                         <p className="text-gray-400 text-sm">Amount</p>
                         <p className="font-cinzel text-palacio-gold">
                           ${order.total_amount}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Product</p>
+                        <p className="font-cinzel text-palacio-gold">
+                          {order.product_name || 'N/A'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Category</p>
+                        <p className="font-cinzel text-palacio-gold">
+                          {order.category || 'N/A'}
                         </p>
                       </div>
                     </div>
