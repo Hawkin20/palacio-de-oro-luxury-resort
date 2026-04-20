@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, CreditCard as Edit2 } from 'lucide-react';
+import { Plus, Trash2, CreditCard as Edit2, Bell, Calendar, Clock, User, DollarSign, Home, UtensilsCrossed } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem, Booking, Order } from '../lib/types';
 import GlassCard from '../components/GlassCard';
@@ -179,6 +179,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       setUpdateError(`Unexpected error: ${err.message}`);
       alert(`Error: ${err.message}`);
     }
+  };
+
+  // Helper: Get orders for a specific user/email
+  const getUserOrders = (userEmail: string) => {
+    return orders.filter(o => o.user_email === userEmail);
   };
 
   if (!isLoggedIn || !isAdmin) {
@@ -376,67 +381,142 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               </div>
             )}
 
+            {/* NOTIFICATION-STYLE BOOKINGS TAB WITH ORDERS */}
             {currentTab === 'bookings' && (
               <div className="space-y-4">
-                {bookings.map((booking) => (
-                  <GlassCard key={booking.reference_number} className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-gray-400 text-sm">Customer</p>
-                        <p className="font-cinzel text-palacio-gold">
-                          {booking.username || 'Unknown'}
-                        </p>
-                        <p className="text-gray-500 text-xs">{booking.user_email}</p>
+                {bookings.map((booking) => {
+                  const userOrders = getUserOrders(booking.user_email || '');
+                  const hasOrders = userOrders.length > 0;
+                  const pendingOrders = userOrders.filter(o => o.status === 'pending').length;
+
+                  return (
+                    <GlassCard key={booking.reference_number} className="p-5">
+                      {/* Header: Notification style */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-palacio-gold/20 flex items-center justify-center">
+                            <Bell size={20} className="text-palacio-gold" />
+                          </div>
+                          <div>
+                            <h3 className="font-playfair text-lg text-palacio-gold">
+                              New Booking Request
+                            </h3>
+                            <p className="text-gray-500 text-xs">
+                              {booking.created_at ? new Date(booking.created_at).toLocaleString() : 'Just now'}
+                            </p>
+                          </div>
+                        </div>
+                        <StatusBadge status={booking.status} size="md" />
                       </div>
-                      <div>
-                        <p className="text-gray-400 text-sm">Reference</p>
-                        <p className="font-cinzel text-palacio-gold">
-                          {booking.reference_number}
-                        </p>
+
+                      {/* Booking Details - Compact */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/20 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <User size={14} className="text-gray-500" />
+                          <div>
+                            <p className="text-gray-500 text-xs">Guest</p>
+                            <p className="font-cinzel text-palacio-gold text-sm">
+                              {booking.username || 'Unknown'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar size={14} className="text-gray-500" />
+                          <div>
+                            <p className="text-gray-500 text-xs">Dates</p>
+                            <p className="font-cinzel text-palacio-gold text-sm">
+                              {booking.check_in_date} → {booking.check_out_date}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Home size={14} className="text-gray-500" />
+                          <div>
+                            <p className="text-gray-500 text-xs">Accommodation</p>
+                            <p className="font-cinzel text-palacio-gold text-sm">
+                              {booking.cottage_name || booking.room_name || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <DollarSign size={14} className="text-gray-500" />
+                          <div>
+                            <p className="text-gray-500 text-xs">Total</p>
+                            <p className="font-cinzel text-palacio-gold text-sm">
+                              ${booking.total_price}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-400 text-sm">Dates</p>
-                        <p className="font-cinzel text-palacio-gold">
-                          {booking.check_in_date} to {booking.check_out_date}
+
+                      {/* ORDERS SECTION - Show user's orders */}
+                      {hasOrders && (
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <UtensilsCrossed size={14} className="text-palacio-gold" />
+                            <h4 className="font-cinzel text-sm text-palacio-gold">
+                              Guest Orders
+                              {pendingOrders > 0 && (
+                                <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full">
+                                  {pendingOrders} pending
+                                </span>
+                              )}
+                            </h4>
+                          </div>
+                          <div className="space-y-2">
+                            {userOrders.map((order) => (
+                              <div 
+                                key={order.order_id} 
+                                className="flex items-center justify-between bg-black/20 rounded-lg p-2 text-sm"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className="text-gray-400">{order.product_name}</span>
+                                  <span className="text-gray-600">×{order.quantity}</span>
+                                  <span className="text-palacio-gold/60">${order.total_amount}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <StatusBadge status={order.status} size="sm" />
+                                  <select
+                                    value={order.status}
+                                    onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
+                                    className="px-2 py-0.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold text-xs focus:outline-none cursor-pointer"
+                                  >
+                                    <option value="pending">Pending</option>
+                                    <option value="preparing">Preparing</option>
+                                    <option value="ready">Ready</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                  </select>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                        <p className="text-gray-500 text-xs font-mono">
+                          Ref: {booking.reference_number}
                         </p>
+                        <select
+                          value={booking.status}
+                          onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
+                          className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="completed">Completed</option>
+                        </select>
                       </div>
-                      <div>
-                        <p className="text-gray-400 text-sm">Total</p>
-                        <p className="font-cinzel text-palacio-gold">
-                          ${booking.total_price}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm">Room</p>
-                        <p className="font-cinzel text-palacio-gold">
-                          {booking.room_name || 'N/A'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400 text-sm">Cottage</p>
-                        <p className="font-cinzel text-palacio-gold">
-                          {booking.cottage_name || 'N/A'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center mt-4">
-                      <StatusBadge status={booking.status} size="md" />
-                      <select
-                        value={booking.status}
-                        onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
-                        className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="completed">Completed</option>
-                      </select>
-                    </div>
-                  </GlassCard>
-                ))}
+                    </GlassCard>
+                  );
+                })}
               </div>
             )}
 
+            {/* ORDERS TAB - Standalone orders list */}
             {currentTab === 'orders' && (
               <div className="space-y-4">
                 {orders.map((order) => (
@@ -484,7 +564,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <StatusBadge status={order.status} size="md" />
                       <select
                         value={order.status}
-                        onChange={(e) => handleUpdateOrderStatus(order.order_id, e.target.value)}
+                        onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
                         className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
                       >
                         <option value="pending">Pending</option>
