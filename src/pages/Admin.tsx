@@ -9,7 +9,7 @@ import StatusBadge from '../components/StatusBadge';
 
 interface AdminProps {
   isLoggedIn: boolean;
-  userRole: string | null; // ✅ Added role prop
+  userRole: string | null;
 }
 
 export default function Admin({ isLoggedIn, userRole }: AdminProps) {
@@ -23,9 +23,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
-  const [isAdmin, setIsAdmin] = useState(false); // ✅ Added admin check state
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
-  // ✅ Role verification effect
   useEffect(() => {
     const verifyAdmin = async () => {
       if (!isLoggedIn) {
@@ -33,13 +33,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         return;
       }
 
-      // If role passed via props, use it
       if (userRole === 'admin') {
         setIsAdmin(true);
         return;
       }
 
-      // Fallback: check from DB directly
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
@@ -68,7 +66,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     verifyAdmin();
   }, [isLoggedIn, userRole]);
 
-  // ✅ Fetch data only if admin
   useEffect(() => {
     if (!isAdmin) return;
     fetchAllData();
@@ -77,6 +74,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const fetchAllData = async () => {
     try {
       setLoading(true);
+      setUpdateError(null);
+      
       const [roomsRes, cottagesRes, menuRes, bookingsRes, ordersRes] =
         await Promise.all([
           supabase.from('rooms').select('*'),
@@ -91,6 +90,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       if (menuRes.data) setMenu(menuRes.data);
       if (bookingsRes.data) setBookings(bookingsRes.data);
       if (ordersRes.data) setOrders(ordersRes.data);
+      
+      if (bookingsRes.error) console.error('Bookings fetch error:', bookingsRes.error);
+      if (ordersRes.error) console.error('Orders fetch error:', ordersRes.error);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -117,34 +119,76 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     }
   };
 
-  const handleUpdateBookingStatus = async (
-    id: string,
-    newStatus: string
-  ) => {
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status: newStatus })
-      .eq('id', id);
-    if (!error) {
-      setBookings(
-        bookings.map((b) => (b.id === id ? { ...b, status: newStatus as any } : b))
+  const handleUpdateBookingStatus = async (id: string, newStatus: string) => {
+    console.log('🔧 Updating booking:', id, '→', newStatus);
+    setUpdateError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error('❌ Booking update error:', error);
+        setUpdateError(`Booking update failed: ${error.message}`);
+        alert(`Failed to update booking status: ${error.message}\n\nCheck RLS policies in Supabase.`);
+        return;
+      }
+
+      console.log('✅ Booking update success:', data);
+      
+      // Update local state
+      setBookings(prev => 
+        prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
       );
+      
+      // Refresh data from server to ensure sync
+      await fetchAllData();
+      
+    } catch (err: any) {
+      console.error('❌ Unexpected error:', err);
+      setUpdateError(`Unexpected error: ${err.message}`);
+      alert(`Error: ${err.message}`);
     }
   };
 
   const handleUpdateOrderStatus = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', id);
-    if (!error) {
-      setOrders(
-        orders.map((o) => (o.id === id ? { ...o, status: newStatus as any } : o))
+    console.log('🔧 Updating order:', id, '→', newStatus);
+    setUpdateError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error('❌ Order update error:', error);
+        setUpdateError(`Order update failed: ${error.message}`);
+        alert(`Failed to update order status: ${error.message}\n\nCheck RLS policies in Supabase.`);
+        return;
+      }
+
+      console.log('✅ Order update success:', data);
+      
+      // Update local state
+      setOrders(prev => 
+        prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
       );
+      
+      // Refresh data from server to ensure sync
+      await fetchAllData();
+      
+    } catch (err: any) {
+      console.error('❌ Unexpected error:', err);
+      setUpdateError(`Unexpected error: ${err.message}`);
+      alert(`Error: ${err.message}`);
     }
   };
 
-  // ✅ Updated guard: check both login AND admin role
   if (!isLoggedIn || !isAdmin) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
@@ -166,6 +210,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     <div className="min-h-screen pt-24 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="section-title mb-8">Admin Dashboard</h1>
+
+        {/* Error Banner */}
+        {updateError && (
+          <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
+            ⚠️ {updateError}
+          </div>
+        )}
 
         <div className="flex gap-2 mb-8 overflow-x-auto">
           {[
@@ -380,10 +431,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <StatusBadge status={booking.status} size="md" />
                       <select
                         value={booking.status}
-                        onChange={(e) =>
-                          handleUpdateBookingStatus(booking.id, e.target.value)
-                        }
-                        className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none"
+                        onChange={(e) => handleUpdateBookingStatus(booking.id, e.target.value)}
+                        className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
                       >
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
@@ -443,10 +492,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <StatusBadge status={order.status} size="md" />
                       <select
                         value={order.status}
-                        onChange={(e) =>
-                          handleUpdateOrderStatus(order.id, e.target.value)
-                        }
-                        className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none"
+                        onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                        className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
                       >
                         <option value="pending">Pending</option>
                         <option value="preparing">Preparing</option>
