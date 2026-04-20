@@ -150,15 +150,15 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     }
   };
 
-  const handleUpdateOrderStatus = async (referenceNumber: string, newStatus: string) => {
-    console.log('🔧 Updating order:', referenceNumber, '→', newStatus);
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+    console.log('🔧 Updating order:', orderId, '→', newStatus);
     setUpdateError(null);
 
     try {
       const { data, error } = await supabase
         .from('orders')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('reference_number', referenceNumber)
+        .eq('id', orderId)
         .select();
 
       if (error) {
@@ -170,7 +170,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
       console.log('✅ Order update success:', data);
       setOrders(prev => 
-        prev.map((o) => (o.reference_number === referenceNumber ? { ...o, status: newStatus } : o))
+        prev.map((o) => (o.order_id === orderId ? { ...o, status: newStatus } : o))
       );
       await fetchAllData();
       
@@ -440,7 +440,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'orders' && (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <GlassCard key={order.reference_number} className="p-6">
+                  <GlassCard key={order.order_id} className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <p className="text-gray-400 text-sm">Customer</p>
@@ -484,7 +484,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <StatusBadge status={order.status} size="md" />
                       <select
                         value={order.status}
-                        onChange={(e) => handleUpdateOrderStatus(order.reference_number, e.target.value)}
+                        onChange={(e) => handleUpdateOrderStatus(order.order_id, e.target.value)}
                         className="px-3 py-1 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
                       >
                         <option value="pending">Pending</option>
