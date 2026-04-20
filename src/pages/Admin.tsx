@@ -9,9 +9,10 @@ import StatusBadge from '../components/StatusBadge';
 
 interface AdminProps {
   isLoggedIn: boolean;
+  userRole: string | null; // ✅ Added role prop
 }
 
-export default function Admin({ isLoggedIn }: AdminProps) {
+export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'rooms' | 'menu' | 'bookings' | 'orders'>('dashboard');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cottages, setCottages] = useState<Cottage[]>([]);
@@ -22,11 +23,56 @@ export default function Admin({ isLoggedIn }: AdminProps) {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
+  const [isAdmin, setIsAdmin] = useState(false); // ✅ Added admin check state
 
+  // ✅ Role verification effect
   useEffect(() => {
-    if (!isLoggedIn) return;
+    const verifyAdmin = async () => {
+      if (!isLoggedIn) {
+        setIsAdmin(false);
+        return;
+      }
+
+      // If role passed via props, use it
+      if (userRole === 'admin') {
+        setIsAdmin(true);
+        return;
+      }
+
+      // Fallback: check from DB directly
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setIsAdmin(false);
+          return;
+        }
+
+        const { data: user, error } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error || user?.role !== 'admin') {
+          setIsAdmin(false);
+          return;
+        }
+
+        setIsAdmin(true);
+      } catch (err) {
+        console.error('Admin verification error:', err);
+        setIsAdmin(false);
+      }
+    };
+
+    verifyAdmin();
+  }, [isLoggedIn, userRole]);
+
+  // ✅ Fetch data only if admin
+  useEffect(() => {
+    if (!isAdmin) return;
     fetchAllData();
-  }, [isLoggedIn]);
+  }, [isAdmin]);
 
   const fetchAllData = async () => {
     try {
@@ -98,7 +144,8 @@ export default function Admin({ isLoggedIn }: AdminProps) {
     }
   };
 
-  if (!isLoggedIn) {
+  // ✅ Updated guard: check both login AND admin role
+  if (!isLoggedIn || !isAdmin) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
         <GlassCard className="p-8 text-center max-w-md">
@@ -106,7 +153,9 @@ export default function Admin({ isLoggedIn }: AdminProps) {
             Admin Access Required
           </h2>
           <p className="text-gray-400">
-            Please log in as an administrator to access this panel.
+            {!isLoggedIn 
+              ? 'Please log in to access this panel.' 
+              : 'You do not have administrator privileges.'}
           </p>
         </GlassCard>
       </div>
