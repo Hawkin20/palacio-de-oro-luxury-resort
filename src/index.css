@@ -45,3 +45,196 @@
     @apply hover:shadow-gold-glow hover:-translate-y-2 smooth-transition;
   }
 }
+
+/* ============================================
+   ANIMATIONS - Add these to your index.css
+   ============================================ */
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0) translateX(0); 
+    opacity: 0; 
+  }
+  10% { 
+    opacity: 1; 
+  }
+  90% { 
+    opacity: 1; 
+  }
+  50% { 
+    transform: translateY(-100px) translateX(20px); 
+    opacity: 0.8; 
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+
+@keyframes scroll-down {
+  0%, 100% { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
+  50% { 
+    transform: translateY(12px); 
+    opacity: 0.3; 
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); 
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); 
+  }
+}
+
+/* Animation Classes */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 1s ease-out forwards;
+}
+
+.animate-slide-up-delay {
+  animation: slide-up 1s ease-out 0.3s both;
+}
+
+.animate-slide-up-delay-2 {
+  animation: slide-up 1s ease-out 0.6s both;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+.animate-scroll-down {
+  animation: scroll-down 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Scroll Reveal (intersection observer needed in JS) */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.reveal-on-scroll.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.stagger-children.revealed > *:nth-child(1) { transition-delay: 0ms; }
+.stagger-children.revealed > *:nth-child(2) { transition-delay: 100ms; }
+.stagger-children.revealed > *:nth-child(3) { transition-delay: 200ms; }
+.stagger-children.revealed > *:nth-child(4) { transition-delay: 300ms; }
+
+.stagger-children.revealed > * {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* Card 3D tilt effect */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.tilt-card:hover {
+  transform: perspective(1000px) rotateX(5deg) rotateY(5deg) scale(1.02);
+}
+
+/* Shine sweep effect */
+.shine-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-sweep::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.shine-sweep:hover::before {
+  left: 100%;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
+}
