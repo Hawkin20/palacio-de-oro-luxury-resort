@@ -113,11 +113,42 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
     }
   };
 
-  const filtered = filter === 'all' 
-    ? [...rooms.map(r => ({ ...r, type: 'room' })), ...cottages.map(c => ({ ...c, type: 'cottage' }))]
-    : filter.startsWith('room_') 
-      ? rooms.filter(r => r.room_type === filter.replace('room_', '')).map(r => ({ ...r, type: 'room' }))
-      : cottages.filter(c => c.cottage_type === filter.replace('cottage_', '')).map(c => ({ ...c, type: 'cottage' }));
+  // FIXED: Separate filter logic for each category
+  const getFilteredItems = () => {
+    const allItems = [
+      ...rooms.map(r => ({ ...r, type: 'room' as const, category: r.room_type?.toLowerCase() || '' })),
+      ...cottages.map(c => ({ ...c, type: 'cottage' as const, category: c.cottage_type?.toLowerCase() || '' }))
+    ];
+
+    switch (filter) {
+      case 'all':
+        return allItems;
+      case 'rooms':
+        // Rooms = STANDARD ROOM, DELUXE ROOM, SUITE (NOT luxury)
+        return rooms
+          .filter(r => {
+            const rt = r.room_type?.toLowerCase() || '';
+            return rt.includes('standard') || rt.includes('deluxe') || rt.includes('suite');
+          })
+          .map(r => ({ ...r, type: 'room' as const, category: r.room_type?.toLowerCase() || '' }));
+      case 'luxury':
+        // Luxury = LUXURY VILLA only
+        return rooms
+          .filter(r => (r.room_type?.toLowerCase() || '').includes('luxury'))
+          .map(r => ({ ...r, type: 'room' as const, category: r.room_type?.toLowerCase() || '' }));
+      case 'cottages':
+        // Cottages = all cottages (family, small, barkada)
+        return cottages
+          .map(c => ({ ...c, type: 'cottage' as const, category: c.cottage_type?.toLowerCase() || '' }));
+      default:
+        return allItems;
+    }
+  };
+
+  const filtered = getFilteredItems();
+
+  // Remove any empty/invalid items
+  const validItems = filtered.filter(item => item.name && item.image_url && item.price_per_night);
 
   return (
     <div className="relative min-h-screen pt-24 pb-20 overflow-hidden">
@@ -125,7 +156,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center fixed"
         style={{ 
-          backgroundImage: 'url("https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80")', // Luxury resort pool view
+          backgroundImage: 'url("https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80")',
           filter: 'brightness(0.15) saturate(1.1)' 
         }}
       />
@@ -138,13 +169,13 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
               From majestic villas to cozy beachside cottages, discover your perfect sanctuary under the golden sun.
             </p>
           </div>
-          
+
           <div className="flex flex-wrap gap-2 justify-end">
             {[
               { label: 'All', value: 'all' },
-              { label: 'Rooms', value: 'room_standard' },
-              { label: 'Luxury', value: 'room_luxury_villa' },
-              { label: 'Cottages', value: 'cottage_family' },
+              { label: 'Rooms', value: 'rooms' },
+              { label: 'Luxury', value: 'luxury' },
+              { label: 'Cottages', value: 'cottages' },
             ].map((btn) => (
               <button
                 key={btn.value}
@@ -165,69 +196,75 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
           <LoadingSpinner />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filtered.map((item: any) => (
-              <GlassCard
-                key={item.id}
-                className="overflow-hidden group hover:border-palacio-gold/50 transition-all duration-500 flex flex-col h-full"
-                onClick={() => {
-                  setSelectedRoom(item);
-                  setShowBookingModal(true);
-                }}
-              >
-                <div className="relative h-64 overflow-hidden">
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                    <StatusBadge status={item.status} size="sm" />
-                    <div className="text-right">
-                      <p className="text-[10px] text-gray-400 uppercase font-cinzel tracking-tighter">Starts at</p>
-                      <p className="text-palacio-gold font-cinzel font-bold text-xl">${item.price_per_night}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 flex-grow flex flex-col">
-                  <h3 className="font-playfair text-2xl text-white mb-3 group-hover:text-palacio-gold transition-colors">
-                    {item.name}
-                  </h3>
-                  <p className="text-gray-400 text-xs mb-6 line-clamp-2 italic leading-relaxed">
-                    {item.description}
-                  </p>
-
-                  <div className="mt-auto space-y-4 pt-4 border-t border-white/5">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 text-gray-300">
-                        <Users size={14} className="text-palacio-gold" />
-                        <span className="text-[11px] font-cinzel tracking-widest">{item.capacity} Guests</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-300">
-                        <Info size={14} className="text-palacio-gold" />
-                        <span className="text-[11px] font-cinzel tracking-widest uppercase">{item.type}</span>
+            {validItems.length > 0 ? (
+              validItems.map((item: any) => (
+                <GlassCard
+                  key={item.id}
+                  className="overflow-hidden group hover:border-palacio-gold/50 transition-all duration-500 flex flex-col h-full"
+                  onClick={() => {
+                    setSelectedRoom(item);
+                    setShowBookingModal(true);
+                  }}
+                >
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                      <StatusBadge status={item.status} size="sm" />
+                      <div className="text-right">
+                        <p className="text-[10px] text-gray-400 uppercase font-cinzel tracking-tighter">Starts at</p>
+                        <p className="text-palacio-gold font-cinzel font-bold text-xl">${item.price_per_night}</p>
                       </div>
                     </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {item.amenities?.slice(0, 3).map((amenity: string) => (
-                        <span key={amenity} className="text-[9px] font-cinzel tracking-widest bg-white/5 text-gray-400 px-3 py-1 rounded-full border border-white/10">
-                          {amenity}
-                        </span>
-                      ))}
-                    </div>
-
-                    <button
-                      disabled={item.status !== 'available'}
-                      className="w-full py-3 bg-palacio-gold text-palacio-black rounded-lg font-cinzel text-xs font-bold hover:bg-white smooth-transition shadow-lg shadow-palacio-gold/10 disabled:opacity-30"
-                    >
-                      {item.status === 'available' ? 'RESERVE NOW' : 'FULLY BOOKED'}
-                    </button>
                   </div>
-                </div>
-              </GlassCard>
-            ))}
+
+                  <div className="p-6 flex-grow flex flex-col">
+                    <h3 className="font-playfair text-2xl text-white mb-3 group-hover:text-palacio-gold transition-colors">
+                      {item.name}
+                    </h3>
+                    <p className="text-gray-400 text-xs mb-6 line-clamp-2 italic leading-relaxed">
+                      {item.description}
+                    </p>
+
+                    <div className="mt-auto space-y-4 pt-4 border-t border-white/5">
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2 text-gray-300">
+                          <Users size={14} className="text-palacio-gold" />
+                          <span className="text-[11px] font-cinzel tracking-widest">{item.capacity} Guests</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-300">
+                          <Info size={14} className="text-palacio-gold" />
+                          <span className="text-[11px] font-cinzel tracking-widest uppercase">{item.type}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {item.amenities?.slice(0, 3).map((amenity: string) => (
+                          <span key={amenity} className="text-[9px] font-cinzel tracking-widest bg-white/5 text-gray-400 px-3 py-1 rounded-full border border-white/10">
+                            {amenity}
+                          </span>
+                        ))}
+                      </div>
+
+                      <button
+                        disabled={item.status !== 'available'}
+                        className="w-full py-3 bg-palacio-gold text-palacio-black rounded-lg font-cinzel text-xs font-bold hover:bg-white smooth-transition shadow-lg shadow-palacio-gold/10 disabled:opacity-30"
+                      >
+                        {item.status === 'available' ? 'RESERVE NOW' : 'FULLY BOOKED'}
+                      </button>
+                    </div>
+                  </div>
+                </GlassCard>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-gray-400 font-cinzel text-sm">
+                No accommodations available for this category.
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -259,7 +296,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       >
         {bookingSuccess ? (
           <div className="text-center py-12">
-            <div className="text-5xl mb-6">🌞</div>
+            <div className="text-5xl mb-6">馃尀</div>
             <h3 className="font-playfair text-2xl text-palacio-gold mb-3">Reservation Placed!</h3>
             <p className="text-gray-400 text-sm italic">Get your beach gear ready, we'll see you soon at Palacio de Oro.</p>
           </div>
@@ -344,4 +381,4 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       </Modal>
     </div>
   );
-}
+          }
