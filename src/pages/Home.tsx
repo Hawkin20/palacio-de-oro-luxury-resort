@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, MenuItem } from '../lib/types';
@@ -10,35 +10,12 @@ interface HomeProps {
   onNavigate: (page: string) => void;
 }
 
-// Scroll Reveal Hook
-const useScrollReveal = () => {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('revealed');
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '-50px' }
-    );
-
-    const elements = document.querySelectorAll('.reveal-on-scroll, .stagger-children');
-    elements.forEach((el) => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, []);
-};
-
 export default function Home({ onNavigate }: HomeProps) {
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([]);
   const [bestsellers, setBestsellers] = useState<MenuItem[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
-
-  useScrollReveal();
 
   useEffect(() => {
     fetchData();
@@ -150,7 +127,7 @@ export default function Home({ onNavigate }: HomeProps) {
       {/* HIGHLIGHTS SECTION */}
       <div className="py-20 bg-gradient-to-b from-palacio-black/90 to-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-title text-palacio-gold mb-12 reveal-on-scroll">
+          <h2 className="section-title text-palacio-gold mb-12 animate-fade-in">
             Summer Highlights
           </h2>
 
@@ -175,11 +152,12 @@ export default function Home({ onNavigate }: HomeProps) {
                   <h3 className="text-2xl font-playfair text-palacio-gold mb-6 border-b border-palacio-gold/30 pb-2 inline-block">
                     {slides[currentSlide]?.title}
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-children">
-                    {slides[currentSlide]?.items?.map((item) => (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {slides[currentSlide]?.items?.map((item, index) => (
                       <div
                         key={item.id}
                         className="group cursor-pointer card-hover"
+                        style={{ animationDelay: `${index * 150}ms` }}
                       >
                         <div className="relative overflow-hidden rounded-lg shadow-xl group-hover:shadow-palacio-gold/20 transition-shadow duration-500">
                           <img
@@ -250,7 +228,7 @@ export default function Home({ onNavigate }: HomeProps) {
       {/* FEATURED ROOMS */}
       <div className="py-20 bg-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-title mb-12 reveal-on-scroll">
+          <h2 className="section-title mb-12 animate-fade-in">
             Luxury Accommodations
           </h2>
 
@@ -269,11 +247,12 @@ export default function Home({ onNavigate }: HomeProps) {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
-              {rooms.map((room) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {rooms.map((room, index) => (
                 <div
                   key={room.id}
-                  className="group cursor-pointer tilt-card"
+                  className="group cursor-pointer card-hover"
+                  style={{ animationDelay: `${index * 100}ms` }}
                   onClick={() => onNavigate('rooms')}
                 >
                   <div className="relative overflow-hidden rounded-t-2xl">
@@ -314,7 +293,7 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
           )}
 
-          <div className="text-center mt-12 reveal-on-scroll">
+          <div className="text-center mt-12 animate-fade-in">
             <button
               onClick={() => onNavigate('rooms')}
               className="px-8 py-4 bg-transparent border-2 border-palacio-gold text-palacio-gold font-cinzel font-bold rounded-full hover:bg-palacio-gold hover:text-palacio-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] active:scale-95 shine-sweep"
@@ -328,17 +307,18 @@ export default function Home({ onNavigate }: HomeProps) {
       {/* SERVICES FOOTER */}
       <div className="py-20 bg-gradient-to-t from-orange-900/20 to-palacio-black border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger-children">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { icon: '🏖️', title: 'Summer Paradise', desc: 'Experience the ultimate beach getaway with our seasonal packages.' },
               { icon: '🍸', title: 'Sky Lounge', desc: 'Cool off with our signature summer cocktails and gourmet appetizers.' },
               { icon: '✨', title: 'Gold Standard', desc: 'Uncompromising luxury and personalized service for every guest.' },
-            ].map((service) => (
+            ].map((service, index) => (
               <div
                 key={service.title}
                 className="text-center p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-palacio-gold/30 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(212,175,55,0.1)] card-hover"
+                style={{ animationDelay: `${index * 200}ms` }}
               >
-                <div className="text-4xl mb-4 inline-block p-4 rounded-full bg-gradient-to-br from-palacio-gold/20 to-orange-400/20 group-hover:rotate-12 transition-transform duration-500">
+                <div className="text-4xl mb-4 inline-block p-4 rounded-full bg-gradient-to-br from-palacio-gold/20 to-orange-400/20">
                   {service.icon}
                 </div>
                 <h3 className="font-playfair text-xl text-palacio-gold mb-2">{service.title}</h3>
