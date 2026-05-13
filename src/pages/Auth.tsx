@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import GlassCard from '../components/GlassCard';
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, X, Sparkles } from 'lucide-react';
 
 interface AuthProps {
   onClose: () => void;
@@ -14,6 +14,22 @@ export default function Auth({ onClose }: AuthProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Password strength
+  const getPasswordStrength = (pass: string) => {
+    let strength = 0;
+    if (pass.length >= 8) strength++;
+    if (/[A-Z]/.test(pass)) strength++;
+    if (/[0-9]/.test(pass)) strength++;
+    if (/[^A-Za-z0-9]/.test(pass)) strength++;
+    return strength;
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+  const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong'];
+  const strengthColors = ['bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,109 +79,258 @@ export default function Auth({ onClose }: AuthProps) {
   };
 
   return (
-    <div className="relative min-h-screen pt-24 pb-20 flex items-center justify-center px-4 overflow-hidden">
-      {/* DARKER Background - Mas madaling basahin */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80")',
-          filter: 'brightness(0.3) saturate(1.1)' 
-        }}
-      />
-      {/* Extra dark overlay */}
-      <div className="absolute inset-0 z-0 bg-black/50" />
-
-      <GlassCard className="relative z-10 w-full max-w-md p-8 md:p-10 border border-white/20 shadow-2xl">
-        <h1 className="font-playfair text-4xl md:text-5xl text-palacio-gold mb-3 text-center drop-shadow-lg">
-          Palacio de Oro
-        </h1>
-        <p className="text-white/90 text-center mb-10 italic text-lg">
-          {isSignUp ? 'Experience Summer Luxury' : 'Welcome back to Paradise'}
-        </p>
-
-        <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-6">
-          {error && (
-            <div className="p-4 bg-red-900/70 border border-red-500 rounded-lg text-white text-sm">
-              {error}
-            </div>
-          )}
-
-          {isSignUp && (
-            <div>
-              <label className="block text-base font-cinzel text-palacio-gold mb-3">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                minLength={5}
-                maxLength={18}
-                pattern="^[A-Z][a-zA-Z0-9_ ]*$"
-                title="Format invalid: Name must start with an uppercase letter (A-Z) and not exceed 18 characters."
-                className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
-                placeholder="Ex: Vincent Ecaldre"
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block text-base font-cinzel text-palacio-gold mb-3">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
-              placeholder="your@email.com"
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 overflow-hidden">
+      {/* Animated Ocean Background */}
+      <div className="absolute inset-0 z-0">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat animate-ocean-sway"
+          style={{ 
+            backgroundImage: 'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80")',
+            filter: 'brightness(0.25) saturate(1.2)' 
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/60" />
+        
+        {/* Floating gold particles */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-palacio-gold/60 rounded-full animate-float-auth"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${4 + Math.random() * 4}s`,
+              }}
             />
-          </div>
+          ))}
+        </div>
+      </div>
 
-          <div>
-            <label className="block text-base font-cinzel text-palacio-gold mb-3">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-5 py-4 bg-black/40 border-2 border-palacio-gold/50 rounded-lg text-white text-lg placeholder-gray-400 focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {/* MAIN BUTTON - MAS MALAKI AT MAS MADALING PINDUTIN */}
+      {/* Main Card */}
+      <div className="relative z-10 w-full max-w-md animate-fade-in-up">
+        <div className="relative bg-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 md:p-10 shadow-[0_0_60px_rgba(212,175,55,0.15)] hover:shadow-[0_0_80px_rgba(212,175,55,0.25)] transition-shadow duration-500">
+          
+          {/* Close button */}
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-5 bg-palacio-gold text-palacio-black font-cinzel font-bold text-lg rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 shadow-lg border-2 border-palacio-gold/50 mt-4"
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-white/60 hover:text-palacio-gold transition-colors rounded-full hover:bg-white/10"
           >
-            {loading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
+            <X size={20} />
           </button>
-        </form>
 
-        {/* TOGGLE BUTTON - MAS MALAKI */}
-        <div className="mt-8 text-center">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-palacio-gold/30 to-orange-400/20 mb-4 animate-glow-pulse">
+              <Sparkles size={28} className="text-palacio-gold" />
+            </div>
+            <h1 className="font-playfair text-4xl md:text-5xl text-palacio-gold mb-2 drop-shadow-lg">
+              Palacio de Oro
+            </h1>
+            <p className="text-white/80 text-center italic text-lg font-poppins">
+              {isSignUp ? 'Begin Your Luxury Journey' : 'Welcome back to Paradise'}
+            </p>
+          </div>
+
+          {/* Toggle Tabs */}
+          <div className="flex mb-8 bg-black/30 rounded-full p-1 border border-white/10">
+            <button
+              onClick={() => { setIsSignUp(false); setError(''); }}
+              className={`flex-1 py-3 rounded-full text-sm font-cinzel font-bold transition-all duration-300 ${
+                !isSignUp 
+                  ? 'bg-palacio-gold text-palacio-black shadow-lg' 
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => { setIsSignUp(true); setError(''); }}
+              className={`flex-1 py-3 rounded-full text-sm font-cinzel font-bold transition-all duration-300 ${
+                isSignUp 
+                  ? 'bg-palacio-gold text-palacio-black shadow-lg' 
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          <form onSubmit={isSignUp ? handleSignUp : handleSignIn} className="space-y-5">
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 bg-red-900/50 border border-red-500/50 rounded-xl text-red-200 text-sm animate-shake">
+                {error}
+              </div>
+            )}
+
+            {/* Name Field (Sign Up only) */}
+            {isSignUp && (
+              <div className="relative">
+                <label className={`absolute left-4 transition-all duration-300 font-cinzel text-sm ${
+                  focusedField === 'name' || name 
+                    ? '-top-2 text-palacio-gold text-xs bg-palacio-black px-2' 
+                    : 'top-4 text-gray-400'
+                }`}>
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={() => setFocusedField('name')}
+                    onBlur={() => setFocusedField(null)}
+                    required={isSignUp}
+                    minLength={5}
+                    maxLength={18}
+                    pattern="^[A-Z][a-zA-Z0-9_ ]*$"
+                    title="Name must start with uppercase letter"
+                    className="w-full pl-12 pr-4 py-4 bg-black/40 border-2 border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all duration-300"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Email Field */}
+            <div className="relative">
+              <label className={`absolute left-4 transition-all duration-300 font-cinzel text-sm ${
+                focusedField === 'email' || email 
+                  ? '-top-2 text-palacio-gold text-xs bg-palacio-black px-2' 
+                  : 'top-4 text-gray-400'
+              }`}>
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  required
+                  className="w-full pl-12 pr-4 py-4 bg-black/40 border-2 border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all duration-300"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="relative">
+              <label className={`absolute left-4 transition-all duration-300 font-cinzel text-sm ${
+                focusedField === 'password' || password 
+                  ? '-top-2 text-palacio-gold text-xs bg-palacio-black px-2' 
+                  : 'top-4 text-gray-400'
+              }`}>
+                Password
+              </label>
+              <div className="relative">
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                  required
+                  className="w-full pl-12 pr-12 py-4 bg-black/40 border-2 border-white/10 rounded-xl text-white placeholder-transparent focus:outline-none focus:border-palacio-gold focus:bg-black/60 transition-all duration-300"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-palacio-gold transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              
+              {/* Password Strength (Sign Up only) */}
+              {isSignUp && password && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex gap-1">
+                    {[...Array(4)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                          i < passwordStrength ? strengthColors[passwordStrength - 1] : 'bg-white/10'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className={`text-xs font-cinzel ${
+                    passwordStrength > 0 ? 'text-' + strengthColors[passwordStrength - 1].replace('bg-', '') : 'text-gray-500'
+                  }`}>
+                    {passwordStrength > 0 ? strengthLabels[passwordStrength - 1] : 'Enter password'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_40px_rgba(212,175,55,0.5)] shine-sweep relative overflow-hidden group"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {loading ? (
+                  <div className="w-6 h-6 border-2 border-palacio-black/30 border-t-palacio-black rounded-full animate-spin" />
+                ) : (
+                  <>
+                    {isSignUp ? 'Create Account' : 'Sign In'}
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </span>
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-white/40 text-xs font-cinzel">OR</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+
+          {/* Social Login (Placeholder) */}
           <button
-            onClick={() => { setIsSignUp(!isSignUp); setError(''); }}
-            className="text-white hover:text-palacio-gold underline text-base font-cinzel transition-colors py-2 px-4"
+            className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-white/80 font-cinzel text-sm hover:bg-white/10 hover:border-white/30 transition-all duration-300 flex items-center justify-center gap-3"
           >
-            {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
           </button>
         </div>
+      </div>
 
-        {/* CLOSE BUTTON - MAS PROMINENT */}
-        <button 
-          onClick={onClose} 
-          className="w-full mt-6 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all text-base font-cinzel border border-white/30"
-        >
-          Close
-        </button>
-      </GlassCard>
-
-      {/* Success Overlay - Same pero slightly larger */}
+      {/* Success Overlay */}
       {showSuccess && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md transition-all duration-500">
-          <GlassCard className="p-12 border-palacio-gold/50 flex flex-col items-center text-center shadow-[0_0_60px_rgba(212,175,55,0.4)] animate-in zoom-in duration-300">
-            <div className="w-24 h-24 bg-palacio-gold/20 rounded-full flex items-center justify-center mb-6 border-2 border-palacio-gold animate-bounce">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="relative bg-white/10 backdrop-blur-2xl border-2 border-palacio-gold/50 rounded-3xl p-12 flex flex-col items-center text-center shadow-[0_0_80px_rgba(212,175,55,0.4)] animate-scale-in max-w-md mx-4">
+            {/* Confetti effect */}
+            <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+              {[...Array(30)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full animate-confetti"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: '-10%',
+                    backgroundColor: ['#D4AF37', '#FFD700', '#FFA500', '#FF6B6B'][Math.floor(Math.random() * 4)],
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${2 + Math.random() * 2}s`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="w-24 h-24 bg-gradient-to-br from-palacio-gold/30 to-orange-400/20 rounded-full flex items-center justify-center mb-6 border-2 border-palacio-gold animate-bounce-slow">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-palacio-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
@@ -174,10 +339,11 @@ export default function Auth({ onClose }: AuthProps) {
             <p className="text-white/90 font-cinzel text-base tracking-widest uppercase">
               {name || 'Guest'}, your luxury journey begins.
             </p>
-            <div className="mt-8 w-20 h-1 bg-palacio-gold animate-pulse"></div>
-          </GlassCard>
+            <div className="mt-8 w-32 h-1 bg-gradient-to-r from-transparent via-palacio-gold to-transparent animate-pulse" />
+            <p className="mt-4 text-white/50 text-sm font-cinzel">Redirecting...</p>
+          </div>
         </div>
       )}
     </div>
   );
-        }
+}
