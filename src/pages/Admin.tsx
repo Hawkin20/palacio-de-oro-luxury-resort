@@ -239,7 +239,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       if (error) {
         console.error('Order update error:', error);
         setUpdateError(`Order update failed: ${error.message}`);
-        showToast(`Failed to update order order: ${error.message}`, 'error');
+        showToast(`Failed to update order: ${error.message}`, 'error');
         return;
       }
 
@@ -564,7 +564,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   <button
                     onClick={() => {
                       setEditingItem(null);
-                      setForm setFormData({});
+                      setFormData({});
                       setShowModal(true);
                     }}
                     className="gold-glow-btn"
