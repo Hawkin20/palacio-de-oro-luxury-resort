@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, X, Plus, Minus } from 'lucide-react';
+import { ShoppingCart, X, Plus, Minus, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { MenuItem, CartItem } from '../lib/types';
 import GlassCard from '../components/GlassCard';
@@ -28,6 +28,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('appetizers');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showCart, setShowCart] = useState(false);
   const [orderData, setOrderData] = useState({
     orderType: 'dine_in' as 'dine_in' | 'room_delivery',
@@ -156,7 +157,17 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
     }
   };
 
-  const filteredItems = menuItems.filter((item) => item.category === selectedCategory);
+  // Category filter
+  let filteredItems = menuItems.filter((item) => item.category === selectedCategory);
+
+  // SEARCH: Filter by name or description
+  if (searchQuery.trim() !== '') {
+    const query = searchQuery.toLowerCase();
+    filteredItems = menuItems.filter(item =>
+      item.name?.toLowerCase().includes(query) ||
+      item.description?.toLowerCase().includes(query)
+    );
+  }
 
   return (
     <div className="relative min-h-screen pt-24 pb-20 overflow-hidden">
@@ -164,13 +175,13 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center fixed"
         style={{ 
-          backgroundImage: 'url("https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&q=80")', // Food photography/Summer vibe
+          backgroundImage: 'url("https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&q=80")',
           filter: 'brightness(0.15) saturate(1.2)' 
         }}
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="section-title text-left mb-2 text-palacio-gold">Palacio Dining</h1>
             <p className="text-gray-400 font-poppins text-sm italic">Savor the flavors of summer luxury</p>
@@ -188,70 +199,100 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
           </button>
         </div>
 
-        {/* Category Navigation */}
-        <div className="mb-12 flex flex-wrap gap-3 pb-4 overflow-x-auto scrollbar-hide">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => setSelectedCategory(cat.value)}
-              className={`px-6 py-2 rounded-full font-cinzel text-xs tracking-widest smooth-transition border ${
-                selectedCategory === cat.value
-                  ? 'bg-palacio-gold text-palacio-black border-palacio-gold'
-                  : 'bg-white/5 text-palacio-gold border-palacio-gold/20 hover:bg-palacio-gold/10'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+        {/* SEARCH BAR */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search menu items..."
+              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-palacio-gold/20 rounded-full text-sm text-white placeholder-gray-500 focus:border-palacio-gold focus:outline-none focus:bg-white/10 smooth-transition"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-palacio-gold"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Category Navigation - Hidden when searching */}
+        {!searchQuery && (
+          <div className="mb-12 flex flex-wrap gap-3 pb-4 overflow-x-auto scrollbar-hide">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setSelectedCategory(cat.value)}
+                className={`px-6 py-2 rounded-full font-cinzel text-xs tracking-widest smooth-transition border ${
+                  selectedCategory === cat.value
+                    ? 'bg-palacio-gold text-palacio-black border-palacio-gold'
+                    : 'bg-white/5 text-palacio-gold border-palacio-gold/20 hover:bg-palacio-gold/10'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <LoadingSpinner />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredItems.map((item) => (
-              <GlassCard key={item.id} className="overflow-hidden group hover:border-palacio-gold/50 transition-all duration-500">
-                <div className="relative h-56 overflow-hidden">
-                  <img
-                    src={item.image_url}
-                    alt={item.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                  <div className="absolute top-3 right-3 flex flex-col gap-2">
-                    {item.is_bestseller && (
-                      <span className="bg-palacio-gold text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
-                        BESTSELLER
-                      </span>
-                    )}
-                    {item.is_featured && (
-                      <span className="bg-white/90 text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
-                        SUMMER SPECIAL
-                      </span>
-                    )}
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => (
+                <GlassCard key={item.id} className="overflow-hidden group hover:border-palacio-gold/50 transition-all duration-500">
+                  <div className="relative h-56 overflow-hidden">
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute top-3 right-3 flex flex-col gap-2">
+                      {item.is_bestseller && (
+                        <span className="bg-palacio-gold text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
+                          BESTSELLER
+                        </span>
+                      )}
+                      {item.is_featured && (
+                        <span className="bg-white/90 text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
+                          SUMMER SPECIAL
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="p-5">
-                  <h3 className="font-playfair text-xl text-palacio-gold mb-2 group-hover:text-white transition-colors">
-                    {item.name}
-                  </h3>
-                  <p className="text-gray-400 text-xs mb-6 line-clamp-2 italic">
-                    {item.description}
-                  </p>
-                  <div className="flex justify-between items-center border-t border-white/5 pt-4">
-                    <span className="font-cinzel font-bold text-palacio-gold text-xl tracking-tighter">
-                      ${item.price.toFixed(2)}
-                    </span>
-                    <button
-                      onClick={() => addToCart(item)}
-                      className="flex items-center gap-2 px-4 py-2 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-[10px] font-bold hover:bg-white hover:scale-105 smooth-transition shadow-lg shadow-palacio-gold/10"
-                    >
-                      <Plus size={14} /> ADD TO CART
-                    </button>
+                  <div className="p-5">
+                    <h3 className="font-playfair text-xl text-palacio-gold mb-2 group-hover:text-white transition-colors">
+                      {item.name}
+                    </h3>
+                    <p className="text-gray-400 text-xs mb-6 line-clamp-2 italic">
+                      {item.description}
+                    </p>
+                    <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                      <span className="font-cinzel font-bold text-palacio-gold text-xl tracking-tighter">
+                        ${item.price.toFixed(2)}
+                      </span>
+                      <button
+                        onClick={() => addToCart(item)}
+                        className="flex items-center gap-2 px-4 py-2 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-[10px] font-bold hover:bg-white hover:scale-105 smooth-transition shadow-lg shadow-palacio-gold/10"
+                      >
+                        <Plus size={14} /> ADD TO CART
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </GlassCard>
-            ))}
+                </GlassCard>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-gray-400 font-cinzel text-sm">
+                {searchQuery ? `No results for "${searchQuery}"` : 'No items in this category.'}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -283,7 +324,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
           </div>
         }
       >
-        {/* Same modal content logic with updated Tailwind classes */}
         {orderSuccess ? (
           <div className="text-center py-12">
             <div className="text-5xl mb-6 animate-bounce">🌊</div>
