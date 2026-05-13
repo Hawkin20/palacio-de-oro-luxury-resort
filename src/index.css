@@ -47,7 +47,7 @@
 }
 
 /* ============================================
-   ANIMATIONS - All items visible by default!
+   GLOBAL ANIMATIONS
    ============================================ */
 
 @keyframes float {
@@ -198,4 +198,182 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 175, 55, 0.5);
+}
+
+/* ============================================
+   AUTH-SPECIFIC ANIMATIONS
+   ============================================ */
+
+@keyframes ocean-sway {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+@keyframes float-auth {
+  0%, 100% { 
+    transform: translateY(0) translateX(0); 
+    opacity: 0; 
+  }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  50% { 
+    transform: translateY(-80px) translateX(15px); 
+    opacity: 0.4; 
+  }
+}
+
+@keyframes fade-in-up {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+@keyframes scale-in {
+  from { 
+    opacity: 0; 
+    transform: scale(0.8); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes confetti {
+  0% { 
+    transform: translateY(0) rotate(0deg); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(100vh) rotate(720deg); 
+    opacity: 0; 
+  }
+}
+
+.animate-ocean-sway {
+  animation: ocean-sway 20s ease-in-out infinite;
+}
+
+.animate-float-auth {
+  animation: float-auth 5s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s ease-out forwards;
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.animate-confetti {
+  animation: confetti 3s ease-in forwards;
+}
+
+/* ============================================
+   SEARCH BAR STYLES (Rooms & Menu)
+   ============================================ */
+
+.search-glow:focus {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  border-color: rgba(212, 175, 55, 0.6);
+}
+
+/* ============================================
+   CARD 3D TILT EFFECT
+   ============================================ */
+
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.tilt-card:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(2deg) scale(1.02);
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+.loading-dots::after {
+  content: '...';
+  animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+
+/* ============================================
+   HOVER GLOW EFFECTS
+   ============================================ */
+
+.hover-glow-gold:hover {
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+}
+
+.hover-glow-white:hover {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================
+   TEXT GRADIENT
+   ============================================ */
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #D4AF37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   BORDER GRADIENT
+   ============================================ */
+
+.border-gradient-gold {
+  border-image: linear-gradient(135deg, rgba(212, 175, 55, 0.5), rgba(255, 215, 0, 0.8), rgba(212, 175, 55, 0.5)) 1;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+@media (max-width: 768px) {
+  .animate-float,
+  .animate-float-auth {
+    display: none;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION (Accessibility)
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
