@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, LogOut, LogIn } from 'lucide-react';
-import Auth from './Auth';
+import Auth from '../pages/Auth'; // ✅ FIXED: Auth is in pages folder
 
 interface NavbarProps {
   currentPage: string;
