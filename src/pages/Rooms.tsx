@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Users, X, Info } from 'lucide-react';
+import { Calendar, Users, X, Info, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, Booking } from '../lib/types';
 import GlassCard from '../components/GlassCard';
@@ -18,6 +18,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
   const [cottages, setCottages] = useState<Cottage[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedRoom, setSelectedRoom] = useState<Room | Cottage | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingData, setBookingData] = useState({
@@ -124,7 +125,6 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       case 'all':
         return allItems;
       case 'rooms':
-        // Rooms = STANDARD ROOM, DELUXE ROOM, SUITE (NOT luxury)
         return rooms
           .filter(r => {
             const rt = r.room_type?.toLowerCase() || '';
@@ -132,12 +132,10 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
           })
           .map(r => ({ ...r, type: 'room' as const, category: r.room_type?.toLowerCase() || '' }));
       case 'luxury':
-        // Luxury = LUXURY VILLA only
         return rooms
           .filter(r => (r.room_type?.toLowerCase() || '').includes('luxury'))
           .map(r => ({ ...r, type: 'room' as const, category: r.room_type?.toLowerCase() || '' }));
       case 'cottages':
-        // Cottages = all cottages (family, small, barkada)
         return cottages
           .map(c => ({ ...c, type: 'cottage' as const, category: c.cottage_type?.toLowerCase() || '' }));
       default:
@@ -147,8 +145,21 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
 
   const filtered = getFilteredItems();
 
+  // SEARCH: Filter by name, description, or amenities
+  const searchFiltered = searchQuery.trim() === ''
+    ? filtered
+    : filtered.filter(item => {
+        const query = searchQuery.toLowerCase();
+        return (
+          item.name?.toLowerCase().includes(query) ||
+          item.description?.toLowerCase().includes(query) ||
+          item.amenities?.some((a: string) => a.toLowerCase().includes(query)) ||
+          item.category?.toLowerCase().includes(query)
+        );
+      });
+
   // Remove any empty/invalid items
-  const validItems = filtered.filter(item => item.name && item.image_url && item.price_per_night);
+  const validItems = searchFiltered.filter(item => item.name && item.image_url && item.price_per_night);
 
   return (
     <div className="relative min-h-screen pt-24 pb-20 overflow-hidden">
@@ -162,7 +173,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
           <div className="max-w-xl">
             <h1 className="section-title text-left mb-4 text-palacio-gold">Accommodations</h1>
             <p className="text-gray-300 font-poppins text-sm leading-relaxed italic">
@@ -189,6 +200,28 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                 {btn.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* SEARCH BAR */}
+        <div className="mb-8">
+          <div className="relative max-w-md">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search accommodations..."
+              className="w-full pl-12 pr-4 py-3 bg-white/5 border border-palacio-gold/20 rounded-full text-sm text-white placeholder-gray-500 focus:border-palacio-gold focus:outline-none focus:bg-white/10 smooth-transition"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-palacio-gold"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -262,7 +295,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
               ))
             ) : (
               <div className="col-span-full text-center py-12 text-gray-400 font-cinzel text-sm">
-                No accommodations available for this category.
+                {searchQuery ? `No results for "${searchQuery}"` : 'No accommodations available for this category.'}
               </div>
             )}
           </div>
@@ -296,7 +329,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       >
         {bookingSuccess ? (
           <div className="text-center py-12">
-            <div className="text-5xl mb-6">馃尀</div>
+            <div className="text-5xl mb-6">🌞</div>
             <h3 className="font-playfair text-2xl text-palacio-gold mb-3">Reservation Placed!</h3>
             <p className="text-gray-400 text-sm italic">Get your beach gear ready, we'll see you soon at Palacio de Oro.</p>
           </div>
@@ -381,4 +414,4 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       </Modal>
     </div>
   );
-          }
+}
