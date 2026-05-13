@@ -5,13 +5,11 @@ import {
   CreditCard as Edit2, 
   Bell, 
   Calendar, 
-  Clock, 
   User, 
   DollarSign, 
   Home, 
   UtensilsCrossed,
   Search,
-  Filter,
   ChevronRight,
   X,
   AlertTriangle,
@@ -53,18 +51,15 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
 
-  // Search states
   const [searchQuery, setSearchQuery] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
   const [bookingSearch, setBookingSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
 
-  // Filter states
   const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled'>('all');
   const [menuCategoryFilter, setMenuCategoryFilter] = useState<'all' | string>('all');
 
-  // Delete confirmation modal
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     itemId: string;
@@ -72,10 +67,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     type: 'room' | 'menu';
   }>({ isOpen: false, itemId: '', itemName: '', type: 'room' });
 
-  // Toast notifications
   const [toasts, setToasts] = useState<Toast[]>([]);
-
-  // Mobile tab scroll indicator
   const [showTabScroll, setShowTabScroll] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -131,7 +123,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     fetchAllData();
   }, [isAdmin]);
 
-  // Check if tabs need scroll indicator on mobile
   useEffect(() => {
     const checkScroll = () => {
       const tabContainer = document.getElementById('admin-tabs');
@@ -248,7 +239,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       if (error) {
         console.error('Order update error:', error);
         setUpdateError(`Order update failed: ${error.message}`);
-        showToast(`Failed to update order: ${error.message}`, 'error');
+        showToast(`Failed to update order order: ${error.message}`, 'error');
         return;
       }
 
@@ -269,7 +260,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     return orders.filter(o => o.user_email === userEmail);
   };
 
-  // Filter functions
   const filteredRooms = [...rooms, ...cottages].filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.price_per_night.toString().includes(searchQuery)
@@ -298,14 +288,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     return matchesSearch && matchesFilter;
   });
 
-  // Get unique menu categories
   const menuCategories = ['all', ...new Set(menu.map(item => item.category))];
 
-  // Get recent activity for dashboard
   const recentBookings = bookings.slice(0, 5);
   const recentOrders = orders.slice(0, 5);
 
-  // Calculate revenue stats
   const totalRevenue = bookings
     .filter(b => b.status === 'completed')
     .reduce((sum, b) => sum + (b.total_price || 0), 0);
@@ -366,7 +353,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           </div>
         )}
 
-        {/* Tab Navigation with Scroll Indicator */}
+        {/* Tab Navigation */}
         <div className="relative mb-8">
           <div 
             id="admin-tabs"
@@ -509,12 +496,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                                   {booking.cottage_name || booking.room_name || 'N/A'}
                                 </p>
                                 <p className="text-gray-600 text-xs">
-                                  {booking.check_in_date} → {booking.check_out_date}
+                                  {booking.check_in_date} to {booking.check_out_date}
                                 </p>
                               </div>
                               <div className="text-right">
                                 <StatusBadge status={booking.status} size="sm" />
-                                 size="sm" />
                                 <p className="font-cinzel text-palacio-gold text-sm mt-1">
                                   ${booking.total_price}
                                 </p>
@@ -557,7 +543,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                                   {order.username || 'Unknown'}
                                 </p>
                                 <p className="text-gray-600 text-xs">
-                                  ×{order.quantity} • ${order.total_amount}
+                                  x{order.quantity} - ${order.total_amount}
                                 </p>
                               </div>
                               <StatusBadge status={order.status} size="sm" />
@@ -578,7 +564,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   <button
                     onClick={() => {
                       setEditingItem(null);
-                      setFormData({});
+                      setForm setFormData({});
                       setShowModal(true);
                     }}
                     className="gold-glow-btn"
@@ -587,7 +573,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     Add Room
                   </button>
                   
-                  {/* Search Bar */}
                   <div className="relative w-full sm:w-64">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
@@ -626,7 +611,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                               {item.name}
                             </h3>
                             <p className="text-gray-400 text-sm">
-                              ${item.price_per_night}/night • {item.capacity} guests
+                              ${item.price_per_night}/night - {item.capacity} guests
                             </p>
                             <div className="mt-2">
                               <StatusBadge status={item.status} size="sm" />
@@ -677,7 +662,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   </button>
 
                   <div className="flex gap-3 w-full sm:w-auto">
-                    {/* Category Filter */}
                     <select
                       value={menuCategoryFilter}
                       onChange={(e) => setMenuCategoryFilter(e.target.value)}
@@ -690,7 +674,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       ))}
                     </select>
 
-                    {/* Search Bar */}
                     <div className="relative flex-1 sm:w-48">
                       <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                       <input
@@ -775,7 +758,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="flex gap-3">
-                    {/* Status Filter */}
                     <select
                       value={bookingFilter}
                       onChange={(e) => setBookingFilter(e.target.value as any)}
@@ -789,7 +771,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </select>
                   </div>
 
-                  {/* Search Bar */}
                   <div className="relative w-full sm:w-64">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
@@ -827,7 +808,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
                       return (
                         <GlassCard key={booking.reference_number} className="p-5">
-                          {/* Header */}
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-palacio-gold/20 flex items-center justify-center">
@@ -844,7 +824,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             </div>
                           </div>
 
-                          {/* Booking Details */}
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/20 rounded-lg p-3">
                             <div className="flex items-center gap-2">
                               <User size={14} className="text-gray-500" />
@@ -860,7 +839,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                               <div>
                                 <p className="text-gray-500 text-xs">Dates</p>
                                 <p className="font-cinzel text-palacio-gold text-sm">
-                                  {booking.check_in_date} → {booking.check_out_date}
+                                  {booking.check_in_date} to {booking.check_out_date}
                                 </p>
                               </div>
                             </div>
@@ -884,7 +863,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             </div>
                           </div>
 
-                          {/* Orders Section */}
                           {hasOrders && (
                             <div className="mb-4">
                               <div className="flex items-center gap-2 mb-2">
@@ -906,7 +884,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                                   >
                                     <div className="flex items-center gap-2">
                                       <span className="text-gray-400">{order.product_name}</span>
-                                      <span className="text-gray-600">×{order.quantity}</span>
+                                      <span className="text-gray-600">x{order.quantity}</span>
                                       <span className="text-palacio-gold/60">${order.total_amount}</span>
                                     </div>
                                     <select
@@ -926,7 +904,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             </div>
                           )}
 
-                          {/* Action Footer */}
                           <div className="flex items-center justify-between pt-3 border-t border-white/5">
                             <p className="text-gray-500 text-xs font-mono">
                               Ref: {booking.reference_number}
@@ -955,7 +932,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="flex gap-3">
-                    {/* Status Filter */}
                     <select
                       value={orderFilter}
                       onChange={(e) => setOrderFilter(e.target.value as any)}
@@ -970,7 +946,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </select>
                   </div>
 
-                  {/* Search Bar */}
                   <div className="relative w-full sm:w-64">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
@@ -1043,7 +1018,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           </div>
                         </div>
                         
-                        {/* Status Update - Only dropdown, no duplicate badge */}
                         <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/5">
                           <select
                             value={order.status}
@@ -1090,7 +1064,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             </button>
             <button 
               onClick={() => {
-                // TODO: Implement actual save logic
                 showToast(editingItem ? 'Item updated (demo)' : 'Item added (demo)');
                 setShowModal(false);
               }}
@@ -1107,7 +1080,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           </p>
           <div className="p-4 bg-white/5 rounded-lg border border-white/10">
             <p className="text-gray-500 text-sm text-center">
-              🚧 Form fields coming soon — connect to your Supabase schema
+              Form fields coming soon - connect to your Supabase schema
             </p>
           </div>
         </div>
