@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, MenuItem } from '../lib/types';
@@ -10,12 +10,35 @@ interface HomeProps {
   onNavigate: (page: string) => void;
 }
 
+// Scroll Reveal Hook
+const useScrollReveal = () => {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '-50px' }
+    );
+
+    const elements = document.querySelectorAll('.reveal-on-scroll, .stagger-children');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+};
+
 export default function Home({ onNavigate }: HomeProps) {
   const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([]);
   const [bestsellers, setBestsellers] = useState<MenuItem[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  useScrollReveal();
 
   useEffect(() => {
     fetchData();
@@ -61,9 +84,9 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* LUXURY SUNSET BEACH HERO */}
+      {/* HERO SECTION */}
       <div
-        className="relative w-full min-h-[100vh] bg-cover bg-center flex items-center justify-center overflow-hidden animate-fade-in"
+        className="relative w-full min-h-[100vh] bg-cover bg-center flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: 'url("https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80")',
           backgroundAttachment: 'fixed',
@@ -72,17 +95,17 @@ export default function Home({ onNavigate }: HomeProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-orange-900/60 via-purple-900/40 to-black/80 animate-pulse-slow" />
         <div className="absolute inset-0 bg-black/30" />
 
-        {/* Floating particles - pure CSS */}
+        {/* Floating Gold Particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(10)].map((_, i) => (
+          {[...Array(12)].map((_, i) => (
             <div
               key={i}
-              className="absolute w-1 h-1 bg-palacio-gold/40 rounded-full animate-float"
+              className="absolute w-1.5 h-1.5 bg-palacio-gold/50 rounded-full animate-float"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${4 + Math.random() * 4}s`,
+                left: `${10 + Math.random() * 80}%`,
+                top: `${10 + Math.random() * 80}%`,
+                animationDelay: `${Math.random() * 6}s`,
+                animationDuration: `${5 + Math.random() * 4}s`,
               }}
             />
           ))}
@@ -100,24 +123,23 @@ export default function Home({ onNavigate }: HomeProps) {
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-slide-up-delay-2">
             <button
               onClick={() => onNavigate('rooms')}
-              className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-lg shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:scale-105 hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[300px] border-2 border-palacio-gold/50 relative overflow-hidden group"
+              className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-lg shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:scale-105 hover:shadow-[0_0_50px_rgba(212,175,55,0.6)] active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[300px] border-2 border-palacio-gold/50 shine-sweep"
             >
-              <span className="relative z-10">Book Your Summer Stay</span>
-              <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+              Book Your Summer Stay
             </button>
 
             <button
               onClick={() => onNavigate('menu')}
               className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-md border-2 border-white/80 text-white font-cinzel font-bold text-lg md:text-xl rounded-lg hover:bg-white/20 hover:border-white hover:scale-105 active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[300px] shadow-xl group"
             >
-              <span className="relative z-10 flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2">
                 Summer Menu <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
               </span>
             </button>
           </div>
         </div>
 
-        {/* Scroll indicator */}
+        {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce-slow">
           <div className="w-6 h-10 border-2 border-palacio-gold/50 rounded-full flex justify-center pt-2">
             <div className="w-1 h-2 bg-palacio-gold rounded-full animate-scroll-down" />
@@ -125,23 +147,23 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Highlights Section */}
+      {/* HIGHLIGHTS SECTION */}
       <div className="py-20 bg-gradient-to-b from-palacio-black/90 to-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-title text-palacio-gold mb-12 animate-on-scroll opacity-0 translate-y-8 transition-all duration-1000 data-[visible=true]:opacity-100 data-[visible=true]:translate-y-0">
+          <h2 className="section-title text-palacio-gold mb-12 reveal-on-scroll">
             Summer Highlights
           </h2>
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-4 animate-pulse">
-                  <div className="h-48 bg-white/10 rounded-lg mb-4" />
-                  <div className="h-6 bg-white/10 rounded mb-2 w-3/4" />
-                  <div className="h-4 bg-white/10 rounded mb-4 w-full" />
+                <div key={i} className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-4 animate-shimmer">
+                  <div className="h-48 bg-white/5 rounded-lg mb-4" />
+                  <div className="h-6 bg-white/5 rounded mb-2 w-3/4" />
+                  <div className="h-4 bg-white/5 rounded mb-4 w-full" />
                   <div className="flex justify-between">
-                    <div className="h-6 bg-white/10 rounded w-1/3" />
-                    <div className="h-8 bg-white/10 rounded w-1/4" />
+                    <div className="h-6 bg-white/5 rounded w-1/3" />
+                    <div className="h-8 bg-white/5 rounded w-1/4" />
                   </div>
                 </div>
               ))}
@@ -153,13 +175,11 @@ export default function Home({ onNavigate }: HomeProps) {
                   <h3 className="text-2xl font-playfair text-palacio-gold mb-6 border-b border-palacio-gold/30 pb-2 inline-block">
                     {slides[currentSlide]?.title}
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {slides[currentSlide]?.items?.map((item, index) => (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-children">
+                    {slides[currentSlide]?.items?.map((item) => (
                       <div
                         key={item.id}
-                        className="group cursor-pointer animate-on-scroll opacity-0 translate-y-8 transition-all duration-700 hover:-translate-y-2"
-                        style={{ transitionDelay: `${index * 150}ms` }}
-                        data-visible="true"
+                        className="group cursor-pointer card-hover"
                       >
                         <div className="relative overflow-hidden rounded-lg shadow-xl group-hover:shadow-palacio-gold/20 transition-shadow duration-500">
                           <img
@@ -197,6 +217,7 @@ export default function Home({ onNavigate }: HomeProps) {
                 </div>
               </div>
 
+              {/* Navigation */}
               <button
                 onClick={prevSlide}
                 className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 p-4 bg-black/60 hover:bg-palacio-gold/50 rounded-full transition-all duration-300 border border-palacio-gold/50 shadow-lg hover:scale-110 active:scale-95 z-10"
@@ -215,8 +236,8 @@ export default function Home({ onNavigate }: HomeProps) {
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 hover:scale-125 ${
-                      currentSlide === index ? 'bg-palacio-gold w-6' : 'bg-white/30'
+                    className={`h-2 rounded-full transition-all duration-300 hover:scale-125 ${
+                      currentSlide === index ? 'bg-palacio-gold w-6' : 'bg-white/30 w-2'
                     }`}
                   />
                 ))}
@@ -226,35 +247,33 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Featured Rooms Section */}
+      {/* FEATURED ROOMS */}
       <div className="py-20 bg-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="section-title mb-12 animate-on-scroll opacity-0 translate-y-8 transition-all duration-1000 data-[visible=true]:opacity-100 data-[visible=true]:translate-y-0">
+          <h2 className="section-title mb-12 reveal-on-scroll">
             Luxury Accommodations
           </h2>
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-4 animate-pulse">
-                  <div className="h-48 bg-white/10 rounded-lg mb-4" />
-                  <div className="h-6 bg-white/10 rounded mb-2 w-3/4" />
-                  <div className="h-4 bg-white/10 rounded mb-4 w-full" />
+                <div key={i} className="relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 p-4 animate-shimmer">
+                  <div className="h-48 bg-white/5 rounded-lg mb-4" />
+                  <div className="h-6 bg-white/5 rounded mb-2 w-3/4" />
+                  <div className="h-4 bg-white/5 rounded mb-4 w-full" />
                   <div className="flex justify-between">
-                    <div className="h-6 bg-white/10 rounded w-1/3" />
-                    <div className="h-8 bg-white/10 rounded w-1/4" />
+                    <div className="h-6 bg-white/5 rounded w-1/3" />
+                    <div className="h-8 bg-white/5 rounded w-1/4" />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {rooms.map((room, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-children">
+              {rooms.map((room) => (
                 <div
                   key={room.id}
-                  className="group cursor-pointer animate-on-scroll opacity-0 translate-y-8 transition-all duration-700 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(212,175,55,0.15)]"
-                  style={{ transitionDelay: `${index * 100}ms` }}
-                  data-visible="true"
+                  className="group cursor-pointer tilt-card"
                   onClick={() => onNavigate('rooms')}
                 >
                   <div className="relative overflow-hidden rounded-t-2xl">
@@ -285,7 +304,7 @@ export default function Home({ onNavigate }: HomeProps) {
                         ${room.price_per_night}
                         <span className="text-gray-500 text-[10px] ml-1">/ NIGHT</span>
                       </div>
-                      <span className="text-xs font-cinzel text-palacio-gold border-b border-palacio-gold hover:text-white transition-colors pb-1 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      <span className="text-xs font-cinzel text-palacio-gold border-b border-palacio-gold hover:text-white transition-colors pb-1 flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300">
                         VIEW DETAILS <ArrowRight size={12} />
                       </span>
                     </div>
@@ -295,10 +314,10 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
           )}
 
-          <div className="text-center mt-12 animate-on-scroll opacity-0 translate-y-8 transition-all duration-1000 data-[visible=true]:opacity-100 data-[visible=true]:translate-y-0">
+          <div className="text-center mt-12 reveal-on-scroll">
             <button
               onClick={() => onNavigate('rooms')}
-              className="px-8 py-4 bg-transparent border-2 border-palacio-gold text-palacio-gold font-cinzel font-bold rounded-full hover:bg-palacio-gold hover:text-palacio-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] active:scale-95"
+              className="px-8 py-4 bg-transparent border-2 border-palacio-gold text-palacio-gold font-cinzel font-bold rounded-full hover:bg-palacio-gold hover:text-palacio-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.3)] active:scale-95 shine-sweep"
             >
               View All Accommodations
             </button>
@@ -306,20 +325,18 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Services Footer Section */}
+      {/* SERVICES FOOTER */}
       <div className="py-20 bg-gradient-to-t from-orange-900/20 to-palacio-black border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger-children">
             {[
               { icon: '🏖️', title: 'Summer Paradise', desc: 'Experience the ultimate beach getaway with our seasonal packages.' },
               { icon: '🍸', title: 'Sky Lounge', desc: 'Cool off with our signature summer cocktails and gourmet appetizers.' },
               { icon: '✨', title: 'Gold Standard', desc: 'Uncompromising luxury and personalized service for every guest.' },
-            ].map((service, index) => (
+            ].map((service) => (
               <div
                 key={service.title}
-                className="text-center p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-palacio-gold/30 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(212,175,55,0.1)] animate-on-scroll opacity-0 translate-y-8 data-[visible=true]:opacity-100 data-[visible=true]:translate-y-0"
-                style={{ transitionDelay: `${index * 200}ms` }}
-                data-visible="true"
+                className="text-center p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-palacio-gold/30 transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(212,175,55,0.1)] card-hover"
               >
                 <div className="text-4xl mb-4 inline-block p-4 rounded-full bg-gradient-to-br from-palacio-gold/20 to-orange-400/20 group-hover:rotate-12 transition-transform duration-500">
                   {service.icon}
