@@ -473,10 +473,8 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                     {item.dietary_tags && item.dietary_tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
                         {item.dietary_tags.map((tag) => {
-  const config = DIETARY_ICONS[tag];
-  if (!config) return null;
-  const TagIcon = config.icon;
-
+                          const config = DIETARY_ICONS[tag];
+                          if (!config) return null;
                           const TagIcon = config.icon;
                           return (
                             <span 
