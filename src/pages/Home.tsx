@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  ChevronLeft, ChevronRight, ArrowRight, Star, MapPin, 
+  ArrowRight, Star, MapPin, 
   Calendar, Users, Clock, Award, Sparkles, Heart, Eye, 
   Instagram, Mail, Phone 
 } from 'lucide-react';
@@ -65,7 +65,7 @@ const amenitiesList = [
 ];
 
 export default function Home({ onNavigate }: HomeProps) {
-  const [rooms, setRooms] = useState<<Room[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [scrollY, setScrollY] = useState(0);
   const [hoveredRoom, setHoveredRoom] = useState<number | null>(null);
@@ -470,7 +470,7 @@ export default function Home({ onNavigate }: HomeProps) {
               <ul className="space-y-2">
                 <li><button onClick={() => onNavigate('about')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">About Us</button></li>
                 <li><button onClick={() => onNavigate('privacy')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Privacy Policy</button></li>
-                <li><button onClick={() => onNavigate('terms')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Terms & Conditions</button></li>
+                <li><button onClick={() => onNavigate('terms')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Terms transition-colors">Terms & Conditions</button></li>
               </ul>
             </div>
             <div>
