@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { 
   ChevronLeft, ChevronRight, ArrowRight, Star, MapPin, 
   Calendar, Users, Clock, Award, Sparkles, Heart, Eye, 
-  Instagram, Mail 
+  Instagram, Mail, Phone 
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Room, MenuItem } from '../lib/types';
+import { Room } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
 
 interface HomeProps {
@@ -245,7 +245,7 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {rooms.map((room, index) => {
+              {rooms.map((room) => {
                 const isHovered = hoveredRoom === room.id;
                 return (
                   <div
