@@ -24,6 +24,19 @@ const CATEGORIES = [
   { value: 'non_alcoholic', label: 'Refreshments', icon: Coffee },
 ];
 
+const FALLBACK_IMAGES: Record<string, string> = {
+  appetizers: 'https://images.unsplash.com/photo-1541014741259-de529411b96a?auto=format&fit=crop&w=600&q=80',
+  main_course: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
+  seafood: 'https://images.unsplash.com/photo-1534604973900-c43ab4c2e0ab?auto=format&fit=crop&w=600&q=80',
+  grilled: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
+  desserts: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=600&q=80',
+  cocktails: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=600&q=80',
+  wine: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?auto=format&fit=crop&w=600&q=80',
+  non_alcoholic: 'https://images.unsplash.com/photo-1625772299848-391b6a87d7b3?auto=format&fit=crop&w=600&q=80',
+};
+
+const DEFAULT_FALLBACK = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&q=80';
+
 const DIETARY_ICONS: Record<string, { icon: typeof Leaf; color: string; label: string }> = {
   spicy: { icon: Flame, color: 'text-red-400', label: 'Spicy' },
   vegan: { icon: Leaf, color: 'text-green-400', label: 'Vegan' },
@@ -31,13 +44,17 @@ const DIETARY_ICONS: Record<string, { icon: typeof Leaf; color: string; label: s
   gluten_free: { icon: ChefHat, color: 'text-amber-400', label: 'Gluten-Free' },
 };
 
+const getImageUrl = (item: MenuItem) => {
+  return item.image_url || FALLBACK_IMAGES[item.category] || DEFAULT_FALLBACK;
+};
+
 export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [menuItems, setMenuItems] = useState([] as MenuItem[]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('appetizers');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCart, setShowCart] = useState(false);
-  const [addedItemId, setAddedItemId] = useState<string | null>(null);
+  const [addedItemId, setAddedItemId] = useState(null as string | null);
   const [orderData, setOrderData] = useState({
     orderType: 'dine_in' as 'dine_in' | 'room_delivery',
     paymentMethod: 'card' as 'cash' | 'gcash' | 'card',
@@ -84,7 +101,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
       ]);
     }
     
-    // Animation trigger
     setAddedItemId(item.id);
     setTimeout(() => setAddedItemId(null), 800);
   };
@@ -172,7 +188,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
     }
   };
 
-  // Filter logic
   let filteredItems = menuItems;
   
   if (searchQuery.trim() !== '') {
@@ -186,7 +201,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
     filteredItems = menuItems.filter((item) => item.category === selectedCategory);
   }
 
-  // Featured items for hero carousel (top 4 featured/bestseller)
   const featuredItems = menuItems.filter(item => item.is_featured || item.is_bestseller).slice(0, 4);
 
   const scrollToCategory = (value: string) => {
@@ -195,9 +209,12 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
     categoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>, category: string) => {
+    e.currentTarget.src = FALLBACK_IMAGES[category] || DEFAULT_FALLBACK;
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a]">
-      {/* Hero Section */}
       <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -238,11 +255,9 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
         </div>
       </div>
 
-      {/* Sticky Header Bar */}
       <div className="sticky top-20 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            {/* Search Bar */}
             <div className="relative w-full md:max-w-md">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
               <input
@@ -262,7 +277,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
               )}
             </div>
 
-            {/* Cart Button */}
             <button
               onClick={() => setShowCart(true)}
               className="relative flex items-center gap-3 px-6 py-3 bg-palacio-gold/10 border border-palacio-gold/30 rounded-full hover:bg-palacio-gold/20 hover:scale-105 smooth-transition group"
@@ -280,7 +294,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Chef's Recommendations - Only show when not searching */}
         {!searchQuery && featuredItems.length > 0 && (
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-8">
@@ -301,9 +314,10 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={item.image_url}
+                      src={getImageUrl(item)}
                       alt={item.name}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                      onError={(e) => handleImageError(e, item.category)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
@@ -334,7 +348,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
           </div>
         )}
 
-        {/* Category Navigation */}
         <div ref={categoryRef} className="mb-12">
           <div className="flex flex-wrap justify-center gap-3 pb-4">
             {CATEGORIES.map((cat) => {
@@ -357,7 +370,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
             })}
           </div>
           
-          {/* Active Category Title */}
           {!searchQuery && (
             <div className="text-center mt-6 mb-2">
               <h2 className="font-playfair text-3xl text-white mb-2">
@@ -395,13 +407,13 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                 >
                   <div className="relative h-64 overflow-hidden">
                     <img
-                      src={item.image_url}
+                      src={getImageUrl(item)}
                       alt={item.name}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                      onError={(e) => handleImageError(e, item.category)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                     
-                    {/* Badges */}
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                       {item.is_bestseller && (
                         <span className="bg-palacio-gold text-palacio-black px-3 py-1.5 rounded-full text-[10px] font-cinzel font-bold shadow-xl flex items-center gap-1 animate-pulse">
@@ -420,7 +432,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                       )}
                     </div>
 
-                    {/* Quick Add Overlay */}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <button
                         onClick={() => addToCart(item)}
@@ -438,7 +449,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                   </div>
 
                   <div className="p-6">
-                    {/* Rating */}
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
@@ -460,12 +470,11 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                       {item.description}
                     </p>
 
-                    {/* Dietary Tags */}
                     {item.dietary_tags && item.dietary_tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
                         {item.dietary_tags.map((tag) => {
                           const config = DIETARY_ICONS[tag];
-                          if (!config) return null;
+                          if (!config) return null null;
                           const TagIcon = config.icon;
                           return (
                             <span 
@@ -527,7 +536,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
         )}
       </div>
 
-      {/* Cart Slide-in Drawer */}
       <div 
         className={`fixed inset-0 z-50 transition-opacity duration-300 ${
           showCart ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -547,7 +555,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
             showCart ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          {/* Cart Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/10 bg-[#0f0f0f]">
             <div>
               <h2 className="font-playfair text-2xl text-palacio-gold">Your Selection</h2>
@@ -565,7 +572,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
             </button>
           </div>
 
-          {/* Cart Content */}
           <div className="flex flex-col h-[calc(100%-180px)] overflow-hidden">
             {orderSuccess ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
@@ -603,9 +609,10 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                     >
                       <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                         <img
-                          src={item.menuItem.image_url}
+                          src={getImageUrl(item.menuItem)}
                           alt={item.menuItem.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => handleImageError(e, item.menuItem.category)}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -641,7 +648,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                   ))}
                 </div>
 
-                {/* Order Details */}
                 <div className="p-6 border-t border-white/10 bg-[#0a0a0a] space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -682,7 +688,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                     </div>
                   )}
 
-                  {/* Total */}
                   <div className="flex justify-between items-center pt-4 border-t border-white/10">
                     <span className="text-gray-400 font-cinzel text-sm">Total</span>
                     <span className="font-cinzel font-bold text-palacio-gold text-2xl">${cartTotal.toFixed(2)}</span>
@@ -692,7 +697,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
             )}
           </div>
 
-          {/* Cart Footer */}
           {!orderSuccess && cart.length > 0 && (
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-[#0f0f0f] border-t border-white/10">
               <button
@@ -708,7 +712,6 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
         </div>
       </div>
 
-      {/* Toast Notification */}
       {addedItemId && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
           <div className="px-6 py-3 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-xs font-bold shadow-2xl shadow-palacio-gold/30 flex items-center gap-2">
@@ -719,4 +722,4 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
       )}
     </div>
   );
-        }
+}
