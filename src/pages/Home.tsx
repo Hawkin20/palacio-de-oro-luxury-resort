@@ -65,7 +65,7 @@ const amenitiesList = [
 ];
 
 export default function Home({ onNavigate }: HomeProps) {
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [scrollY, setScrollY] = useState(0);
   const [hoveredRoom, setHoveredRoom] = useState<number | null>(null);
