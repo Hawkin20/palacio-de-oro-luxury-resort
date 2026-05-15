@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -17,7 +17,11 @@ import {
   TrendingUp,
   BedDouble,
   ShoppingBag,
-  Clock3
+  Clock3,
+  BarChart3,
+  ArrowUpRight,
+  ArrowDownRight,
+  Trash
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem, Booking, Order } from '../lib/types';
@@ -34,8 +38,10 @@ interface AdminProps {
 interface Toast {
   id: string;
   message: string;
-  type: 'success' | 'error';
+  type: 'success' | 'error' | 'info';
 }
+
+type TimeRange = 'today' | 'week' | 'month' | 'year';
 
 export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'rooms' | 'menu' | 'bookings' | 'orders'>('dashboard');
@@ -59,23 +65,25 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled'>('all');
   const [menuCategoryFilter, setMenuCategoryFilter] = useState<'all' | string>('all');
+  const [analyticsRange, setAnalyticsRange] = useState<TimeRange>('month');
 
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     itemId: string;
     itemName: string;
-    type: 'room' | 'menu';
+    type: 'room' | 'menu' | 'booking' | 'order';
   }>({ isOpen: false, itemId: '', itemName: '', type: 'room' });
 
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showTabScroll, setShowTabScroll] = useState(false);
+  const [previousCounts, setPreviousCounts] = useState({ bookings: 0, orders: 0 });
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now().toString();
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3000);
+    }, 4000);
   };
 
   useEffect(() => {
@@ -121,6 +129,10 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   useEffect(() => {
     if (!isAdmin) return;
     fetchAllData();
+    
+    // Auto refresh every 30 seconds
+    const interval = setInterval(fetchAllData, 30000);
+    return () => clearInterval(interval);
   }, [isAdmin]);
 
   useEffect(() => {
@@ -134,6 +146,19 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
   }, []);
+
+  // Detect new bookings/orders for toast notifications
+  useEffect(() => {
+    if (previousCounts.bookings > 0 && bookings.length > previousCounts.bookings) {
+      const newCount = bookings.length - previousCounts.bookings;
+      showToast(`${newCount} new booking${newCount > 1 ? 's' : ''} received!`, 'info');
+    }
+    if (previousCounts.orders > 0 && orders.length > previousCounts.orders) {
+      const newCount = orders.length - previousCounts.orders;
+      showToast(`${newCount} new order${newCount > 1 ? 's' : ''} received!`, 'info');
+    }
+    setPreviousCounts({ bookings: bookings.length, orders: orders.length });
+  }, [bookings.length, orders.length]);
 
   const fetchAllData = async () => {
     try {
@@ -164,7 +189,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     }
   };
 
-  const openDeleteModal = (id: string, name: string, type: 'room' | 'menu') => {
+  const openDeleteModal = (id: string, name: string, type: 'room' | 'menu' | 'booking' | 'order') => {
     setDeleteModal({ isOpen: true, itemId: id, itemName: name, type });
   };
 
@@ -175,22 +200,34 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const confirmDelete = async () => {
     const { itemId, type } = deleteModal;
     
-    if (type === 'room') {
-      const { error } = await supabase.from('rooms').delete().eq('id', itemId);
-      if (!error) {
-        setRooms(rooms.filter((r) => r.id !== itemId));
-        showToast('Room deleted successfully');
-      } else {
-        showToast('Failed to delete room', 'error');
+    try {
+      if (type === 'room') {
+        const { error } = await supabase.from('rooms').delete().eq('id', itemId);
+        if (!error) {
+          setRooms(rooms.filter((r) => r.id !== itemId));
+          showToast('Room deleted successfully');
+        } else throw error;
+      } else if (type === 'menu') {
+        const { error } = await supabase.from('menu_items').delete().eq('id', itemId);
+        if (!error) {
+          setMenu(menu.filter((m) => m.id !== itemId));
+          showToast('Menu item deleted successfully');
+        } else throw error;
+      } else if (type === 'booking') {
+        const { error } = await supabase.from('bookings').delete().eq('reference_number', itemId);
+        if (!error) {
+          setBookings(bookings.filter((b) => b.reference_number !== itemId));
+          showToast('Booking deleted successfully');
+        } else throw error;
+      } else if (type === 'order') {
+        const { error } = await supabase.from('orders').delete().eq('id', itemId);
+        if (!error) {
+          setOrders(orders.filter((o) => o.order_id !== itemId));
+          showToast('Order deleted successfully');
+        } else throw error;
       }
-    } else {
-      const { error } = await supabase.from('menu_items').delete().eq('id', itemId);
-      if (!error) {
-        setMenu(menu.filter((m) => m.id !== itemId));
-        showToast('Menu item deleted successfully');
-      } else {
-        showToast('Failed to delete menu item', 'error');
-      }
+    } catch (err: any) {
+      showToast(`Failed to delete: ${err.message}`, 'error');
     }
     
     closeDeleteModal();
@@ -198,16 +235,14 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   const handleUpdateBookingStatus = async (referenceNumber: string, newStatus: string) => {
     setUpdateError(null);
-
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('bookings')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('reference_number', referenceNumber)
         .select();
 
       if (error) {
-        console.error('Booking update error:', error);
         setUpdateError(`Booking update failed: ${error.message}`);
         showToast(`Failed to update booking: ${error.message}`, 'error');
         return;
@@ -217,10 +252,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         prev.map((b) => (b.reference_number === referenceNumber ? { ...b, status: newStatus } : b))
       );
       showToast(`Booking status updated to ${newStatus}`);
-      await fetchAllData();
-      
     } catch (err: any) {
-      console.error('Unexpected error:', err);
       setUpdateError(`Unexpected error: ${err.message}`);
       showToast(`Error: ${err.message}`, 'error');
     }
@@ -228,16 +260,14 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     setUpdateError(null);
-
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('orders')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', orderId)
         .select();
 
       if (error) {
-        console.error('Order update error:', error);
         setUpdateError(`Order update failed: ${error.message}`);
         showToast(`Failed to update order: ${error.message}`, 'error');
         return;
@@ -247,14 +277,126 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         prev.map((o) => (o.order_id === orderId ? { ...o, status: newStatus } : o))
       );
       showToast(`Order status updated to ${newStatus}`);
-      await fetchAllData();
-      
     } catch (err: any) {
-      console.error('Unexpected error:', err);
       setUpdateError(`Unexpected error: ${err.message}`);
       showToast(`Error: ${err.message}`, 'error');
     }
   };
+
+  // ===== ANALYTICS HELPERS =====
+  const getDateRange = (range: TimeRange) => {
+    const now = new Date();
+    const start = new Date(now);
+    
+    switch (range) {
+      case 'today':
+        start.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        start.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        start.setMonth(now.getMonth() - 1);
+        break;
+      case 'year':
+        start.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+    return { start, end: now };
+  };
+
+  const analytics = useMemo(() => {
+    const { start, end } = getDateRange(analyticsRange);
+    
+    const periodBookings = bookings.filter(b => {
+      const d = new Date(b.created_at || '');
+      return d >= start && d <= end;
+    });
+    
+    const periodOrders = orders.filter(o => {
+      const d = new Date(o.created_at || '');
+      return d >= start && d <= end;
+    });
+
+    const bookingRevenue = periodBookings
+      .filter(b => b.status === 'completed' || b.status === 'confirmed')
+      .reduce((sum, b) => sum + (b.total_price || 0), 0);
+    
+    const orderRevenue = periodOrders
+      .filter(o => o.status === 'completed')
+      .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+
+    const totalRevenue = bookingRevenue + orderRevenue;
+    
+    // Previous period comparison
+    const periodLength = end.getTime() - start.getTime();
+    const prevStart = new Date(start.getTime() - periodLength);
+    const prevEnd = new Date(start.getTime());
+    
+    const prevBookings = bookings.filter(b => {
+      const d = new Date(b.created_at || '');
+      return d >= prevStart && d <= prevEnd;
+    });
+    
+    const prevOrders = orders.filter(o => {
+      const d = new Date(o.created_at || '');
+      return d >= prevStart && d <= prevEnd;
+    });
+    
+    const prevRevenue = prevBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').reduce((s, b) => s + (b.total_price || 0), 0)
+      + prevOrders.filter(o => o.status === 'completed').reduce((s, o) => s + (o.total_amount || 0), 0);
+
+    const revenueChange = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
+    
+    // Daily breakdown for chart
+    const dailyData: Record<string, { bookings: number; orders: number; total: number }> = {};
+    const days = Math.ceil(periodLength / (1000 * 60 * 60 * 24));
+    
+    for (let i = 0; i < days; i++) {
+      const d = new Date(end);
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      dailyData[key] = { bookings: 0, orders: 0, total: 0 };
+    }
+
+    periodBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').forEach(b => {
+      const key = (b.created_at || '').split('T')[0];
+      if (dailyData[key]) {
+        dailyData[key].bookings += b.total_price || 0;
+        dailyData[key].total += b.total_price || 0;
+      }
+    });
+
+    periodOrders.filter(o => o.status === 'completed').forEach(o => {
+      const key = (o.created_at || '').split('T')[0];
+      if (dailyData[key]) {
+        dailyData[key].orders += o.total_amount || 0;
+        dailyData[key].total += o.total_amount || 0;
+      }
+    });
+
+    const chartData = Object.entries(dailyData)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, data]) => ({
+        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        fullDate: date,
+        bookings: data.bookings,
+        orders: data.orders,
+        total: data.total
+      }));
+
+    return {
+      totalRevenue,
+      bookingRevenue,
+      orderRevenue,
+      totalBookings: periodBookings.length,
+      totalOrders: periodOrders.length,
+      revenueChange,
+      chartData,
+      avgBookingValue: periodBookings.length > 0 ? bookingRevenue / periodBookings.length : 0,
+      avgOrderValue: periodOrders.length > 0 ? orderRevenue / periodOrders.length : 0
+    };
+  }, [bookings, orders, analyticsRange]);
 
   const getUserOrders = (userEmail: string) => {
     return orders.filter(o => o.user_email === userEmail);
@@ -293,18 +435,17 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const recentBookings = bookings.slice(0, 5);
   const recentOrders = orders.slice(0, 5);
 
-  const totalRevenue = bookings
-    .filter(b => b.status === 'completed')
-    .reduce((sum, b) => sum + (b.total_price || 0), 0);
-  
   const todayRevenue = bookings
     .filter(b => {
       const bookingDate = new Date(b.created_at || '');
       const today = new Date();
-      return b.status === 'completed' && 
+      return (b.status === 'completed' || b.status === 'confirmed') && 
         bookingDate.toDateString() === today.toDateString();
     })
     .reduce((sum, b) => sum + (b.total_price || 0), 0);
+
+  const canDeleteBooking = (status: string) => status === 'completed' || status === 'cancelled';
+  const canDeleteOrder = (status: string) => status === 'completed' || status === 'cancelled';
 
   if (!isLoggedIn || !isAdmin) {
     return (
@@ -333,10 +474,12 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 smooth-transition ${
               toast.type === 'success' 
                 ? 'bg-green-900/90 border border-green-500 text-green-100' 
+                : toast.type === 'info'
+                ? 'bg-blue-900/90 border border-blue-500 text-blue-100'
                 : 'bg-red-900/90 border border-red-500 text-red-100'
             }`}
           >
-            {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
+            {toast.type === 'success' ? <CheckCircle size={18} /> : toast.type === 'info' ? <Bell size={18} /> : <AlertTriangle size={18} />}
             <span className="text-sm font-medium">{toast.message}</span>
           </div>
         ))}
@@ -392,7 +535,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {/* DASHBOARD TAB */}
             {currentTab === 'dashboard' && (
               <div className="space-y-6">
-                {/* Stats Grid */}
+                {/* Quick Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <GlassCard className="p-4 md:p-6 text-center">
                     <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
@@ -420,7 +563,104 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   </GlassCard>
                 </div>
 
-                {/* Revenue Overview */}
+                {/* BUSINESS ANALYTICS SECTION */}
+                <GlassCard className="p-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div className="flex items-center gap-3">
+                      <BarChart3 size={22} className="text-palacio-gold" />
+                      <h3 className="font-playfair text-xl text-palacio-gold">Business Analytics</h3>
+                    </div>
+                    <div className="flex gap-2">
+                      {(['today', 'week', 'month', 'year'] as TimeRange[]).map(range => (
+                        <button
+                          key={range}
+                          onClick={() => setAnalyticsRange(range)}
+                          className={`px-3 py-1.5 rounded text-xs font-cinzel smooth-transition ${
+                            analyticsRange === range
+                              ? 'bg-palacio-gold text-palacio-black'
+                              : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                          }`}
+                        >
+                          {range === 'today' ? 'Today' : range === 'week' ? '7 Days' : range === 'month' ? '30 Days' : '1 Year'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Revenue Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                      <p className="text-gray-400 text-xs mb-1">Total Revenue</p>
+                      <div className="flex items-end justify-between">
+                        <span className="text-2xl font-playfair text-palacio-gold">
+                          ${analytics.totalRevenue.toLocaleString()}
+                        </span>
+                        <span className={`text-xs flex items-center gap-0.5 ${analytics.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {analytics.revenueChange >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                          {Math.abs(analytics.revenueChange).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                      <p className="text-gray-400 text-xs mb-1">Booking Revenue</p>
+                      <div className="flex items-end justify-between">
+                        <span className="text-2xl font-playfair text-palacio-gold">
+                          ${analytics.bookingRevenue.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-gray-500">{analytics.totalBookings} bookings</span>
+                      </div>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                      <p className="text-gray-400 text-xs mb-1">Order Revenue</p>
+                      <div className="flex items-end justify-between">
+                        <span className="text-2xl font-playfair text-palacio-gold">
+                          ${analytics.orderRevenue.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-gray-500">{analytics.totalOrders} orders</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Simple Bar Chart */}
+                  {analytics.chartData.length > 0 && (
+                    <div className="mb-6">
+                      <p className="text-gray-400 text-xs mb-3">Revenue Trend</p>
+                      <div className="flex items-end gap-1 h-32 sm:h-40">
+                        {analytics.chartData.map((day, i) => {
+                          const maxVal = Math.max(...analytics.chartData.map(d => d.total), 1);
+                          const height = maxVal > 0 ? (day.total / maxVal) * 100 : 0;
+                          return (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                              <div className="w-full flex gap-0.5 items-end" style={{ height: '100%' }}>
+                                <div 
+                                  className="flex-1 bg-palacio-gold/60 rounded-t-sm smooth-transition group-hover:bg-palacio-gold"
+                                  style={{ height: `${height}%`, minHeight: height > 0 ? '4px' : '0' }}
+                                />
+                              </div>
+                              <span className="text-[9px] text-gray-600 rotate-0 sm:rotate-0 truncate w-full text-center">
+                                {day.date}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Averages */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between items-center py-2 border-t border-white/5">
+                      <span className="text-gray-400 text-sm">Avg. Booking Value</span>
+                      <span className="font-cinzel text-palacio-gold">${analytics.avgBookingValue.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-t border-white/5">
+                      <span className="text-gray-400 text-sm">Avg. Order Value</span>
+                      <span className="font-cinzel text-palacio-gold">${analytics.avgOrderValue.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </GlassCard>
+
+                {/* Revenue & Occupancy */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <GlassCard className="p-6">
                     <div className="flex items-center gap-3 mb-4">
@@ -430,11 +670,15 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Today's Revenue</span>
-                        <span className="font-cinzel text-palacio-gold text-lg">${todayRevenue}</span>
+                        <span className="font-cinzel text-palacio-gold text-lg">${todayRevenue.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Total Revenue</span>
-                        <span className="font-cinzel text-palacio-gold text-lg">${totalRevenue}</span>
+                        <span className="text-gray-400">This Month (Bookings)</span>
+                        <span className="font-cinzel text-palacio-gold text-lg">${analytics.bookingRevenue.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">This Month (Orders)</span>
+                        <span className="font-cinzel text-palacio-gold text-lg">${analytics.orderRevenue.toLocaleString()}</span>
                       </div>
                     </div>
                   </GlassCard>
@@ -458,6 +702,12 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             width: `${Math.min(100, (bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100)}%` 
                           }}
                         />
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <span className="text-gray-400 text-sm">Occupancy Rate</span>
+                        <span className="font-cinzel text-palacio-gold">
+                          {((bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100).toFixed(1)}%
+                        </span>
                       </div>
                     </div>
                   </GlassCard>
@@ -805,6 +1055,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       const userOrders = getUserOrders(booking.user_email || '');
                       const hasOrders = userOrders.length > 0;
                       const pendingOrders = userOrders.filter(o => o.status === 'pending').length;
+                      const showDelete = canDeleteBooking(booking.status);
 
                       return (
                         <GlassCard key={booking.reference_number} className="p-5">
@@ -822,6 +1073,15 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                                 </p>
                               </div>
                             </div>
+                            {showDelete && (
+                              <button
+                                onClick={() => openDeleteModal(booking.reference_number, `Booking ${booking.reference_number}`, 'booking')}
+                                className="p-2 hover:bg-red-900/20 rounded smooth-transition"
+                                title="Delete booking"
+                              >
+                                <Trash size={18} className="text-red-400" />
+                              </button>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/20 rounded-lg p-3">
@@ -908,16 +1168,18 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             <p className="text-gray-500 text-xs font-mono">
                               Ref: {booking.reference_number}
                             </p>
-                            <select
-                              value={booking.status}
-                              onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
-                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
-                            >
-                              <option value="pending">Pending</option>
-                              <option value="confirmed">Confirmed</option>
-                              <option value="cancelled">Cancelled</option>
-                              <option value="completed">Completed</option>
-                            </select>
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={booking.status}
+                                onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
+                                className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="completed">Completed</option>
+                              </select>
+                            </div>
                           </div>
                         </GlassCard>
                       );
@@ -976,63 +1238,77 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   </GlassCard>
                 ) : (
                   <div className="space-y-4">
-                    {filteredOrders.map((order) => (
-                      <GlassCard key={order.order_id} className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-gray-400 text-sm">Customer</p>
-                            <p className="font-cinzel text-palacio-gold">
-                              {order.username || 'Unknown'}
-                            </p>
-                            <p className="text-gray-500 text-xs">{order.user_email}</p>
+                    {filteredOrders.map((order) => {
+                      const showDelete = canDeleteOrder(order.status);
+                      return (
+                        <GlassCard key={order.order_id} className="p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                              <div>
+                                <p className="text-gray-400 text-sm">Customer</p>
+                                <p className="font-cinzel text-palacio-gold">
+                                  {order.username || 'Unknown'}
+                                </p>
+                                <p className="text-gray-500 text-xs">{order.user_email}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Reference</p>
+                                <p className="font-cinzel text-palacio-gold">
+                                  {order.reference_number}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Type</p>
+                                <p className="font-cinzel text-palacio-gold">
+                                  {order.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Amount</p>
+                                <p className="font-cinzel text-palacio-gold">
+                                  ${order.total_amount}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Product</p>
+                                <p className="font-cinzel text-palacio-gold">
+                                  {order.product_name || 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400 text-sm">Category</p>
+                                <p className="font-cinzel text-palacio-gold">
+                                  {order.category || 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                            {showDelete && (
+                              <button
+                                onClick={() => openDeleteModal(order.order_id!, `Order ${order.reference_number}`, 'order')}
+                                className="p-2 hover:bg-red-900/20 rounded smooth-transition ml-4"
+                                title="Delete order"
+                              >
+                                <Trash size={18} className="text-red-400" />
+                              </button>
+                            )}
                           </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Reference</p>
-                            <p className="font-cinzel text-palacio-gold">
-                              {order.reference_number}
-                            </p>
+                          
+                          <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/5">
+                            <select
+                              value={order.status}
+                              onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
+                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="preparing">Preparing</option>
+                              <option value="ready">Ready</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
                           </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Type</p>
-                            <p className="font-cinzel text-palacio-gold">
-                              {order.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Amount</p>
-                            <p className="font-cinzel text-palacio-gold">
-                              ${order.total_amount}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Product</p>
-                            <p className="font-cinzel text-palacio-gold">
-                              {order.product_name || 'N/A'}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-sm">Category</p>
-                            <p className="font-cinzel text-palacio-gold">
-                              {order.category || 'N/A'}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/5">
-                          <select
-                            value={order.status}
-                            onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
-                            className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="preparing">Preparing</option>
-                            <option value="ready">Ready</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </div>
-                      </GlassCard>
-                    ))}
+                        </GlassCard>
+                      );
+                    })}
                   </div>
                 )}
               </div>
