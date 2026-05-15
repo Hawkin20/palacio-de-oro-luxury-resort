@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -18,13 +18,10 @@ import {
   BedDouble,
   ShoppingBag,
   Clock3,
-  BarChart3,
-  ArrowUpRight,
-  ArrowDownRight,
   Trash
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Room, Cottage, MenuItem, Booking, Order } from '../lib/types';
+import { Room, Cottage, MenuItem } from '../lib/types';
 import GlassCard from '../components/GlassCard';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -38,18 +35,49 @@ interface AdminProps {
 interface Toast {
   id: string;
   message: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error';
 }
 
-type TimeRange = 'today' | 'week' | 'month' | 'year';
+interface BookingData {
+  id: string;
+  reference_number: string;
+  user_id: string;
+  room_id?: string;
+  cottage_id?: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_price: number;
+  status: string;
+  created_at: string;
+  username?: string;
+  user_email?: string;
+  room_name?: string;
+  cottage_name?: string;
+}
+
+interface OrderData {
+  id: string;
+  reference_number: string;
+  user_id: string;
+  menu_item_id?: string;
+  quantity: number;
+  total_amount: number;
+  status: string;
+  order_type: string;
+  created_at: string;
+  username?: string;
+  user_email?: string;
+  product_name?: string;
+  category?: string;
+}
 
 export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'rooms' | 'menu' | 'bookings' | 'orders'>('dashboard');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cottages, setCottages] = useState<Cottage[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [bookings, setBookings] = useState<BookingData[]>([]);
+  const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -65,7 +93,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled'>('all');
   const [menuCategoryFilter, setMenuCategoryFilter] = useState<'all' | string>('all');
-  const [analyticsRange, setAnalyticsRange] = useState<TimeRange>('month');
 
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -76,14 +103,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showTabScroll, setShowTabScroll] = useState(false);
-  const [previousCounts, setPreviousCounts] = useState({ bookings: 0, orders: 0 });
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     const id = Date.now().toString();
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 4000);
+    }, 3000);
   };
 
   useEffect(() => {
@@ -92,44 +118,36 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         setIsAdmin(false);
         return;
       }
-
       if (userRole === 'admin') {
         setIsAdmin(true);
         return;
       }
-
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setIsAdmin(false);
           return;
         }
-
         const { data: user, error } = await supabase
           .from('users')
           .select('role')
           .eq('id', session.user.id)
           .single();
-
         if (error || user?.role !== 'admin') {
           setIsAdmin(false);
           return;
         }
-
         setIsAdmin(true);
       } catch (err) {
-        console.error('Admin verification error:', err);
         setIsAdmin(false);
       }
     };
-
     verifyAdmin();
   }, [isLoggedIn, userRole]);
 
   useEffect(() => {
     if (!isAdmin) return;
     fetchAllData();
-    
     const interval = setInterval(fetchAllData, 30000);
     return () => clearInterval(interval);
   }, [isAdmin]);
@@ -146,42 +164,66 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     return () => window.removeEventListener('resize', checkScroll);
   }, []);
 
-  useEffect(() => {
-    if (previousCounts.bookings > 0 && bookings.length > previousCounts.bookings) {
-      const newCount = bookings.length - previousCounts.bookings;
-      showToast(`${newCount} new booking${newCount > 1 ? 's' : ''} received!`, 'info');
-    }
-    if (previousCounts.orders > 0 && orders.length > previousCounts.orders) {
-      const newCount = orders.length - previousCounts.orders;
-      showToast(`${newCount} new order${newCount > 1 ? 's' : ''} received!`, 'info');
-    }
-    setPreviousCounts({ bookings: bookings.length, orders: orders.length });
-  }, [bookings.length, orders.length]);
-
   const fetchAllData = async () => {
     try {
       setLoading(true);
       setUpdateError(null);
-      
-      const [roomsRes, cottagesRes, menuRes, bookingsRes, ordersRes] =
-        await Promise.all([
-          supabase.from('rooms').select('*'),
-          supabase.from('cottages').select('*'),
-          supabase.from('menu_items').select('*'),
-          supabase.from('full_bookings').select('*').order('created_at', { ascending: false }),
-          supabase.from('full_order_tracking').select('*').order('created_at', { ascending: false }),
-        ]);
+
+      const [roomsRes, cottagesRes, menuRes, bookingsRes, ordersRes] = await Promise.all([
+        supabase.from('rooms').select('*'),
+        supabase.from('cottages').select('*'),
+        supabase.from('menu_items').select('*'),
+        supabase.from('bookings').select('*').order('created_at', { ascending: false }),
+        supabase.from('orders').select('*').order('created_at', { ascending: false }),
+      ]);
 
       if (roomsRes.data) setRooms(roomsRes.data);
       if (cottagesRes.data) setCottages(cottagesRes.data);
       if (menuRes.data) setMenu(menuRes.data);
-      if (bookingsRes.data) setBookings(bookingsRes.data);
-      if (ordersRes.data) setOrders(ordersRes.data);
-      
-      if (bookingsRes.error) console.error('Bookings fetch error:', bookingsRes.error);
-      if (ordersRes.error) console.error('Orders fetch error:', ordersRes.error);
+
+      const bookingsData = bookingsRes.data || [];
+      const ordersData = ordersRes.data || [];
+
+      const userIds = [...new Set([
+        ...bookingsData.map((b: any) => b.user_id),
+        ...ordersData.map((o: any) => b.user_id),
+      ])].filter(Boolean);
+
+      let usersMap: Record<string, { email?: string; username?: string }> = {};
+      if (userIds.length > 0) {
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, email, username')
+          .in('id', userIds);
+        usersMap = (usersData || []).reduce((acc: any, u: any) => {
+          acc[u.id] = { email: u.email, username: u.username };
+          return acc;
+        }, {});
+      }
+
+      const enrichedBookings: BookingData[] = bookingsData.map((b: any) => ({
+        ...b,
+        username: usersMap[b.user_id]?.username || usersMap[b.user_id]?.email?.split('@')[0] || 'Guest',
+        user_email: usersMap[b.user_id]?.email || '',
+        room_name: roomsRes.data?.find((r: any) => r.id === b.room_id)?.name,
+        cottage_name: cottagesRes.data?.find((c: any) => c.id === b.cottage_id)?.name,
+      }));
+
+      const enrichedOrders: OrderData[] = ordersData.map((o: any) => ({
+        ...o,
+        username: usersMap[o.user_id]?.username || usersMap[o.user_id]?.email?.split('@')[0] || 'Guest',
+        user_email: usersMap[o.user_id]?.email || '',
+        product_name: menuRes.data?.find((m: any) => m.id === o.menu_item_id)?.name,
+        category: menuRes.data?.find((m: any) => m.id === o.menu_item_id)?.category,
+      }));
+
+      setBookings(enrichedBookings);
+      setOrders(enrichedOrders);
+
+      if (bookingsRes.error) console.error('Bookings error:', bookingsRes.error);
+      if (ordersRes.error) console.error('Orders error:', ordersRes.error);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
@@ -197,204 +239,76 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   const confirmDelete = async () => {
     const { itemId, type } = deleteModal;
-    
     try {
       if (type === 'room') {
         const { error } = await supabase.from('rooms').delete().eq('id', itemId);
         if (!error) {
           setRooms(rooms.filter((r) => r.id !== itemId));
-          showToast('Room deleted successfully');
+          showToast('Room deleted');
         } else throw error;
       } else if (type === 'menu') {
         const { error } = await supabase.from('menu_items').delete().eq('id', itemId);
         if (!error) {
           setMenu(menu.filter((m) => m.id !== itemId));
-          showToast('Menu item deleted successfully');
+          showToast('Menu item deleted');
         } else throw error;
       } else if (type === 'booking') {
-        const { error } = await supabase.from('bookings').delete().eq('reference_number', itemId);
+        const { error } = await supabase.from('bookings').delete().eq('id', itemId);
         if (!error) {
-          setBookings(bookings.filter((b) => b.reference_number !== itemId));
-          showToast('Booking deleted successfully');
+          setBookings(bookings.filter((b) => b.id !== itemId));
+          showToast('Booking deleted');
         } else throw error;
       } else if (type === 'order') {
         const { error } = await supabase.from('orders').delete().eq('id', itemId);
         if (!error) {
-          setOrders(orders.filter((o) => o.order_id !== itemId));
-          showToast('Order deleted successfully');
+          setOrders(orders.filter((o) => o.id !== itemId));
+          showToast('Order deleted');
         } else throw error;
       }
     } catch (err: any) {
-      showToast(`Failed to delete: ${err.message}`, 'error');
+      showToast(`Delete failed: ${err.message}`, 'error');
     }
-    
     closeDeleteModal();
   };
 
-  const handleUpdateBookingStatus = async (referenceNumber: string, newStatus: string) => {
+  const handleUpdateBookingStatus = async (id: string, newStatus: string) => {
     setUpdateError(null);
     try {
       const { error } = await supabase
         .from('bookings')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('reference_number', referenceNumber)
+        .eq('id', id)
         .select();
-
       if (error) {
-        setUpdateError(`Booking update failed: ${error.message}`);
-        showToast(`Failed to update booking: ${error.message}`, 'error');
+        setUpdateError(`Update failed: ${error.message}`);
+        showToast(`Failed: ${error.message}`, 'error');
         return;
       }
-
-      setBookings(prev => 
-        prev.map((b) => (b.reference_number === referenceNumber ? { ...b, status: newStatus } : b))
-      );
-      showToast(`Booking status updated to ${newStatus}`);
+      setBookings(prev => prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b)));
+      showToast(`Status: ${newStatus}`);
     } catch (err: any) {
-      setUpdateError(`Unexpected error: ${err.message}`);
       showToast(`Error: ${err.message}`, 'error');
     }
   };
 
-  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+  const handleUpdateOrderStatus = async (id: string, newStatus: string) => {
     setUpdateError(null);
     try {
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', orderId)
+        .eq('id', id)
         .select();
-
       if (error) {
-        setUpdateError(`Order update failed: ${error.message}`);
-        showToast(`Failed to update order: ${error.message}`, 'error');
+        setUpdateError(`Update failed: ${error.message}`);
+        showToast(`Failed: ${error.message}`, 'error');
         return;
       }
-
-      setOrders(prev => 
-        prev.map((o) => (o.order_id === orderId ? { ...o, status: newStatus } : o))
-      );
-      showToast(`Order status updated to ${newStatus}`);
+      setOrders(prev => prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o)));
+      showToast(`Status: ${newStatus}`);
     } catch (err: any) {
-      setUpdateError(`Unexpected error: ${err.message}`);
       showToast(`Error: ${err.message}`, 'error');
     }
-  };
-
-  const getDateRange = (range: TimeRange) => {
-    const now = new Date();
-    const start = new Date(now);
-    
-    switch (range) {
-      case 'today':
-        start.setHours(0, 0, 0, 0);
-        break;
-      case 'week':
-        start.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        start.setMonth(now.getMonth() - 1);
-        break;
-      case 'year':
-        start.setFullYear(now.getFullYear() - 1);
-        break;
-    }
-    return { start, end: now };
-  };
-
-  const analytics = useMemo(() => {
-    const { start, end } = getDateRange(analyticsRange);
-    
-    const periodBookings = bookings.filter(b => {
-      const d = new Date(b.created_at || '');
-      return d >= start && d <= end;
-    });
-    
-    const periodOrders = orders.filter(o => {
-      const d = new Date(o.created_at || '');
-      return d >= start && d <= end;
-    });
-
-    const bookingRevenue = periodBookings
-      .filter(b => b.status === 'completed' || b.status === 'confirmed')
-      .reduce((sum, b) => sum + (b.total_price || 0), 0);
-    
-    const orderRevenue = periodOrders
-      .filter(o => o.status === 'completed')
-      .reduce((sum, o) => sum + (o.total_amount || 0), 0);
-
-    const totalRevenue = bookingRevenue + orderRevenue;
-    
-    const periodLength = end.getTime() - start.getTime();
-    const prevStart = new Date(start.getTime() - periodLength);
-    const prevEnd = new Date(start.getTime());
-    
-    const prevBookings = bookings.filter(b => {
-      const d = new Date(b.created_at || '');
-      return d >= prevStart && d <= prevEnd;
-    });
-    
-    const prevOrders = orders.filter(o => {
-      const d = new Date(o.created_at || '');
-      return d >= prevStart && d <= prevEnd;
-    });
-    
-    const prevRevenue = prevBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').reduce((s, b) => s + (b.total_price || 0), 0)
-      + prevOrders.filter(o => o.status === 'completed').reduce((s, o) => s + (o.total_amount || 0), 0);
-
-    const revenueChange = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
-    
-    const dailyData: Record<string, { bookings: number; orders: number; total: number }> = {};
-    const days = Math.min(Math.ceil(periodLength / (1000 * 60 * 60 * 24)), 7);
-    
-    for (let i = 0; i < days; i++) {
-      const d = new Date(end);
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      dailyData[key] = { bookings: 0, orders: 0, total: 0 };
-    }
-
-    periodBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').forEach(b => {
-      const key = (b.created_at || '').split('T')[0];
-      if (dailyData[key]) {
-        dailyData[key].bookings += b.total_price || 0;
-        dailyData[key].total += b.total_price || 0;
-      }
-    });
-
-    periodOrders.filter(o => o.status === 'completed').forEach(o => {
-      const key = (o.created_at || '').split('T')[0];
-      if (dailyData[key]) {
-        dailyData[key].orders += o.total_amount || 0;
-        dailyData[key].total += o.total_amount || 0;
-      }
-    });
-
-    const chartData = Object.entries(dailyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, data]) => ({
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        fullDate: date,
-        bookings: data.bookings,
-        orders: data.orders,
-        total: data.total
-      }));
-
-    return {
-      totalRevenue,
-      bookingRevenue,
-      orderRevenue,
-      totalBookings: periodBookings.length,
-      totalOrders: periodOrders.length,
-      revenueChange,
-      chartData,
-      avgBookingValue: periodBookings.length > 0 ? bookingRevenue / periodBookings.length : 0,
-      avgOrderValue: periodOrders.length > 0 ? orderRevenue / periodOrders.length : 0
-    };
-  }, [bookings, orders, analyticsRange]);
-
-  const getUserOrders = (userEmail: string) => {
-    return orders.filter(o => o.user_email === userEmail);
   };
 
   const filteredRooms = [...rooms, ...cottages].filter(item => 
@@ -412,7 +326,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = (booking.username || '').toLowerCase().includes(bookingSearch.toLowerCase()) ||
       booking.reference_number.toLowerCase().includes(bookingSearch.toLowerCase()) ||
-      (booking.cottage_name || '').toLowerCase().includes(bookingSearch.toLowerCase());
+      (booking.cottage_name || '').toLowerCase().includes(bookingSearch.toLowerCase()) ||
+      (booking.room_name || '').toLowerCase().includes(bookingSearch.toLowerCase());
     const matchesFilter = bookingFilter === 'all' || booking.status === bookingFilter;
     return matchesSearch && matchesFilter;
   });
@@ -432,11 +347,15 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   const todayRevenue = bookings
     .filter(b => {
-      const bookingDate = new Date(b.created_at || '');
+      const d = new Date(b.created_at || '');
       const today = new Date();
       return (b.status === 'completed' || b.status === 'confirmed') && 
-        bookingDate.toDateString() === today.toDateString();
+        d.toDateString() === today.toDateString();
     })
+    .reduce((sum, b) => sum + (b.total_price || 0), 0);
+
+  const monthRevenue = bookings
+    .filter(b => b.status === 'completed' || b.status === 'confirmed')
     .reduce((sum, b) => sum + (b.total_price || 0), 0);
 
   const canDeleteBooking = (status: string) => status === 'completed' || status === 'cancelled';
@@ -446,13 +365,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
         <GlassCard className="p-8 text-center max-w-md">
-          <h2 className="font-playfair text-2xl text-palacio-gold mb-4">
-            Admin Access Required
-          </h2>
+          <h2 className="font-playfair text-2xl text-palacio-gold mb-4">Admin Access Required</h2>
           <p className="text-gray-400">
-            {!isLoggedIn 
-              ? 'Please log in to access this panel.' 
-              : 'You do not have administrator privileges.'}
+            {!isLoggedIn ? 'Please log in.' : 'No admin privileges.'}
           </p>
         </GlassCard>
       </div>
@@ -468,12 +383,10 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 smooth-transition ${
               toast.type === 'success' 
                 ? 'bg-green-900/90 border border-green-500 text-green-100' 
-                : toast.type === 'info'
-                ? 'bg-blue-900/90 border border-blue-500 text-blue-100'
                 : 'bg-red-900/90 border border-red-500 text-red-100'
             }`}
           >
-            {toast.type === 'success' ? <CheckCircle size={18} /> : toast.type === 'info' ? <Bell size={18} /> : <AlertTriangle size={18} />}
+            {toast.type === 'success' ? <CheckCircle size={18} /> : <AlertTriangle size={18} />}
             <span className="text-sm font-medium">{toast.message}</span>
           </div>
         ))}
@@ -490,10 +403,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         )}
 
         <div className="relative mb-8">
-          <div 
-            id="admin-tabs"
-            className="flex gap-2 overflow-x-auto scrollbar-hide pb-2"
-          >
+          <div id="admin-tabs" className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
             {[
               { value: 'dashboard', label: 'Dashboard', icon: TrendingUp },
               { value: 'rooms', label: 'Rooms & Cottages', icon: BedDouble },
@@ -528,7 +438,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { val: rooms.length + cottages.length, label: 'Total Accommodations' },
+                    { val: rooms.length + cottages.length, label: 'Accommodations' },
                     { val: menu.length, label: 'Menu Items' },
                     { val: bookings.filter(b => b.status === 'pending').length, label: 'Pending Bookings' },
                     { val: orders.filter(o => o.status === 'pending').length, label: 'Pending Orders' },
@@ -541,72 +451,24 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 </div>
 
                 <div className="bg-white/15 border border-white/25 rounded-xl p-5">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
-                    <div className="flex items-center gap-2">
-                      <BarChart3 size={20} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Business Analytics</h3>
-                    </div>
-                    <div className="flex gap-2">
-                      {(['today','week','month','year'] as TimeRange[]).map(r => (
-                        <button key={r} onClick={() => setAnalyticsRange(r)}
-                          className={`px-3 py-1.5 rounded text-xs font-bold smooth-transition ${
-                            analyticsRange === r ? 'bg-palacio-gold text-black' : 'bg-black/30 text-gray-200 hover:bg-black/50'
-                          }`}>
-                          {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : '1Y'}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp size={20} className="text-palacio-gold" />
+                    <h3 className="font-playfair text-lg text-palacio-gold font-bold">Revenue Summary</h3>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="bg-black/40 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Total Revenue</p>
-                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.totalRevenue.toLocaleString()}</p>
-                      <p className={`text-xs font-bold mt-1 ${analytics.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {analytics.revenueChange >= 0 ? '▲' : '▼'} {Math.abs(analytics.revenueChange).toFixed(1)}% vs last period
-                      </p>
+                      <p className="text-gray-300 text-[10px] font-bold uppercase mb-1">Today's Revenue</p>
+                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${todayRevenue.toLocaleString()}</p>
                     </div>
                     <div className="bg-black/40 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Booking Revenue</p>
-                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.bookingRevenue.toLocaleString()}</p>
-                      <p className="text-gray-400 text-xs font-bold mt-1">{analytics.totalBookings} bookings</p>
+                      <p className="text-gray-300 text-[10px] font-bold uppercase mb-1">Total Booking Revenue</p>
+                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${monthRevenue.toLocaleString()}</p>
+                      <p className="text-gray-400 text-xs font-bold mt-1">{bookings.length} total bookings</p>
                     </div>
                     <div className="bg-black/40 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Order Revenue</p>
-                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.orderRevenue.toLocaleString()}</p>
-                      <p className="text-gray-400 text-xs font-bold mt-1">{analytics.totalOrders} orders</p>
-                    </div>
-                  </div>
-
-                  {analytics.chartData.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-gray-300 text-xs font-bold mb-2">Revenue Trend (Last 7 Days)</p>
-                      <div className="flex items-end gap-2 h-28">
-                        {analytics.chartData.map((day, i) => {
-                          const maxVal = Math.max(...analytics.chartData.map(d => d.total), 1);
-                          const h = maxVal > 0 ? (day.total / maxVal) * 100 : 0;
-                          return (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                              <div className="text-[9px] text-palacio-gold font-bold">${Math.round(day.total)}</div>
-                              <div className="w-full bg-gray-700 rounded-t-sm relative" style={{ height: `${Math.max(h, 5)}%` }}>
-                                <div className="absolute inset-0 bg-palacio-gold rounded-t-sm opacity-90" />
-                              </div>
-                              <div className="text-[9px] text-gray-400 font-bold">{day.date.split(' ')[0]}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300 text-sm font-bold">Avg Booking</span>
-                      <span className="text-palacio-gold font-bold">${analytics.avgBookingValue.toFixed(0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-300 text-sm font-bold">Avg Order</span>
-                      <span className="text-palacio-gold font-bold">${analytics.avgOrderValue.toFixed(0)}</span>
+                      <p className="text-gray-300 text-[10px] font-bold uppercase mb-1">Total Orders</p>
+                      <p className="text-2xl font-playfair text-palacio-gold font-bold">{orders.length}</p>
+                      <p className="text-gray-400 text-xs font-bold mt-1">{orders.filter(o => o.status === 'completed').length} completed</p>
                     </div>
                   </div>
                 </div>
@@ -615,26 +477,30 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   <div className="bg-white/15 border border-white/25 rounded-xl p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <DollarSign size={18} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Revenue Overview</h3>
+                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Revenue Breakdown</h3>
                     </div>
                     <div className="space-y-3">
-                      {[
-                        { label: "Today's Revenue", val: todayRevenue },
-                        { label: 'This Month (Bookings)', val: analytics.bookingRevenue },
-                        { label: 'This Month (Orders)', val: analytics.orderRevenue },
-                      ].map((r, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-100 font-bold text-sm">{r.label}</span>
-                          <span className="text-palacio-gold font-bold font-cinzel">${r.val.toLocaleString()}</span>
-                        </div>
-                      ))}
+                      <div className="flex justify-between">
+                        <span className="text-gray-100 font-bold text-sm">Today's Revenue</span>
+                        <span className="text-palacio-gold font-bold font-cinzel">${todayRevenue.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-100 font-bold text-sm">All Bookings</span>
+                        <span className="text-palacio-gold font-bold font-cinzel">${monthRevenue.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-100 font-bold text-sm">Confirmed Only</span>
+                        <span className="text-palacio-gold font-bold font-cinzel">
+                          ${bookings.filter(b => b.status === 'confirmed').reduce((s, b) => s + (b.total_price || 0), 0).toLocaleString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <div className="bg-white/15 border border-white/25 rounded-xl p-5">
                     <div className="flex items-center gap-2 mb-4">
                       <BedDouble size={18} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Occupancy Rate</h3>
+                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Occupancy</h3>
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between">
@@ -674,11 +540,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   ) : (
                     <div className="space-y-2">
                       {recentBookings.map(b => (
-                        <div key={b.reference_number} className="bg-white/15 border border-white/25 rounded-lg p-4">
+                        <div key={b.id} className="bg-white/15 border border-white/25 rounded-lg p-4">
                           <div className="flex justify-between items-start">
                             <div>
-                              <p className="text-palacio-gold font-bold text-sm">{b.username || 'Guest'}</p>
-                              <p className="text-gray-200 text-xs font-bold mt-0.5">{b.cottage_name || b.room_name || 'N/A'}</p>
+                              <p className="text-palacio-gold font-bold text-sm">{b.username}</p>
+                              <p className="text-gray-200 text-xs font-bold mt-0.5">
+                                {b.cottage_name || b.room_name || 'No room assigned'}
+                              </p>
                               <p className="text-gray-400 text-xs">{b.check_in_date} → {b.check_out_date}</p>
                             </div>
                             <div className="text-right">
@@ -708,18 +576,15 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   ) : (
                     <div className="space-y-2">
                       {recentOrders.map(o => (
-                        <div key={o.order_id} className="bg-white/15 border border-white/25 rounded-lg p-4">
+                        <div key={o.id} className="bg-white/15 border border-white/25 rounded-lg p-4">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <p className="text-palacio-gold font-bold text-sm">
                                 {o.product_name || o.reference_number || 'Order'}
                               </p>
-                              <p className="text-gray-200 text-xs font-bold mt-0.5">
-                                {o.username || o.user_email || 'Unknown Customer'}
-                              </p>
+                              <p className="text-gray-200 text-xs font-bold mt-0.5">{o.username}</p>
                               <p className="text-gray-400 text-xs">
-                                Qty: {o.quantity || 1} · ${o.total_amount}
-                                {o.order_type && ` · ${o.order_type === 'dine_in' ? 'Dine-in' : 'Delivery'}`}
+                                Qty: {o.quantity} · ${o.total_amount} · {o.order_type === 'dine_in' ? 'Dine-in' : 'Delivery'}
                               </p>
                             </div>
                             <div className="text-right">
@@ -738,35 +603,14 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'rooms' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <button
-                    onClick={() => {
-                      setEditingItem(null);
-                      setFormData({});
-                      setShowModal(true);
-                    }}
-                    className="gold-glow-btn"
-                  >
-                    <Plus className="inline mr-2" size={18} />
-                    Add Room
+                  <button onClick={() => { setEditingItem(null); setFormData({}); setShowModal(true); }} className="gold-glow-btn">
+                    <Plus className="inline mr-2" size={18} /> Add Room
                   </button>
-                  
                   <div className="relative w-full sm:w-64">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search rooms..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
-                    />
-                    {searchQuery && (
-                      <button 
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
+                    <input type="text" placeholder="Search rooms..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50" />
+                    {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"><X size={14} /></button>}
                   </div>
                 </div>
 
@@ -774,9 +618,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   <GlassCard className="p-12 text-center">
                     <BedDouble size={48} className="text-gray-500 mx-auto mb-4" />
                     <p className="text-gray-300 text-lg mb-2 font-medium">No rooms found</p>
-                    <p className="text-gray-400 text-sm">
-                      {searchQuery ? 'Try adjusting your search' : 'Add your first room to get started'}
-                    </p>
                   </GlassCard>
                 ) : (
                   <div className="space-y-4">
@@ -784,35 +625,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <GlassCard key={item.id} className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h3 className="font-playfair text-lg text-palacio-gold font-medium">
-                              {item.name}
-                            </h3>
-                            <p className="text-gray-300 text-sm font-medium">
-                              ${item.price_per_night}/night - {item.capacity} guests
-                            </p>
-                            <div className="mt-2">
-                              <StatusBadge status={item.status} size="sm" />
-                            </div>
+                            <h3 className="font-playfair text-lg text-palacio-gold font-medium">{item.name}</h3>
+                            <p className="text-gray-300 text-sm font-medium">${item.price_per_night}/night - {item.capacity} guests</p>
+                            <div className="mt-2"><StatusBadge status={item.status} size="sm" /></div>
                           </div>
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingItem(item);
-                                setFormData(item);
-                                setShowModal(true);
-                              }}
-                              className="p-2 hover:bg-palacio-gold/20 rounded smooth-transition"
-                              title="Edit"
-                            >
-                              <Edit2 size={18} className="text-palacio-gold" />
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(item.id, item.name, 'room')}
-                              className="p-2 hover:bg-red-900/30 rounded smooth-transition"
-                              title="Delete"
-                            >
-                              <Trash2 size={18} className="text-red-400" />
-                            </button>
+                            <button onClick={() => { setEditingItem(item); setFormData(item); setShowModal(true); }} className="p-2 hover:bg-palacio-gold/20 rounded smooth-transition"><Edit2 size={18} className="text-palacio-gold" /></button>
+                            <button onClick={() => openDeleteModal(item.id, item.name, 'room')} className="p-2 hover:bg-red-900/30 rounded smooth-transition"><Trash2 size={18} className="text-red-400" /></button>
                           </div>
                         </div>
                       </GlassCard>
@@ -825,48 +644,19 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'menu' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <button
-                    onClick={() => {
-                      setEditingItem(null);
-                      setFormData({});
-                      setShowModal(true);
-                    }}
-                    className className="gold-glow-btn"
-                  >
-                    <Plus className="inline mr-2" size={18} />
-                    Add Menu Item
+                  <button onClick={() => { setEditingItem(null); setFormData({}); setShowModal(true); }} className="gold-glow-btn">
+                    <Plus className="inline mr-2" size={18} /> Add Menu Item
                   </button>
-
                   <div className="flex gap-3 w-full sm:w-auto">
-                    <select
-                      value={menuCategoryFilter}
-                      onChange={(e) => setMenuCategoryFilter(e.target.value)}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
-                    >
-                      {menuCategories.map(cat => (
-                        <option key={cat} value={cat} className="bg-palacio-black">
-                          {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                        </option>
-                      ))}
+                    <select value={menuCategoryFilter} onChange={(e) => setMenuCategoryFilter(e.target.value)}
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50">
+                      {menuCategories.map(cat => <option key={cat} value={cat} className="bg-palacio-black">{cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}</option>)}
                     </select>
-
                     <div className="relative flex-1 sm:w-48">
                       <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Search menu..."
-                        value={menuSearch}
-                        onChange={(e) => setMenuSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
-                      />
-                      {menuSearch && (
-                        <button 
-                          onClick={() => setMenuSearch('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
+                      <input type="text" placeholder="Search menu..." value={menuSearch} onChange={(e) => setMenuSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50" />
+                      {menuSearch && <button onClick={() => setMenuSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"><X size={14} /></button>}
                     </div>
                   </div>
                 </div>
@@ -875,52 +665,21 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   <GlassCard className="p-12 text-center">
                     <UtensilsCrossed size={48} className="text-gray-500 mx-auto mb-4" />
                     <p className="text-gray-300 text-lg mb-2 font-medium">No menu items found</p>
-                    <p className="text-gray-400 text-sm">
-                      {menuSearch || menuCategoryFilter !== 'all' ? 'Try adjusting your filters' : 'Add your first menu item'}
-                    </p>
                   </GlassCard>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredMenu.map((item) => (
                       <GlassCard key={item.id} className="p-4 group">
                         <div className="relative overflow-hidden rounded mb-3">
-                          <img
-                            src={item.image_url || '/placeholder-food.jpg'}
-                            alt={item.name}
-                            className="w-full h-32 object-cover smooth-transition group-hover:scale-105"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/placeholder-food.jpg';
-                            }}
-                          />
+                          <img src={item.image_url || '/placeholder-food.jpg'} alt={item.name} className="w-full h-32 object-cover smooth-transition group-hover:scale-105"
+                            onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-food.jpg'; }} />
                         </div>
-                        <h3 className="font-playfair text-palacio-gold mb-1 font-medium">
-                          {item.name}
-                        </h3>
-                        <p className="text-gray-300 text-xs mb-2 capitalize font-medium">
-                          {item.category}
-                        </p>
-                        <p className="font-cinzel text-palacio-gold mb-3 font-medium">
-                          ${item.price}
-                        </p>
+                        <h3 className="font-playfair text-palacio-gold mb-1 font-medium">{item.name}</h3>
+                        <p className="text-gray-300 text-xs mb-2 capitalize font-medium">{item.category}</p>
+                        <p className="font-cinzel text-palacio-gold mb-3 font-medium">${item.price}</p>
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingItem(item);
-                              setFormData(item);
-                              setShowModal(true);
-                            }}
-                            className="flex-1 p-2 hover:bg-palacio-gold/20 rounded text-sm smooth-transition"
-                          >
-                            <Edit2 size={14} className="inline mr-1 text-palacio-gold" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => openDeleteModal(item.id, item.name, 'menu')}
-                            className="flex-1 p-2 hover:bg-red-900/30 rounded text-sm smooth-transition"
-                          >
-                            <Trash2 size={14} className="inline mr-1 text-red-400" />
-                            Delete
-                          </button>
+                          <button onClick={() => { setEditingItem(item); setFormData(item); setShowModal(true); }} className="flex-1 p-2 hover:bg-palacio-gold/20 rounded text-sm smooth-transition"><Edit2 size={14} className="inline mr-1 text-palacio-gold" /> Edit</button>
+                          <button onClick={() => openDeleteModal(item.id, item.name, 'menu')} className="flex-1 p-2 hover:bg-red-900/30 rounded text-sm smooth-transition"><Trash2 size={14} className="inline mr-1 text-red-400" /> Delete</button>
                         </div>
                       </GlassCard>
                     ))}
@@ -933,11 +692,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="flex gap-3">
-                    <select
-                      value={bookingFilter}
-                      onChange={(e) => setBookingFilter(e.target.value as any)}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
-                    >
+                    <select value={bookingFilter} onChange={(e) => setBookingFilter(e.target.value as any)}
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50">
                       <option value="all" className="bg-palacio-black">All Status</option>
                       <option value="pending" className="bg-palacio-black">Pending</option>
                       <option value="confirmed" className="bg-palacio-black">Confirmed</option>
@@ -945,24 +701,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <option value="completed" className="bg-palacio-black">Completed</option>
                     </select>
                   </div>
-
                   <div className="relative w-full sm:w-64">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search by guest, ref, or room..."
-                      value={bookingSearch}
-                      onChange={(e) => setBookingSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
-                    />
-                    {bookingSearch && (
-                      <button 
-                        onClick={() => setBookingSearch('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
+                    <input type="text" placeholder="Search by guest, ref, or room..." value={bookingSearch} onChange={(e) => setBookingSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50" />
+                    {bookingSearch && <button onClick={() => setBookingSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"><X size={14} /></button>}
                   </div>
                 </div>
 
@@ -970,141 +713,59 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   <GlassCard className="p-12 text-center">
                     <Calendar size={48} className="text-gray-500 mx-auto mb-4" />
                     <p className="text-gray-300 text-lg mb-2 font-medium">No bookings found</p>
-                    <p className="text-gray-400 text-sm">
-                      {bookingSearch || bookingFilter !== 'all' ? 'Try adjusting your filters' : 'No bookings yet'}
-                    </p>
                   </GlassCard>
                 ) : (
                   <div className="space-y-4">
                     {filteredBookings.map((booking) => {
-                      const userOrders = getUserOrders(booking.user_email || '');
-                      const hasOrders = userOrders.length > 0;
-                      const pendingOrders = userOrders.filter(o => o.status === 'pending').length;
                       const showDelete = canDeleteBooking(booking.status);
-
                       return (
-                        <GlassCard key={booking.reference_number} className="p-5">
+                        <GlassCard key={booking.id} className="p-5">
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-palacio-gold/20 flex items-center justify-center">
                                 <Bell size={20} className="text-palacio-gold" />
                               </div>
                               <div>
-                                <h3 className="font-playfair text-lg text-palacio-gold font-medium">
-                                  New Booking Request
-                                </h3>
-                                <p className="text-gray-400 text-xs">
-                                  {booking.created_at ? new Date(booking.created_at).toLocaleString() : 'Just now'}
-                                </p>
+                                <h3 className="font-playfair text-lg text-palacio-gold font-medium">Booking Request</h3>
+                                <p className="text-gray-400 text-xs">{new Date(booking.created_at).toLocaleString()}</p>
                               </div>
                             </div>
                             {showDelete && (
-                              <button
-                                onClick={() => openDeleteModal(booking.reference_number, `Booking ${booking.reference_number}`, 'booking')}
-                                className="p-2 hover:bg-red-900/30 rounded smooth-transition"
-                                title="Delete booking"
-                              >
+                              <button onClick={() => openDeleteModal(booking.id, `Booking ${booking.reference_number}`, 'booking')}
+                                className="p-2 hover:bg-red-900/30 rounded smooth-transition">
                                 <Trash size={18} className="text-red-400" />
                               </button>
                             )}
                           </div>
 
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/30 rounded-lg p-3">
-                            <div className="flex items-center gap-2">
-                              <User size={14} className="text-gray-400" />
-                              <div>
-                                <p className="text-gray-400 text-xs font-medium">Guest</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {booking.username || 'Unknown'}
-                                </p>
-                              </div>
+                            <div>
+                              <p className="text-gray-400 text-xs font-medium">Guest</p>
+                              <p className="font-cinzel text-palacio-gold text-sm font-medium">{booking.username}</p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar size={14} className="text-gray-400" />
-                              <div>
-                                <p className="text-gray-400 text-xs font-medium">Dates</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {booking.check_in_date} to {booking.check_out_date}
-                                </p>
-                              </div>
+                            <div>
+                              <p className="text-gray-400 text-xs font-medium">Dates</p>
+                              <p className="font-cinzel text-palacio-gold text-sm font-medium">{booking.check_in_date} to {booking.check_out_date}</p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Home size={14} className="text-gray-400" />
-                              <div>
-                                <p className="text-gray-400 text-xs font-medium">Accommodation</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {booking.cottage_name || booking.room_name || 'N/A'}
-                                </p>
-                              </div>
+                            <div>
+                              <p className="text-gray-400 text-xs font-medium">Room</p>
+                              <p className="font-cinzel text-palacio-gold text-sm font-medium">{booking.cottage_name || booking.room_name || 'N/A'}</p>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <DollarSign size={14} className="text-gray-400" />
-                              <div>
-                                <p className="text-gray-400 text-xs font-medium">Total</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  ${booking.total_price}
-                                </p>
-                              </div>
+                            <div>
+                              <p className="text-gray-400 text-xs font-medium">Total</p>
+                              <p className="font-cinzel text-palacio-gold text-sm font-medium">${booking.total_price}</p>
                             </div>
                           </div>
 
-                          {hasOrders && (
-                            <div className="mb-4">
-                              <div className="flex items-center gap-2 mb-2">
-                                <UtensilsCrossed size={14} className="text-palacio-gold" />
-                                <h4 className="font-cinzel text-sm text-palacio-gold font-medium">
-                                  Guest Orders
-                                  {pendingOrders > 0 && (
-                                    <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">
-                                      {pendingOrders} pending
-                                    </span>
-                                  )}
-                                </h4>
-                              </div>
-                              <div className="space-y-2">
-                                {userOrders.map((order) => (
-                                  <div 
-                                    key={order.order_id} 
-                                    className="flex items-center justify-between bg-black/30 rounded-lg p-2 text-sm"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-gray-300 font-medium">{order.product_name}</span>
-                                      <span className="text-gray-500">x{order.quantity}</span>
-                                      <span className="text-palacio-gold/80 font-medium">${order.total_amount}</span>
-                                    </div>
-                                    <select
-                                      value={order.status}
-                                      onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
-                                      className="px-2 py-0.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold text-xs focus:outline-none cursor-pointer font-medium"
-                                    >
-                                      <option value="pending">Pending</option>
-                                      <option value="preparing">Preparing</option>
-                                      <option value="ready">Ready</option>
-                                      <option value="completed">Completed</option>
-                                      <option value="cancelled">Cancelled</option>
-                                    </select>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
                           <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                            <p className="text-gray-500 text-xs font-mono">
-                              Ref: {booking.reference_number}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <select
-                                value={booking.status}
-                                onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
-                                className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium"
-                              >
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="cancelled">Cancelled</option>
-                                <option value="completed">Completed</option>
-                              </select>
-                            </div>
+                            <p className="text-gray-500 text-xs font-mono">Ref: {booking.reference_number}</p>
+                            <select value={booking.status} onChange={(e) => handleUpdateBookingStatus(booking.id, e.target.value)}
+                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium">
+                              <option value="pending">Pending</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="cancelled">Cancelled</option>
+                              <option value="completed">Completed</option>
+                            </select>
                           </div>
                         </GlassCard>
                       );
@@ -1118,11 +779,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="flex gap-3">
-                    <select
-                      value={orderFilter}
-                      onChange={(e) => setOrderFilter(e.target.value as any)}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
-                    >
+                    <select value={orderFilter} onChange={(e) => setOrderFilter(e.target.value as any)}
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50">
                       <option value="all" className="bg-palacio-black">All Status</option>
                       <option value="pending" className="bg-palacio-black">Pending</option>
                       <option value="preparing" className="bg-palacio-black">Preparing</option>
@@ -1131,24 +789,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <option value="cancelled" className="bg-palacio-black">Cancelled</option>
                     </select>
                   </div>
-
                   <div className="relative w-full sm:w-64">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search by customer, product..."
-                      value={orderSearch}
-                      onChange={(e) => setOrderSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
-                    />
-                    {orderSearch && (
-                      <button 
-                        onClick={() => setOrderSearch('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
+                    <input type="text" placeholder="Search by customer, product..." value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50" />
+                    {orderSearch && <button onClick={() => setOrderSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"><X size={14} /></button>}
                   </div>
                 </div>
 
@@ -1156,73 +801,52 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   <GlassCard className="p-12 text-center">
                     <ShoppingBag size={48} className="text-gray-500 mx-auto mb-4" />
                     <p className="text-gray-300 text-lg mb-2 font-medium">No orders found</p>
-                    <p className="text-gray-400 text-sm">
-                      {orderSearch || orderFilter !== 'all' ? 'Try adjusting your filters' : 'No orders yet'}
-                    </p>
                   </GlassCard>
                 ) : (
                   <div className="space-y-4">
                     {filteredOrders.map((order) => {
                       const showDelete = canDeleteOrder(order.status);
                       return (
-                        <GlassCard key={order.order_id} className="p-6">
+                        <GlassCard key={order.id} className="p-6">
                           <div className="flex items-start justify-between mb-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                               <div>
                                 <p className="text-gray-400 text-sm font-medium">Customer</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.username || 'Unknown'}
-                                </p>
+                                <p className="font-cinzel text-palacio-gold font-medium">{order.username}</p>
                                 <p className="text-gray-400 text-xs">{order.user_email}</p>
                               </div>
                               <div>
                                 <p className="text-gray-400 text-sm font-medium">Reference</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.reference_number}
-                                </p>
+                                <p className="font-cinzel text-palacio-gold font-medium">{order.reference_number}</p>
                               </div>
                               <div>
                                 <p className="text-gray-400 text-sm font-medium">Type</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}
-                                </p>
+                                <p className="font-cinzel text-palacio-gold font-medium">{order.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}</p>
                               </div>
                               <div>
                                 <p className="text-gray-400 text-sm font-medium">Amount</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  ${order.total_amount}
-                                </p>
+                                <p className="font-cinzel text-palacio-gold font-medium">${order.total_amount}</p>
                               </div>
                               <div>
                                 <p className="text-gray-400 text-sm font-medium">Product</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.product_name || 'N/A'}
-                                </p>
+                                <p className="font-cinzel text-palacio-gold font-medium">{order.product_name || 'N/A'}</p>
                               </div>
                               <div>
                                 <p className="text-gray-400 text-sm font-medium">Category</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.category || 'N/A'}
-                                </p>
+                                <p className="font-cinzel text-palacio-gold font-medium">{order.category || 'N/A'}</p>
                               </div>
                             </div>
                             {showDelete && (
-                              <button
-                                onClick={() => openDeleteModal(order.order_id!, `Order ${order.reference_number}`, 'order')}
-                                className="p-2 hover:bg-red-900/30 rounded smooth-transition ml-4"
-                                title="Delete order"
-                              >
+                              <button onClick={() => openDeleteModal(order.id, `Order ${order.reference_number}`, 'order')}
+                                className="p-2 hover:bg-red-900/30 rounded smooth-transition ml-4">
                                 <Trash size={18} className="text-red-400" />
                               </button>
                             )}
                           </div>
                           
                           <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/10">
-                            <select
-                              value={order.status}
-                              onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
-                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium"
-                            >
+                            <select value={order.status} onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium">
                               <option value="pending">Pending</option>
                               <option value="preparing">Preparing</option>
                               <option value="ready">Ready</option>
@@ -1241,79 +865,35 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         )}
       </div>
 
-      <Modal
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setEditingItem(null);
-          setFormData({});
-        }}
+      <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditingItem(null); setFormData({}); }}
         title={editingItem ? 'Edit Item' : 'Add Item'}
         footer={
           <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setShowModal(false);
-                setEditingItem(null);
-                setFormData({});
-              }}
-              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={() => {
-                showToast(editingItem ? 'Item updated (demo)' : 'Item added (demo)');
-                setShowModal(false);
-              }}
-              className="flex-1 px-4 py-2 bg-palacio-gold text-palacio-black rounded font-cinzel font-semibold hover:bg-palacio-gold/80 smooth-transition"
-            >
-              Save
-            </button>
+            <button onClick={() => { setShowModal(false); setEditingItem(null); setFormData({}); }}
+              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition">Cancel</button>
+            <button onClick={() => { showToast(editingItem ? 'Updated (demo)' : 'Added (demo)'); setShowModal(false); }}
+              className="flex-1 px-4 py-2 bg-palacio-gold text-palacio-black rounded font-cinzel font-semibold hover:bg-palacio-gold/80 smooth-transition">Save</button>
           </div>
-        }
-      >
+        }>
         <div className="space-y-4">
-          <p className="text-gray-300 text-sm font-medium">
-            {editingItem ? 'Editing: ' + (editingItem.name || 'Item') : 'Create new item'}
-          </p>
+          <p className="text-gray-300 text-sm font-medium">{editingItem ? 'Editing: ' + (editingItem.name || 'Item') : 'Create new item'}</p>
           <div className="p-4 bg-white/10 rounded-lg border border-white/20">
-            <p className="text-gray-400 text-sm text-center">
-              Form fields coming soon - connect to your Supabase schema
-            </p>
+            <p className="text-gray-400 text-sm text-center">Form fields coming soon</p>
           </div>
         </div>
       </Modal>
 
-      <Modal
-        isOpen={deleteModal.isOpen}
-        onClose={closeDeleteModal}
-        title="Confirm Deletion"
+      <Modal isOpen={deleteModal.isOpen} onClose={closeDeleteModal} title="Confirm Deletion"
         footer={
           <div className="flex gap-3">
-            <button
-              onClick={closeDeleteModal}
-              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmDelete}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded font-cinzel font-semibold hover:bg-red-700 smooth-transition"
-            >
-              Delete
-            </button>
+            <button onClick={closeDeleteModal} className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition">Cancel</button>
+            <button onClick={confirmDelete} className="flex-1 px-4 py-2 bg-red-600 text-white rounded font-cinzel font-semibold hover:bg-red-700 smooth-transition">Delete</button>
           </div>
-        }
-      >
+        }>
         <div className="text-center py-4">
           <AlertTriangle size={48} className="text-red-400 mx-auto mb-4" />
-          <p className="text-gray-200 mb-2 font-medium">
-            Are you sure you want to delete <span className="text-palacio-gold font-semibold">{deleteModal.itemName}</span>?
-          </p>
-          <p className="text-gray-400 text-sm">
-            This action cannot be undone.
-          </p>
+          <p className="text-gray-200 mb-2 font-medium">Delete <span className="text-palacio-gold font-semibold">{deleteModal.itemName}</span>?</p>
+          <p className="text-gray-400 text-sm">This cannot be undone.</p>
         </div>
       </Modal>
     </div>
