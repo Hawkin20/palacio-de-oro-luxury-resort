@@ -59,11 +59,16 @@ export interface Booking {
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   reference_number: string;
   created_at: string;
+  updated_at?: string;
+  username?: string;
+  user_email?: string;
+  accommodation_name?: string;
+  cottage_name?: string;
+  room_name?: string;
 }
 
 export interface Order {
-  id: string;              // Original orders table ID (UUID)
-  order_id?: string;       // ✅ From full_order_tracking view (same as id, but exposed as order_id)
+  id: string;
   guest_id: string;
   total_amount: number;
   payment_method: 'cash' | 'gcash' | 'card';
@@ -72,14 +77,17 @@ export interface Order {
   status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
   reference_number: string;
   created_at: string;
-  // ✅ Additional fields from full_order_tracking view
+  updated_at?: string;
+  user_id?: string;
+  order_item_id?: string;
+  menu_item_id?: string;
+  quantity?: number;
+  unit_price?: number;
+  subtotal?: number;
   username?: string;
   user_email?: string;
   product_name?: string;
   category?: string;
-  quantity?: number;
-  unit_price?: number;
-  subtotal?: number;
 }
 
 export interface OrderItem {
