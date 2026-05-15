@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { CartItem } from './lib/types';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer';
 import Home from './pages/Home';
 import Rooms from './pages/Rooms';
 import Menu from './pages/Menu';
@@ -15,7 +14,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string>();
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<<CartItem[]>([]);
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
@@ -31,16 +30,13 @@ function App() {
         }
       }
     );
-
     return () => {
       listener?.subscription.unsubscribe();
     };
   }, []);
 
   const checkAuth = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
       setIsLoggedIn(true);
       setUserId(session.user.id);
@@ -59,26 +55,11 @@ function App() {
       case 'home':
         return <Home onNavigate={setCurrentPage} />;
       case 'rooms':
-        return (
-          <Rooms
-            userId={userId}
-            isLoggedIn={isLoggedIn}
-            onNavigate={setCurrentPage}
-          />
-        );
+        return <Rooms userId={userId} isLoggedIn={isLoggedIn} onNavigate={setCurrentPage} />;
       case 'menu':
-        return (
-          <Menu
-            userId={userId}
-            isLoggedIn={isLoggedIn}
-            cart={cart}
-            setCart={setCart}
-          />
-        );
+        return <Menu userId={userId} isLoggedIn={isLoggedIn} cart={cart} setCart={setCart} />;
       case 'bookings':
-        return (
-          <Bookings userId={userId} isLoggedIn={isLoggedIn} />
-        );
+        return <Bookings userId={userId} isLoggedIn={isLoggedIn} />;
       case 'contact':
         return <Contact />;
       case 'admin':
@@ -105,7 +86,6 @@ function App() {
       <main className="flex-1">
         {renderPage()}
       </main>
-      <Footer />
     </div>
   );
 }
