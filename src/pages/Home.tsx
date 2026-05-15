@@ -122,7 +122,6 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-palacio-black">
-      {/* Announcement Bar */}
       <div className="sticky top-0 z-50 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black py-2.5 px-4 text-center font-cinzel shadow-lg">
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Sparkles size={16} className="animate-pulse-slow" />
@@ -135,7 +134,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Hero Section */}
       <div className="relative w-full min-h-[100vh] flex items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center scale-110"
@@ -213,7 +211,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Amenities Bar */}
       <div className="py-8 bg-gradient-to-r from-palacio-black via-palacio-black/95 to-palacio-black border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
@@ -227,7 +224,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Rooms Section */}
       <div className="py-24 bg-palacio-black relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.03)_0%,transparent_70%)]" />
         
@@ -344,7 +340,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Awards Section */}
       <div className="py-16 border-y border-white/5 bg-gradient-to-r from-palacio-black via-palacio-black/90 to-palacio-black">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 transition-opacity duration-700">
@@ -361,7 +356,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Testimonials Section */}
       <div className="py-24 bg-gradient-to-b from-palacio-black via-orange-900/10 to-palacio-black relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl" />
         
@@ -410,7 +404,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Instagram Section */}
       <div className="py-24 bg-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
@@ -444,11 +437,10 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* Newsletter Section */}
       <div className="py-20 bg-gradient-to-b from-palacio-black to-palacio-black/95 border-t border-white/5">
         <div className="max-w-2xl mx-auto px-4 text-center">
           <Sparkles size={32} className="mx-auto text-palacio-gold mb-4" />
-          <h3 className="text-3xl md:text-4xl font-playfair text-palacio-gold mb-playfair text-palacio-gold mb-3">Join the Golden Circle</h3>
+          <h3 className="text-3xl md:text-4xl font-playfair text-palacio-gold mb-3">Join the Golden Circle</h3>
           <p className="text-gray-400 text-sm mb-8">Subscribe for exclusive offers, early access to seasonal packages, and insider perks.</p>
           
           <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
@@ -466,7 +458,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* FOOTER - ISA LANG TO, WALANG DUPLICATE */}
       <footer className="bg-palacio-black border-t border-white/5 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
@@ -506,7 +497,7 @@ export default function Home({ onNavigate }: HomeProps) {
           </div>
           
           <div className="border-t border-white/5 pt-8 text-center">
-            <p className="text-gray-600 text-sm">© 2026 Palacio de Oro. All rights reserved.</p>
+            <p className="text-gray-600 text-sm"> 2026 Palacio de Oro. All rights reserved.</p>
             <p className="text-gray-700 text-[10px] mt-2 font-cinzel tracking-wider">
               DEVELOPED BY VINCENT ECALDRE | EDUCATIONAL PROJECT
             </p>
