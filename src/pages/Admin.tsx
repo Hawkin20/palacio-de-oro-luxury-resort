@@ -62,7 +62,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [bookingSearch, setBookingSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
 
-  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled'>('all');
   const [menuCategoryFilter, setMenuCategoryFilter] = useState<'all' | string>('all');
   const [analyticsRange, setAnalyticsRange] = useState<TimeRange>('month');
@@ -130,7 +130,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     if (!isAdmin) return;
     fetchAllData();
     
-    // Auto refresh every 30 seconds
     const interval = setInterval(fetchAllData, 30000);
     return () => clearInterval(interval);
   }, [isAdmin]);
@@ -147,7 +146,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     return () => window.removeEventListener('resize', checkScroll);
   }, []);
 
-  // Detect new bookings/orders for toast notifications
   useEffect(() => {
     if (previousCounts.bookings > 0 && bookings.length > previousCounts.bookings) {
       const newCount = bookings.length - previousCounts.bookings;
@@ -283,7 +281,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     }
   };
 
-  // ===== ANALYTICS HELPERS =====
   const getDateRange = (range: TimeRange) => {
     const now = new Date();
     const start = new Date(now);
@@ -328,7 +325,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
     const totalRevenue = bookingRevenue + orderRevenue;
     
-    // Previous period comparison
     const periodLength = end.getTime() - start.getTime();
     const prevStart = new Date(start.getTime() - periodLength);
     const prevEnd = new Date(start.getTime());
@@ -348,7 +344,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
     const revenueChange = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
     
-    // Daily breakdown for chart
     const dailyData: Record<string, { bookings: number; orders: number; total: number }> = {};
     const days = Math.ceil(periodLength / (1000 * 60 * 60 * 24));
     
@@ -541,25 +536,25 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
                       {rooms.length + cottages.length}
                     </div>
-                    <p className="text-gray-400 text-xs md:text-sm">Total Accommodations</p>
+                    <p className="text-gray-300 text-xs md:text-sm font-medium">Total Accommodations</p>
                   </GlassCard>
                   <GlassCard className="p-4 md:p-6 text-center">
                     <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
                       {menu.length}
                     </div>
-                    <p className="text-gray-400 text-xs md:text-sm">Menu Items</p>
+                    <p className="text-gray-300 text-xs md:text-sm font-medium">Menu Items</p>
                   </GlassCard>
                   <GlassCard className="p-4 md:p-6 text-center">
                     <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
                       {bookings.filter((b) => b.status === 'pending').length}
                     </div>
-                    <p className="text-gray-400 text-xs md:text-sm">Pending Bookings</p>
+                    <p className="text-gray-300 text-xs md:text-sm font-medium">Pending Bookings</p>
                   </GlassCard>
                   <GlassCard className="p-4 md:p-6 text-center">
                     <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
                       {orders.filter((o) => o.status === 'pending').length}
                     </div>
-                    <p className="text-gray-400 text-xs md:text-sm">Pending Orders</p>
+                    <p className="text-gray-300 text-xs md:text-sm font-medium">Pending Orders</p>
                   </GlassCard>
                 </div>
 
@@ -578,7 +573,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           className={`px-3 py-1.5 rounded text-xs font-cinzel smooth-transition ${
                             analyticsRange === range
                               ? 'bg-palacio-gold text-palacio-black'
-                              : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
                           }`}
                         >
                           {range === 'today' ? 'Today' : range === 'week' ? '7 Days' : range === 'month' ? '30 Days' : '1 Year'}
@@ -589,34 +584,34 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
                   {/* Revenue Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-400 text-xs mb-1">Total Revenue</p>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <p className="text-gray-300 text-xs mb-1 font-medium">Total Revenue</p>
                       <div className="flex items-end justify-between">
                         <span className="text-2xl font-playfair text-palacio-gold">
                           ${analytics.totalRevenue.toLocaleString()}
                         </span>
-                        <span className={`text-xs flex items-center gap-0.5 ${analytics.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <span className={`text-xs flex items-center gap-0.5 font-medium ${analytics.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {analytics.revenueChange >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                           {Math.abs(analytics.revenueChange).toFixed(1)}%
                         </span>
                       </div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-400 text-xs mb-1">Booking Revenue</p>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <p className="text-gray-300 text-xs mb-1 font-medium">Booking Revenue</p>
                       <div className="flex items-end justify-between">
                         <span className="text-2xl font-playfair text-palacio-gold">
                           ${analytics.bookingRevenue.toLocaleString()}
                         </span>
-                        <span className="text-xs text-gray-500">{analytics.totalBookings} bookings</span>
+                        <span className="text-xs text-gray-300 font-medium">{analytics.totalBookings} bookings</span>
                       </div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-400 text-xs mb-1">Order Revenue</p>
+                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                      <p className="text-gray-300 text-xs mb-1 font-medium">Order Revenue</p>
                       <div className="flex items-end justify-between">
                         <span className="text-2xl font-playfair text-palacio-gold">
                           ${analytics.orderRevenue.toLocaleString()}
                         </span>
-                        <span className="text-xs text-gray-500">{analytics.totalOrders} orders</span>
+                        <span className="text-xs text-gray-300 font-medium">{analytics.totalOrders} orders</span>
                       </div>
                     </div>
                   </div>
@@ -624,7 +619,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   {/* Simple Bar Chart */}
                   {analytics.chartData.length > 0 && (
                     <div className="mb-6">
-                      <p className="text-gray-400 text-xs mb-3">Revenue Trend</p>
+                      <p className="text-gray-300 text-xs mb-3 font-medium">Revenue Trend</p>
                       <div className="flex items-end gap-1 h-32 sm:h-40">
                         {analytics.chartData.map((day, i) => {
                           const maxVal = Math.max(...analytics.chartData.map(d => d.total), 1);
@@ -633,11 +628,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
                               <div className="w-full flex gap-0.5 items-end" style={{ height: '100%' }}>
                                 <div 
-                                  className="flex-1 bg-palacio-gold/60 rounded-t-sm smooth-transition group-hover:bg-palacio-gold"
+                                  className="flex-1 bg-palacio-gold/80 rounded-t-sm smooth-transition group-hover:bg-palacio-gold"
                                   style={{ height: `${height}%`, minHeight: height > 0 ? '4px' : '0' }}
                                 />
                               </div>
-                              <span className="text-[9px] text-gray-600 rotate-0 sm:rotate-0 truncate w-full text-center">
+                              <span className="text-[10px] text-gray-400 truncate w-full text-center font-medium">
                                 {day.date}
                               </span>
                             </div>
@@ -649,13 +644,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
                   {/* Averages */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="flex justify-between items-center py-2 border-t border-white/5">
-                      <span className="text-gray-400 text-sm">Avg. Booking Value</span>
-                      <span className="font-cinzel text-palacio-gold">${analytics.avgBookingValue.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-2 border-t border-white/10">
+                      <span className="text-gray-300 text-sm font-medium">Avg. Booking Value</span>
+                      <span className="font-cinzel text-palacio-gold font-medium">${analytics.avgBookingValue.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-t border-white/5">
-                      <span className="text-gray-400 text-sm">Avg. Order Value</span>
-                      <span className="font-cinzel text-palacio-gold">${analytics.avgOrderValue.toFixed(2)}</span>
+                    <div className="flex justify-between items-center py-2 border-t border-white/10">
+                      <span className="text-gray-300 text-sm font-medium">Avg. Order Value</span>
+                      <span className="font-cinzel text-palacio-gold font-medium">${analytics.avgOrderValue.toFixed(2)}</span>
                     </div>
                   </div>
                 </GlassCard>
@@ -669,16 +664,16 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Today's Revenue</span>
-                        <span className="font-cinzel text-palacio-gold text-lg">${todayRevenue.toLocaleString()}</span>
+                        <span className="text-gray-300 font-medium">Today's Revenue</span>
+                        <span className="font-cinzel text-palacio-gold text-lg font-medium">${todayRevenue.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">This Month (Bookings)</span>
-                        <span className="font-cinzel text-palacio-gold text-lg">${analytics.bookingRevenue.toLocaleString()}</span>
+                        <span className="text-gray-300 font-medium">This Month (Bookings)</span>
+                        <span className="font-cinzel text-palacio-gold text-lg font-medium">${analytics.bookingRevenue.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">This Month (Orders)</span>
-                        <span className="font-cinzel text-palacio-gold text-lg">${analytics.orderRevenue.toLocaleString()}</span>
+                        <span className="text-gray-300 font-medium">This Month (Orders)</span>
+                        <span className="font-cinzel text-palacio-gold text-lg font-medium">${analytics.orderRevenue.toLocaleString()}</span>
                       </div>
                     </div>
                   </GlassCard>
@@ -690,12 +685,12 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </div>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Occupied Rooms</span>
-                        <span className="font-cinzel text-palacio-gold text-lg">
+                        <span className="text-gray-300 font-medium">Occupied Rooms</span>
+                        <span className="font-cinzel text-palacio-gold text-lg font-medium">
                           {bookings.filter(b => b.status === 'confirmed').length} / {rooms.length + cottages.length}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-800 rounded-full h-2">
+                      <div className="w-full bg-gray-700 rounded-full h-2">
                         <div 
                           className="bg-palacio-gold h-2 rounded-full smooth-transition"
                           style={{ 
@@ -704,8 +699,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                         />
                       </div>
                       <div className="flex justify-between items-center pt-2">
-                        <span className="text-gray-400 text-sm">Occupancy Rate</span>
-                        <span className="font-cinzel text-palacio-gold">
+                        <span className="text-gray-300 text-sm font-medium">Occupancy Rate</span>
+                        <span className="font-cinzel text-palacio-gold font-medium">
                           {((bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100).toFixed(1)}%
                         </span>
                       </div>
@@ -724,14 +719,14 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       </h3>
                       <button 
                         onClick={() => setCurrentTab('bookings')}
-                        className="text-palacio-gold text-sm hover:underline flex items-center gap-1"
+                        className="text-palacio-gold text-sm hover:underline flex items-center-gold text-sm hover:underline flex items-center gap-1 font-medium"
                       >
                         View All <ChevronRight size={14} />
                       </button>
                     </div>
                     {recentBookings.length === 0 ? (
                       <GlassCard className="p-8 text-center">
-                        <p className="text-gray-500">No bookings yet</p>
+                        <p className="text-gray-400">No bookings yet</p>
                       </GlassCard>
                     ) : (
                       <div className="space-y-3">
@@ -739,19 +734,19 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           <GlassCard key={booking.reference_number} className="p-4">
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className="font-cinzel text-palacio-gold text-sm">
+                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
                                   {booking.username || 'Unknown'}
                                 </p>
-                                <p className="text-gray-500 text-xs mt-1">
+                                <p className="text-gray-300 text-xs mt-1 font-medium">
                                   {booking.cottage_name || booking.room_name || 'N/A'}
                                 </p>
-                                <p className="text-gray-600 text-xs">
+                                <p className="text-gray-400 text-xs">
                                   {booking.check_in_date} to {booking.check_out_date}
                                 </p>
                               </div>
                               <div className="text-right">
                                 <StatusBadge status={booking.status} size="sm" />
-                                <p className="font-cinzel text-palacio-gold text-sm mt-1">
+                                <p className="font-cinzel text-palacio-gold text-sm mt-1 font-medium">
                                   ${booking.total_price}
                                 </p>
                               </div>
@@ -771,14 +766,14 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       </h3>
                       <button 
                         onClick={() => setCurrentTab('orders')}
-                        className="text-palacio-gold text-sm hover:underline flex items-center gap-1"
+                        className="text-palacio-gold text-sm hover:underline flex items-center gap-1 font-medium"
                       >
                         View All <ChevronRight size={14} />
                       </button>
                     </div>
                     {recentOrders.length === 0 ? (
                       <GlassCard className="p-8 text-center">
-                        <p className="text-gray-500">No orders yet</p>
+                        <p className="text-gray-400">No orders yet</p>
                       </GlassCard>
                     ) : (
                       <div className="space-y-3">
@@ -786,13 +781,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           <GlassCard key={order.order_id} className="p-4">
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className="font-cinzel text-palacio-gold text-sm">
+                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
                                   {order.product_name || 'N/A'}
                                 </p>
-                                <p className="text-gray-500 text-xs mt-1">
+                                <p className="text-gray-300 text-xs mt-1 font-medium">
                                   {order.username || 'Unknown'}
                                 </p>
-                                <p className="text-gray-600 text-xs">
+                                <p className="text-gray-400 text-xs">
                                   x{order.quantity} - ${order.total_amount}
                                 </p>
                               </div>
@@ -824,18 +819,18 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   </button>
                   
                   <div className="relative w-full sm:w-64">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search rooms..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-palacio-gold/50"
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
                     />
                     {searchQuery && (
                       <button 
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                       >
                         <X size={14} />
                       </button>
@@ -845,9 +840,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
                 {filteredRooms.length === 0 ? (
                   <GlassCard className="p-12 text-center">
-                    <BedDouble size={48} className="text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg mb-2">No rooms found</p>
-                    <p className="text-gray-600 text-sm">
+                    <BedDouble size={48} className="text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-300 text-lg mb-2 font-medium">No rooms found</p>
+                    <p className="text-gray-400 text-sm">
                       {searchQuery ? 'Try adjusting your search' : 'Add your first room to get started'}
                     </p>
                   </GlassCard>
@@ -857,10 +852,10 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <GlassCard key={item.id} className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h3 className="font-playfair text-lg text-palacio-gold">
+                            <h3 className="font-playfair text-lg text-palacio-gold font-medium">
                               {item.name}
                             </h3>
-                            <p className="text-gray-400 text-sm">
+                            <p className="text-gray-300 text-sm font-medium">
                               ${item.price_per_night}/night - {item.capacity} guests
                             </p>
                             <div className="mt-2">
@@ -881,7 +876,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             </button>
                             <button
                               onClick={() => openDeleteModal(item.id, item.name, 'room')}
-                              className="p-2 hover:bg-red-900/20 rounded smooth-transition"
+                              className="p-2 hover:bg-red-900/30 rounded smooth-transition"
                               title="Delete"
                             >
                               <Trash2 size={18} className="text-red-400" />
@@ -915,7 +910,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <select
                       value={menuCategoryFilter}
                       onChange={(e) => setMenuCategoryFilter(e.target.value)}
-                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
                     >
                       {menuCategories.map(cat => (
                         <option key={cat} value={cat} className="bg-palacio-black">
@@ -925,18 +920,18 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </select>
 
                     <div className="relative flex-1 sm:w-48">
-                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                       <input
                         type="text"
                         placeholder="Search menu..."
                         value={menuSearch}
                         onChange={(e) => setMenuSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-palacio-gold/50"
+                        className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
                       />
                       {menuSearch && (
                         <button 
                           onClick={() => setMenuSearch('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                         >
                           <X size={14} />
                         </button>
@@ -947,9 +942,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
                 {filteredMenu.length === 0 ? (
                   <GlassCard className="p-12 text-center">
-                    <UtensilsCrossed size={48} className="text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg mb-2">No menu items found</p>
-                    <p className="text-gray-600 text-sm">
+                    <UtensilsCrossed size={48} className="text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-300 text-lg mb-2 font-medium">No menu items found</p>
+                    <p className="text-gray-400 text-sm">
                       {menuSearch || menuCategoryFilter !== 'all' ? 'Try adjusting your filters' : 'Add your first menu item'}
                     </p>
                   </GlassCard>
@@ -967,13 +962,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             }}
                           />
                         </div>
-                        <h3 className="font-playfair text-palacio-gold mb-1">
+                        <h3 className="font-playfair text-palacio-gold mb-1 font-medium">
                           {item.name}
                         </h3>
-                        <p className="text-gray-400 text-xs mb-2 capitalize">
+                        <p className="text-gray-300 text-xs mb-2 capitalize font-medium">
                           {item.category}
                         </p>
-                        <p className="font-cinzel text-palacio-gold mb-3">
+                        <p className="font-cinzel text-palacio-gold mb-3 font-medium">
                           ${item.price}
                         </p>
                         <div className="flex gap-2">
@@ -990,7 +985,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           </button>
                           <button
                             onClick={() => openDeleteModal(item.id, item.name, 'menu')}
-                            className="flex-1 p-2 hover:bg-red-900/20 rounded text-sm smooth-transition"
+                            className="flex-1 p-2 hover:bg-red-900/30 rounded text-sm smooth-transition"
                           >
                             <Trash2 size={14} className="inline mr-1 text-red-400" />
                             Delete
@@ -1011,7 +1006,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <select
                       value={bookingFilter}
                       onChange={(e) => setBookingFilter(e.target.value as any)}
-                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
                     >
                       <option value="all" className="bg-palacio-black">All Status</option>
                       <option value="pending" className="bg-palacio-black">Pending</option>
@@ -1022,18 +1017,18 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   </div>
 
                   <div className="relative w-full sm:w-64">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search by guest, ref, or room..."
                       value={bookingSearch}
                       onChange={(e) => setBookingSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-palacio-gold/50"
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
                     />
                     {bookingSearch && (
                       <button 
                         onClick={() => setBookingSearch('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                       >
                         <X size={14} />
                       </button>
@@ -1043,9 +1038,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
                 {filteredBookings.length === 0 ? (
                   <GlassCard className="p-12 text-center">
-                    <Calendar size={48} className="text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg mb-2">No bookings found</p>
-                    <p className="text-gray-600 text-sm">
+                    <Calendar size={48} className="text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-300 text-lg mb-2 font-medium">No bookings found</p>
+                    <p className="text-gray-400 text-sm">
                       {bookingSearch || bookingFilter !== 'all' ? 'Try adjusting your filters' : 'No bookings yet'}
                     </p>
                   </GlassCard>
@@ -1065,10 +1060,10 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                                 <Bell size={20} className="text-palacio-gold" />
                               </div>
                               <div>
-                                <h3 className="font-playfair text-lg text-palacio-gold">
+                                <h3 className="font-playfair text-lg text-palacio-gold font-medium">
                                   New Booking Request
                                 </h3>
-                                <p className="text-gray-500 text-xs">
+                                <p className="text-gray-400 text-xs">
                                   {booking.created_at ? new Date(booking.created_at).toLocaleString() : 'Just now'}
                                 </p>
                               </div>
@@ -1076,7 +1071,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             {showDelete && (
                               <button
                                 onClick={() => openDeleteModal(booking.reference_number, `Booking ${booking.reference_number}`, 'booking')}
-                                className="p-2 hover:bg-red-900/20 rounded smooth-transition"
+                                className="p-2 hover:bg-red-900/30 rounded smooth-transition"
                                 title="Delete booking"
                               >
                                 <Trash size={18} className="text-red-400" />
@@ -1084,39 +1079,39 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/20 rounded-lg p-3">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/30 rounded-lg p-3">
                             <div className="flex items-center gap-2">
-                              <User size={14} className="text-gray-500" />
+                              <User size={14} className="text-gray-400" />
                               <div>
-                                <p className="text-gray-500 text-xs">Guest</p>
-                                <p className="font-cinzel text-palacio-gold text-sm">
+                                <p className="text-gray-400 text-xs font-medium">Guest</p>
+                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
                                   {booking.username || 'Unknown'}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Calendar size={14} className="text-gray-500" />
+                              <Calendar size={14} className="text-gray-400" />
                               <div>
-                                <p className="text-gray-500 text-xs">Dates</p>
-                                <p className="font-cinzel text-palacio-gold text-sm">
+                                <p className="text-gray-400 text-xs font-medium">Dates</p>
+                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
                                   {booking.check_in_date} to {booking.check_out_date}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Home size={14} className="text-gray-500" />
+                              <Home size={14} className="text-gray-400" />
                               <div>
-                                <p className="text-gray-500 text-xs">Accommodation</p>
-                                <p className="font-cinzel text-palacio-gold text-sm">
+                                <p className="text-gray-400 text-xs font-medium">Accommodation</p>
+                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
                                   {booking.cottage_name || booking.room_name || 'N/A'}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <DollarSign size={14} className="text-gray-500" />
+                              <DollarSign size={14} className="text-gray-400" />
                               <div>
-                                <p className="text-gray-500 text-xs">Total</p>
-                                <p className="font-cinzel text-palacio-gold text-sm">
+                                <p className="text-gray-400 text-xs font-medium">Total</p>
+                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
                                   ${booking.total_price}
                                 </p>
                               </div>
@@ -1127,10 +1122,10 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             <div className="mb-4">
                               <div className="flex items-center gap-2 mb-2">
                                 <UtensilsCrossed size={14} className="text-palacio-gold" />
-                                <h4 className="font-cinzel text-sm text-palacio-gold">
+                                <h4 className="font-cinzel text-sm text-palacio-gold font-medium">
                                   Guest Orders
                                   {pendingOrders > 0 && (
-                                    <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full">
+                                    <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">
                                       {pendingOrders} pending
                                     </span>
                                   )}
@@ -1140,17 +1135,17 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                                 {userOrders.map((order) => (
                                   <div 
                                     key={order.order_id} 
-                                    className="flex items-center justify-between bg-black/20 rounded-lg p-2 text-sm"
+                                    className="flex items-center justify-between bg-black/30 rounded-lg p-2 text-sm"
                                   >
                                     <div className="flex items-center gap-2">
-                                      <span className="text-gray-400">{order.product_name}</span>
-                                      <span className="text-gray-600">x{order.quantity}</span>
-                                      <span className="text-palacio-gold/60">${order.total_amount}</span>
+                                      <span className="text-gray-300 font-medium">{order.product_name}</span>
+                                      <span className="text-gray-500">x{order.quantity}</span>
+                                      <span className="text-palacio-gold/80 font-medium">${order.total_amount}</span>
                                     </div>
                                     <select
                                       value={order.status}
                                       onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
-                                      className="px-2 py-0.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold text-xs focus:outline-none cursor-pointer"
+                                      className="px-2 py-0.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold text-xs focus:outline-none cursor-pointer font-medium"
                                     >
                                       <option value="pending">Pending</option>
                                       <option value="preparing">Preparing</option>
@@ -1164,7 +1159,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             </div>
                           )}
 
-                          <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                          <div className="flex items-center justify-between pt-3 border-t border-white/10">
                             <p className="text-gray-500 text-xs font-mono">
                               Ref: {booking.reference_number}
                             </p>
@@ -1172,7 +1167,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                               <select
                                 value={booking.status}
                                 onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
-                                className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
+                                className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium"
                               >
                                 <option value="pending">Pending</option>
                                 <option value="confirmed">Confirmed</option>
@@ -1197,7 +1192,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <select
                       value={orderFilter}
                       onChange={(e) => setOrderFilter(e.target.value as any)}
-                      className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
+                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
                     >
                       <option value="all" className="bg-palacio-black">All Status</option>
                       <option value="pending" className="bg-palacio-black">Pending</option>
@@ -1209,18 +1204,18 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   </div>
 
                   <div className="relative w-full sm:w-64">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search by customer, product..."
                       value={orderSearch}
                       onChange={(e) => setOrderSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-palacio-gold/50"
+                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
                     />
                     {orderSearch && (
                       <button 
                         onClick={() => setOrderSearch('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                       >
                         <X size={14} />
                       </button>
@@ -1230,9 +1225,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
                 {filteredOrders.length === 0 ? (
                   <GlassCard className="p-12 text-center">
-                    <ShoppingBag size={48} className="text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg mb-2">No orders found</p>
-                    <p className="text-gray-600 text-sm">
+                    <ShoppingBag size={48} className="text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-300 text-lg mb-2 font-medium">No orders found</p>
+                    <p className="text-gray-400 text-sm">
                       {orderSearch || orderFilter !== 'all' ? 'Try adjusting your filters' : 'No orders yet'}
                     </p>
                   </GlassCard>
@@ -1245,39 +1240,39 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           <div className="flex items-start justify-between mb-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                               <div>
-                                <p className="text-gray-400 text-sm">Customer</p>
-                                <p className="font-cinzel text-palacio-gold">
+                                <p className="text-gray-400 text-sm font-medium">Customer</p>
+                                <p className="font-cinzel text-palacio-gold font-medium">
                                   {order.username || 'Unknown'}
                                 </p>
-                                <p className="text-gray-500 text-xs">{order.user_email}</p>
+                                <p className="text-gray-400 text-xs">{order.user_email}</p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm">Reference</p>
-                                <p className="font-cinzel text-palacio-gold">
+                                <p className="text-gray-400 text-sm font-medium">Reference</p>
+                                <p className="font-cinzel text-palacio-gold font-medium">
                                   {order.reference_number}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm">Type</p>
-                                <p className="font-cinzel text-palacio-gold">
+                                <p className="text-gray-400 text-sm font-medium">Type</p>
+                                <p className="font-cinzel text-palacio-gold font-medium">
                                   {order.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm">Amount</p>
-                                <p className="font-cinzel text-palacio-gold">
+                                <p className="text-gray-400 text-sm font-medium">Amount</p>
+                                <p className="font-cinzel text-palacio-gold font-medium">
                                   ${order.total_amount}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm">Product</p>
-                                <p className="font-cinzel text-palacio-gold">
+                                <p className="text-gray-400 text-sm font-medium">Product</p>
+                                <p className="font-cinzel text-palacio-gold font-medium">
                                   {order.product_name || 'N/A'}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm">Category</p>
-                                <p className="font-cinzel text-palacio-gold">
+                                <p className="text-gray-400 text-sm font-medium">Category</p>
+                                <p className="font-cinzel text-palacio-gold font-medium">
                                   {order.category || 'N/A'}
                                 </p>
                               </div>
@@ -1285,7 +1280,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             {showDelete && (
                               <button
                                 onClick={() => openDeleteModal(order.order_id!, `Order ${order.reference_number}`, 'order')}
-                                className="p-2 hover:bg-red-900/20 rounded smooth-transition ml-4"
+                                className="p-2 hover:bg-red-900/30 rounded smooth-transition ml-4"
                                 title="Delete order"
                               >
                                 <Trash size={18} className="text-red-400" />
@@ -1293,11 +1288,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             )}
                           </div>
                           
-                          <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/5">
+                          <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/10">
                             <select
                               value={order.status}
                               onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
-                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer"
+                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium"
                             >
                               <option value="pending">Pending</option>
                               <option value="preparing">Preparing</option>
@@ -1351,11 +1346,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         }
       >
         <div className="space-y-4">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-300 text-sm font-medium">
             {editingItem ? 'Editing: ' + (editingItem.name || 'Item') : 'Create new item'}
           </p>
-          <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-            <p className="text-gray-500 text-sm text-center">
+          <div className="p-4 bg-white/10 rounded-lg border border-white/20">
+            <p className="text-gray-400 text-sm text-center">
               Form fields coming soon - connect to your Supabase schema
             </p>
           </div>
@@ -1386,10 +1381,10 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       >
         <div className="text-center py-4">
           <AlertTriangle size={48} className="text-red-400 mx-auto mb-4" />
-          <p className="text-gray-300 mb-2">
+          <p className="text-gray-200 mb-2 font-medium">
             Are you sure you want to delete <span className="text-palacio-gold font-semibold">{deleteModal.itemName}</span>?
           </p>
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-400 text-sm">
             This action cannot be undone.
           </p>
         </div>
