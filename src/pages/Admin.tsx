@@ -10,7 +10,6 @@ import {
   Home, 
   UtensilsCrossed,
   Search,
-  ChevronRight,
   X,
   AlertTriangle,
   CheckCircle,
@@ -19,8 +18,6 @@ import {
   ShoppingBag,
   Clock3,
   BarChart3,
-  ArrowUpRight,
-  ArrowDownRight,
   Trash
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -56,24 +53,20 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [formData, setFormData] = useState<any>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
-
   const [searchQuery, setSearchQuery] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
   const [bookingSearch, setBookingSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
-
   const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled'>('all');
   const [menuCategoryFilter, setMenuCategoryFilter] = useState<'all' | string>('all');
   const [analyticsRange, setAnalyticsRange] = useState<TimeRange>('month');
-
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     itemId: string;
     itemName: string;
     type: 'room' | 'menu' | 'booking' | 'order';
   }>({ isOpen: false, itemId: '', itemName: '', type: 'room' });
-
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showTabScroll, setShowTabScroll] = useState(false);
   const [previousCounts, setPreviousCounts] = useState({ bookings: 0, orders: 0 });
@@ -92,44 +85,37 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         setIsAdmin(false);
         return;
       }
-
       if (userRole === 'admin') {
         setIsAdmin(true);
         return;
       }
-
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setIsAdmin(false);
           return;
         }
-
         const { data: user, error } = await supabase
           .from('users')
           .select('role')
           .eq('id', session.user.id)
           .single();
-
         if (error || user?.role !== 'admin') {
           setIsAdmin(false);
           return;
         }
-
         setIsAdmin(true);
       } catch (err) {
         console.error('Admin verification error:', err);
         setIsAdmin(false);
       }
     };
-
     verifyAdmin();
   }, [isLoggedIn, userRole]);
 
   useEffect(() => {
     if (!isAdmin) return;
     fetchAllData();
-    
     const interval = setInterval(fetchAllData, 30000);
     return () => clearInterval(interval);
   }, [isAdmin]);
@@ -162,22 +148,55 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     try {
       setLoading(true);
       setUpdateError(null);
-      
-      const [roomsRes, cottagesRes, menuRes, bookingsRes, ordersRes] =
+      const [roomsRes, cottagesRes, menuRes, bookingsRes, ordersRes, usersRes] =
         await Promise.all([
           supabase.from('rooms').select('*'),
           supabase.from('cottages').select('*'),
           supabase.from('menu_items').select('*'),
           supabase.from('full_bookings').select('*').order('created_at', { ascending: false }),
           supabase.from('full_order_tracking').select('*').order('created_at', { ascending: false }),
+          supabase.from('users').select('id, name, email'),
         ]);
-
       if (roomsRes.data) setRooms(roomsRes.data);
       if (cottagesRes.data) setCottages(cottagesRes.data);
       if (menuRes.data) setMenu(menuRes.data);
-      if (bookingsRes.data) setBookings(bookingsRes.data);
-      if (ordersRes.data) setOrders(ordersRes.data);
-      
+      if (bookingsRes.data) {
+        const usersMap = new Map();
+        if (usersRes.data) {
+          usersRes.data.forEach((u: any) => usersMap.set(u.id, u));
+        }
+        const processedBookings = bookingsRes.data.map((b: any) => ({
+          ...b,
+          username: b.username || usersMap.get(b.guest_id)?.name || 'Guest',
+          user_email: b.user_email || usersMap.get(b.guest_id)?.email || '',
+          cottage_name: b.cottage_name || b.accommodation_name || '',
+          room_name: b.room_name || b.accommodation_name || '',
+        }));
+        setBookings(processedBookings);
+      }
+      if (ordersRes.data) {
+        const usersMap = new Map();
+        if (usersRes.data) {
+          usersRes.data.forEach((u: any) => usersMap.set(u.id, u));
+        }
+        const menuMap = new Map();
+        if (menuRes.data) {
+          menuRes.data.forEach((m: any) => menuMap.set(m.id, m));
+        }
+        const processedOrders = ordersRes.data.map((o: any) => {
+          const user = usersMap.get(o.guest_id);
+          const menuItem = menuMap.get(o.menu_item_id);
+          return {
+            ...o,
+            username: o.username || user?.name || 'Unknown',
+            user_email: o.user_email || user?.email || '',
+            product_name: o.product_name || menuItem?.name || 'N/A',
+            category: o.category || menuItem?.category || 'N/A',
+            quantity: o.quantity || 1,
+          };
+        });
+        setOrders(processedOrders);
+      }
       if (bookingsRes.error) console.error('Bookings fetch error:', bookingsRes.error);
       if (ordersRes.error) console.error('Orders fetch error:', ordersRes.error);
     } catch (error) {
@@ -197,7 +216,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   const confirmDelete = async () => {
     const { itemId, type } = deleteModal;
-    
     try {
       if (type === 'room') {
         const { error } = await supabase.from('rooms').delete().eq('id', itemId);
@@ -220,14 +238,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       } else if (type === 'order') {
         const { error } = await supabase.from('orders').delete().eq('id', itemId);
         if (!error) {
-          setOrders(orders.filter((o) => o.order_id !== itemId));
+          setOrders(orders.filter((o) => o.id !== itemId));
           showToast('Order deleted successfully');
         } else throw error;
       }
     } catch (err: any) {
       showToast(`Failed to delete: ${err.message}`, 'error');
     }
-    
     closeDeleteModal();
   };
 
@@ -239,13 +256,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('reference_number', referenceNumber)
         .select();
-
       if (error) {
         setUpdateError(`Booking update failed: ${error.message}`);
         showToast(`Failed to update booking: ${error.message}`, 'error');
         return;
       }
-
       setBookings(prev => 
         prev.map((b) => (b.reference_number === referenceNumber ? { ...b, status: newStatus } : b))
       );
@@ -264,15 +279,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', orderId)
         .select();
-
       if (error) {
         setUpdateError(`Order update failed: ${error.message}`);
         showToast(`Failed to update order: ${error.message}`, 'error');
         return;
       }
-
       setOrders(prev => 
-        prev.map((o) => (o.order_id === orderId ? { ...o, status: newStatus } : o))
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
       );
       showToast(`Order status updated to ${newStatus}`);
     } catch (err: any) {
@@ -284,7 +297,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const getDateRange = (range: TimeRange) => {
     const now = new Date();
     const start = new Date(now);
-    
     switch (range) {
       case 'today':
         start.setHours(0, 0, 0, 0);
@@ -304,56 +316,43 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   const analytics = useMemo(() => {
     const { start, end } = getDateRange(analyticsRange);
-    
     const periodBookings = bookings.filter(b => {
       const d = new Date(b.created_at || '');
       return d >= start && d <= end;
     });
-    
     const periodOrders = orders.filter(o => {
       const d = new Date(o.created_at || '');
       return d >= start && d <= end;
     });
-
     const bookingRevenue = periodBookings
       .filter(b => b.status === 'completed' || b.status === 'confirmed')
       .reduce((sum, b) => sum + (b.total_price || 0), 0);
-    
     const orderRevenue = periodOrders
       .filter(o => o.status === 'completed')
       .reduce((sum, o) => sum + (o.total_amount || 0), 0);
-
     const totalRevenue = bookingRevenue + orderRevenue;
-    
     const periodLength = end.getTime() - start.getTime();
     const prevStart = new Date(start.getTime() - periodLength);
     const prevEnd = new Date(start.getTime());
-    
     const prevBookings = bookings.filter(b => {
       const d = new Date(b.created_at || '');
       return d >= prevStart && d <= prevEnd;
     });
-    
     const prevOrders = orders.filter(o => {
       const d = new Date(o.created_at || '');
       return d >= prevStart && d <= prevEnd;
     });
-    
     const prevRevenue = prevBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').reduce((s, b) => s + (b.total_price || 0), 0)
       + prevOrders.filter(o => o.status === 'completed').reduce((s, o) => s + (o.total_amount || 0), 0);
-
     const revenueChange = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
-    
     const dailyData: Record<string, { bookings: number; orders: number; total: number }> = {};
     const days = Math.min(Math.ceil(periodLength / (1000 * 60 * 60 * 24)), 7);
-    
     for (let i = 0; i < days; i++) {
       const d = new Date(end);
       d.setDate(d.getDate() - i);
       const key = d.toISOString().split('T')[0];
       dailyData[key] = { bookings: 0, orders: 0, total: 0 };
     }
-
     periodBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').forEach(b => {
       const key = (b.created_at || '').split('T')[0];
       if (dailyData[key]) {
@@ -361,7 +360,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         dailyData[key].total += b.total_price || 0;
       }
     });
-
     periodOrders.filter(o => o.status === 'completed').forEach(o => {
       const key = (o.created_at || '').split('T')[0];
       if (dailyData[key]) {
@@ -369,7 +367,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         dailyData[key].total += o.total_amount || 0;
       }
     });
-
     const chartData = Object.entries(dailyData)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, data]) => ({
@@ -379,7 +376,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         orders: data.orders,
         total: data.total
       }));
-
     return {
       totalRevenue,
       bookingRevenue,
@@ -393,8 +389,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     };
   }, [bookings, orders, analyticsRange]);
 
-  const getUserOrders = (userEmail: string) => {
-    return orders.filter(o => o.user_email === userEmail);
+  const getUserOrders = (guestId: string) => {
+    return orders.filter(o => o.guest_id === guestId);
   };
 
   const filteredRooms = [...rooms, ...cottages].filter(item => 
@@ -412,7 +408,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const filteredBookings = bookings.filter(booking => {
     const matchesSearch = (booking.username || '').toLowerCase().includes(bookingSearch.toLowerCase()) ||
       booking.reference_number.toLowerCase().includes(bookingSearch.toLowerCase()) ||
-      (booking.cottage_name || '').toLowerCase().includes(bookingSearch.toLowerCase());
+      (booking.cottage_name || '').toLowerCase().includes(bookingSearch.toLowerCase()) ||
+      (booking.room_name || '').toLowerCase().includes(bookingSearch.toLowerCase()) ||
+      (booking.accommodation_name || '').toLowerCase().includes(bookingSearch.toLowerCase());
     const matchesFilter = bookingFilter === 'all' || booking.status === bookingFilter;
     return matchesSearch && matchesFilter;
   });
@@ -420,16 +418,15 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = (order.username || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
       (order.product_name || '').toLowerCase().includes(orderSearch.toLowerCase()) ||
-      order.reference_number.toLowerCase().includes(orderSearch.toLowerCase());
+      order.reference_number.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      (order.category || '').toLowerCase().includes(orderSearch.toLowerCase());
     const matchesFilter = orderFilter === 'all' || order.status === orderFilter;
     return matchesSearch && matchesFilter;
   });
 
   const menuCategories = ['all', ...new Set(menu.map(item => item.category))];
-
   const recentBookings = bookings.slice(0, 5);
   const recentOrders = orders.slice(0, 5);
-
   const todayRevenue = bookings
     .filter(b => {
       const bookingDate = new Date(b.created_at || '');
@@ -438,7 +435,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         bookingDate.toDateString() === today.toDateString();
     })
     .reduce((sum, b) => sum + (b.total_price || 0), 0);
-
   const canDeleteBooking = (status: string) => status === 'completed' || status === 'cancelled';
   const canDeleteOrder = (status: string) => status === 'completed' || status === 'cancelled';
 
@@ -678,7 +674,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="text-palacio-gold font-bold text-sm">{b.username || 'Guest'}</p>
-                              <p className="text-gray-200 text-xs font-bold mt-0.5">{b.cottage_name || b.room_name || 'N/A'}</p>
+                              <p className="text-gray-200 text-xs font-bold mt-0.5">{b.cottage_name || b.room_name || b.accommodation_name || 'N/A'}</p>
                               <p className="text-gray-400 text-xs">{b.check_in_date} → {b.check_out_date}</p>
                             </div>
                             <div className="text-right">
@@ -708,7 +704,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   ) : (
                     <div className="space-y-2">
                       {recentOrders.map(o => (
-                        <div key={o.order_id} className="bg-white/15 border border-white/25 rounded-lg p-4">
+                        <div key={o.id} className="bg-white/15 border border-white/25 rounded-lg p-4">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <p className="text-palacio-gold font-bold text-sm">
@@ -977,7 +973,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 ) : (
                   <div className="space-y-4">
                     {filteredBookings.map((booking) => {
-                      const userOrders = getUserOrders(booking.user_email || '');
+                      const userOrders = getUserOrders(booking.guest_id || '');
                       const hasOrders = userOrders.length > 0;
                       const pendingOrders = userOrders.filter(o => o.status === 'pending').length;
                       const showDelete = canDeleteBooking(booking.status);
@@ -1033,7 +1029,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                               <div>
                                 <p className="text-gray-400 text-xs font-medium">Accommodation</p>
                                 <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {booking.cottage_name || booking.room_name || 'N/A'}
+                                  {booking.cottage_name || booking.room_name || booking.accommodation_name || 'N/A'}
                                 </p>
                               </div>
                             </div>
@@ -1064,7 +1060,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                               <div className="space-y-2">
                                 {userOrders.map((order) => (
                                   <div 
-                                    key={order.order_id} 
+                                    key={order.id} 
                                     className="flex items-center justify-between bg-black/30 rounded-lg p-2 text-sm"
                                   >
                                     <div className="flex items-center gap-2">
@@ -1074,7 +1070,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                                     </div>
                                     <select
                                       value={order.status}
-                                      onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
+                                      onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
                                       className="px-2 py-0.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold text-xs focus:outline-none cursor-pointer font-medium"
                                     >
                                       <option value="pending">Pending</option>
@@ -1165,7 +1161,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     {filteredOrders.map((order) => {
                       const showDelete = canDeleteOrder(order.status);
                       return (
-                        <GlassCard key={order.order_id} className="p-6">
+                        <GlassCard key={order.id} className="p-6">
                           <div className="flex items-start justify-between mb-4">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
                               <div>
@@ -1208,7 +1204,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             </div>
                             {showDelete && (
                               <button
-                                onClick={() => openDeleteModal(order.order_id!, `Order ${order.reference_number}`, 'order')}
+                                onClick={() => openDeleteModal(order.id, `Order ${order.reference_number}`, 'order')}
                                 className="p-2 hover:bg-red-900/30 rounded smooth-transition ml-4"
                                 title="Delete order"
                               >
@@ -1220,7 +1216,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/10">
                             <select
                               value={order.status}
-                              onChange={(e) => handleUpdateOrderStatus(order.order_id!, e.target.value)}
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
                               className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium"
                             >
                               <option value="pending">Pending</option>
