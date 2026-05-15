@@ -14,7 +14,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string>();
-  const [cart, setCart] = useState<<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
