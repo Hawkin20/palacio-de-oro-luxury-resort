@@ -62,7 +62,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [bookingSearch, setBookingSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
 
-  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'confirmed' | 'cancelled' | 'completed'>('all');
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [orderFilter, setOrderFilter] = useState<'all' | 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled'>('all');
   const [menuCategoryFilter, setMenuCategoryFilter] = useState<'all' | string>('all');
   const [analyticsRange, setAnalyticsRange] = useState<TimeRange>('month');
@@ -345,7 +345,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     const revenueChange = prevRevenue > 0 ? ((totalRevenue - prevRevenue) / prevRevenue) * 100 : 0;
     
     const dailyData: Record<string, { bookings: number; orders: number; total: number }> = {};
-    const days = Math.ceil(periodLength / (1000 * 60 * 60 * 24));
+    const days = Math.min(Math.ceil(periodLength / (1000 * 60 * 60 * 24)), 7);
     
     for (let i = 0; i < days; i++) {
       const d = new Date(end);
@@ -461,7 +461,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   return (
     <div className="min-h-screen pt-24 pb-20 relative">
-      {/* Toast Notifications */}
       <div className="fixed top-24 right-4 z-50 space-y-2">
         {toasts.map(toast => (
           <div
@@ -483,7 +482,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="section-title mb-8">Admin Dashboard</h1>
 
-        {/* Error Banner */}
         {updateError && (
           <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200 flex items-center gap-2">
             <AlertTriangle size={18} />
@@ -491,7 +489,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           </div>
         )}
 
-        {/* Tab Navigation */}
         <div className="relative mb-8">
           <div 
             id="admin-tabs"
@@ -527,114 +524,74 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           <LoadingSpinner />
         ) : (
           <>
-            {/* DASHBOARD TAB */}
             {currentTab === 'dashboard' && (
               <div className="space-y-6">
-                {/* Quick Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <GlassCard className="p-4 md:p-6 text-center">
-                    <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
-                      {rooms.length + cottages.length}
-                    </div>
-                    <p className="text-gray-300 text-xs md:text-sm font-medium">Total Accommodations</p>
-                  </GlassCard>
-                  <GlassCard className="p-4 md:p-6 text-center">
-                    <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
-                      {menu.length}
-                    </div>
-                    <p className="text-gray-300 text-xs md:text-sm font-medium">Menu Items</p>
-                  </GlassCard>
-                  <GlassCard className="p-4 md:p-6 text-center">
-                    <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
-                      {bookings.filter((b) => b.status === 'pending').length}
-                    </div>
-                    <p className="text-gray-300 text-xs md:text-sm font-medium">Pending Bookings</p>
-                  </GlassCard>
-                  <GlassCard className="p-4 md:p-6 text-center">
-                    <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1">
-                      {orders.filter((o) => o.status === 'pending').length}
-                    </div>
-                    <p className="text-gray-300 text-xs md:text-sm font-medium">Pending Orders</p>
-                  </GlassCard>
+                  {[
+                    { val: rooms.length + cottages.length, label: 'Total Accommodations' },
+                    { val: menu.length, label: 'Menu Items' },
+                    { val: bookings.filter(b => b.status === 'pending').length, label: 'Pending Bookings' },
+                    { val: orders.filter(o => o.status === 'pending').length, label: 'Pending Orders' },
+                  ].map((s, i) => (
+                    <GlassCard key={i} className="p-4 md:p-6 text-center !bg-white/15 !border-white/25">
+                      <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1 font-bold">{s.val}</div>
+                      <p className="text-gray-100 text-xs md:text-sm font-bold">{s.label}</p>
+                    </GlassCard>
+                  ))}
                 </div>
 
-                {/* BUSINESS ANALYTICS SECTION */}
-                <GlassCard className="p-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <div className="flex items-center gap-3">
-                      <BarChart3 size={22} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-xl text-palacio-gold">Business Analytics</h3>
+                <div className="bg-white/15 border border-white/25 rounded-xl p-5">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 size={20} className="text-palacio-gold" />
+                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Business Analytics</h3>
                     </div>
                     <div className="flex gap-2">
-                      {(['today', 'week', 'month', 'year'] as TimeRange[]).map(range => (
-                        <button
-                          key={range}
-                          onClick={() => setAnalyticsRange(range)}
-                          className={`px-3 py-1.5 rounded text-xs font-cinzel smooth-transition ${
-                            analyticsRange === range
-                              ? 'bg-palacio-gold text-palacio-black'
-                              : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                          }`}
-                        >
-                          {range === 'today' ? 'Today' : range === 'week' ? '7 Days' : range === 'month' ? '30 Days' : '1 Year'}
+                      {(['today','week','month','year'] as TimeRange[]).map(r => (
+                        <button key={r} onClick={() => setAnalyticsRange(r)}
+                          className={`px-3 py-1.5 rounded text-xs font-bold smooth-transition ${
+                            analyticsRange === r ? 'bg-palacio-gold text-black' : 'bg-black/30 text-gray-200 hover:bg-black/50'
+                          }`}>
+                          {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : '1Y'}
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Revenue Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <p className="text-gray-300 text-xs mb-1 font-medium">Total Revenue</p>
-                      <div className="flex items-end justify-between">
-                        <span className="text-2xl font-playfair text-palacio-gold">
-                          ${analytics.totalRevenue.toLocaleString()}
-                        </span>
-                        <span className={`text-xs flex items-center gap-0.5 font-medium ${analytics.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {analytics.revenueChange >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                          {Math.abs(analytics.revenueChange).toFixed(1)}%
-                        </span>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                    <div className="bg-black/40 rounded-lg p-4 border border-white/10">
+                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Total Revenue</p>
+                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.totalRevenue.toLocaleString()}</p>
+                      <p className={`text-xs font-bold mt-1 ${analytics.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {analytics.revenueChange >= 0 ? '▲' : '▼'} {Math.abs(analytics.revenueChange).toFixed(1)}% vs last period
+                      </p>
                     </div>
-                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <p className="text-gray-300 text-xs mb-1 font-medium">Booking Revenue</p>
-                      <div className="flex items-end justify-between">
-                        <span className="text-2xl font-playfair text-palacio-gold">
-                          ${analytics.bookingRevenue.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-gray-300 font-medium">{analytics.totalBookings} bookings</span>
-                      </div>
+                    <div className="bg-black/40 rounded-lg p-4 border border-white/10">
+                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Booking Revenue</p>
+                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.bookingRevenue.toLocaleString()}</p>
+                      <p className="text-gray-400 text-xs font-bold mt-1">{analytics.totalBookings} bookings</p>
                     </div>
-                    <div className="bg-white/10 rounded-lg p-4 border border-white/20">
-                      <p className="text-gray-300 text-xs mb-1 font-medium">Order Revenue</p>
-                      <div className="flex items-end justify-between">
-                        <span className="text-2xl font-playfair text-palacio-gold">
-                          ${analytics.orderRevenue.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-gray-300 font-medium">{analytics.totalOrders} orders</span>
-                      </div>
+                    <div className="bg-black/40 rounded-lg p-4 border border-white/10">
+                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Order Revenue</p>
+                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.orderRevenue.toLocaleString()}</p>
+                      <p className="text-gray-400 text-xs font-bold mt-1">{analytics.totalOrders} orders</p>
                     </div>
                   </div>
 
-                  {/* Simple Bar Chart */}
                   {analytics.chartData.length > 0 && (
-                    <div className="mb-6">
-                      <p className="text-gray-300 text-xs mb-3 font-medium">Revenue Trend</p>
-                      <div className="flex items-end gap-1 h-32 sm:h-40">
+                    <div className="mb-4">
+                      <p className="text-gray-300 text-xs font-bold mb-2">Revenue Trend (Last 7 Days)</p>
+                      <div className="flex items-end gap-2 h-28">
                         {analytics.chartData.map((day, i) => {
                           const maxVal = Math.max(...analytics.chartData.map(d => d.total), 1);
-                          const height = maxVal > 0 ? (day.total / maxVal) * 100 : 0;
+                          const h = maxVal > 0 ? (day.total / maxVal) * 100 : 0;
                           return (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
-                              <div className="w-full flex gap-0.5 items-end" style={{ height: '100%' }}>
-                                <div 
-                                  className="flex-1 bg-palacio-gold/80 rounded-t-sm smooth-transition group-hover:bg-palacio-gold"
-                                  style={{ height: `${height}%`, minHeight: height > 0 ? '4px' : '0' }}
-                                />
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                              <div className="text-[9px] text-palacio-gold font-bold">${Math.round(day.total)}</div>
+                              <div className="w-full bg-gray-700 rounded-t-sm relative" style={{ height: `${Math.max(h, 5)}%` }}>
+                                <div className="absolute inset-0 bg-palacio-gold rounded-t-sm opacity-90" />
                               </div>
-                              <span className="text-[10px] text-gray-400 truncate w-full text-center font-medium">
-                                {day.date}
-                              </span>
+                              <div className="text-[9px] text-gray-400 font-bold">{day.date.split(' ')[0]}</div>
                             </div>
                           );
                         })}
@@ -642,167 +599,142 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </div>
                   )}
 
-                  {/* Averages */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex justify-between items-center py-2 border-t border-white/10">
-                      <span className="text-gray-300 text-sm font-medium">Avg. Booking Value</span>
-                      <span className="font-cinzel text-palacio-gold font-medium">${analytics.avgBookingValue.toFixed(2)}</span>
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-sm font-bold">Avg Booking</span>
+                      <span className="text-palacio-gold font-bold">${analytics.avgBookingValue.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2 border-t border-white/10">
-                      <span className="text-gray-300 text-sm font-medium">Avg. Order Value</span>
-                      <span className="font-cinzel text-palacio-gold font-medium">${analytics.avgOrderValue.toFixed(2)}</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-sm font-bold">Avg Order</span>
+                      <span className="text-palacio-gold font-bold">${analytics.avgOrderValue.toFixed(0)}</span>
                     </div>
                   </div>
-                </GlassCard>
+                </div>
 
-                {/* Revenue & Occupancy */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <GlassCard className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <DollarSign size={20} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold">Revenue Overview</h3>
+                  <div className="bg-white/15 border border-white/25 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <DollarSign size={18} className="text-palacio-gold" />
+                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Revenue Overview</h3>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 font-medium">Today's Revenue</span>
-                        <span className="font-cinzel text-palacio-gold text-lg font-medium">${todayRevenue.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 font-medium">This Month (Bookings)</span>
-                        <span className="font-cinzel text-palacio-gold text-lg font-medium">${analytics.bookingRevenue.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 font-medium">This Month (Orders)</span>
-                        <span className="font-cinzel text-palacio-gold text-lg font-medium">${analytics.orderRevenue.toLocaleString()}</span>
-                      </div>
+                      {[
+                        { label: "Today's Revenue", val: todayRevenue },
+                        { label: 'This Month (Bookings)', val: analytics.bookingRevenue },
+                        { label: 'This Month (Orders)', val: analytics.orderRevenue },
+                      ].map((r, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-gray-100 font-bold text-sm">{r.label}</span>
+                          <span className="text-palacio-gold font-bold font-cinzel">${r.val.toLocaleString()}</span>
+                        </div>
+                      ))}
                     </div>
-                  </GlassCard>
+                  </div>
 
-                  <GlassCard className="p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <BedDouble size={20} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold">Occupancy Rate</h3>
+                  <div className="bg-white/15 border border-white/25 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BedDouble size={18} className="text-palacio-gold" />
+                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Occupancy Rate</h3>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-300 font-medium">Occupied Rooms</span>
-                        <span className="font-cinzel text-palacio-gold text-lg font-medium">
+                      <div className="flex justify-between">
+                        <span className="text-gray-100 font-bold text-sm">Occupied</span>
+                        <span className="text-palacio-gold font-bold font-cinzel">
                           {bookings.filter(b => b.status === 'confirmed').length} / {rooms.length + cottages.length}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-palacio-gold h-2 rounded-full smooth-transition"
-                          style={{ 
-                            width: `${Math.min(100, (bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100)}%` 
-                          }}
-                        />
+                      <div className="w-full bg-gray-700 rounded-full h-3">
+                        <div className="bg-palacio-gold h-3 rounded-full" style={{
+                          width: `${Math.min(100, (bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100)}%`
+                        }} />
                       </div>
-                      <div className="flex justify-between items-center pt-2">
-                        <span className="text-gray-300 text-sm font-medium">Occupancy Rate</span>
-                        <span className="font-cinzel text-palacio-gold font-medium">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300 text-xs font-bold">Rate</span>
+                        <span className="text-palacio-gold font-bold">
                           {((bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
                 </div>
 
-                {/* Recent Activity */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Recent Bookings */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-playfair text-lg text-palacio-gold flex items-center gap-2">
-                        <Clock3 size={18} />
-                        Recent Bookings
-                      </h3>
-                      <button 
-                        onClick={() => setCurrentTab('bookings')}
-                        className="text-palacio-gold text-sm hover:underline flex items-center-gold text-sm hover:underline flex items-center gap-1 font-medium"
-                      >
-                        View All <ChevronRight size={14} />
-                      </button>
-                    </div>
-                    {recentBookings.length === 0 ? (
-                      <GlassCard className="p-8 text-center">
-                        <p className="text-gray-400">No bookings yet</p>
-                      </GlassCard>
-                    ) : (
-                      <div className="space-y-3">
-                        {recentBookings.map(booking => (
-                          <GlassCard key={booking.reference_number} className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {booking.username || 'Unknown'}
-                                </p>
-                                <p className="text-gray-300 text-xs mt-1 font-medium">
-                                  {booking.cottage_name || booking.room_name || 'N/A'}
-                                </p>
-                                <p className="text-gray-400 text-xs">
-                                  {booking.check_in_date} to {booking.check_out_date}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <StatusBadge status={booking.status} size="sm" />
-                                <p className="font-cinzel text-palacio-gold text-sm mt-1 font-medium">
-                                  ${booking.total_price}
-                                </p>
-                              </div>
-                            </div>
-                          </GlassCard>
-                        ))}
-                      </div>
-                    )}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-playfair text-lg text-palacio-gold font-bold flex items-center gap-2">
+                      <Clock3 size={16} /> Recent Bookings
+                    </h3>
+                    <button onClick={() => setCurrentTab('bookings')} className="text-palacio-gold text-xs font-bold hover:underline">
+                      View All →
+                    </button>
                   </div>
+                  {recentBookings.length === 0 ? (
+                    <div className="bg-white/10 border border-white/20 rounded-lg p-6 text-center">
+                      <p className="text-gray-300 font-bold">No bookings yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {recentBookings.map(b => (
+                        <div key={b.reference_number} className="bg-white/15 border border-white/25 rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-palacio-gold font-bold text-sm">{b.username || 'Guest'}</p>
+                              <p className="text-gray-200 text-xs font-bold mt-0.5">{b.cottage_name || b.room_name || 'N/A'}</p>
+                              <p className="text-gray-400 text-xs">{b.check_in_date} → {b.check_out_date}</p>
+                            </div>
+                            <div className="text-right">
+                              <StatusBadge status={b.status} size="sm" />
+                              <p className="text-palacio-gold font-bold text-sm mt-1">${b.total_price}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                  {/* Recent Orders */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-playfair text-lg text-palacio-gold flex items-center gap-2">
-                        <ShoppingBag size={18} />
-                        Recent Orders
-                      </h3>
-                      <button 
-                        onClick={() => setCurrentTab('orders')}
-                        className="text-palacio-gold text-sm hover:underline flex items-center gap-1 font-medium"
-                      >
-                        View All <ChevronRight size={14} />
-                      </button>
-                    </div>
-                    {recentOrders.length === 0 ? (
-                      <GlassCard className="p-8 text-center">
-                        <p className="text-gray-400">No orders yet</p>
-                      </GlassCard>
-                    ) : (
-                      <div className="space-y-3">
-                        {recentOrders.map(order => (
-                          <GlassCard key={order.order_id} className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {order.product_name || 'N/A'}
-                                </p>
-                                <p className="text-gray-300 text-xs mt-1 font-medium">
-                                  {order.username || 'Unknown'}
-                                </p>
-                                <p className="text-gray-400 text-xs">
-                                  x{order.quantity} - ${order.total_amount}
-                                </p>
-                              </div>
-                              <StatusBadge status={order.status} size="sm" />
-                            </div>
-                          </GlassCard>
-                        ))}
-                      </div>
-                    )}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-playfair text-lg text-palacio-gold font-bold flex items-center gap-2">
+                      <ShoppingBag size={16} /> Recent Orders
+                    </h3>
+                    <button onClick={() => setCurrentTab('orders')} className="text-palacio-gold text-xs font-bold hover:underline">
+                      View All →
+                    </button>
                   </div>
+                  {recentOrders.length === 0 ? (
+                    <div className="bg-white/10 border border-white/20 rounded-lg p-6 text-center">
+                      <p className="text-gray-300 font-bold">No orders yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {recentOrders.map(o => (
+                        <div key={o.order_id} className="bg-white/15 border border-white/25 rounded-lg p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="text-palacio-gold font-bold text-sm">
+                                {o.product_name || o.reference_number || 'Order'}
+                              </p>
+                              <p className="text-gray-200 text-xs font-bold mt-0.5">
+                                {o.username || o.user_email || 'Unknown Customer'}
+                              </p>
+                              <p className="text-gray-400 text-xs">
+                                Qty: {o.quantity || 1} · ${o.total_amount}
+                                {o.order_type && ` · ${o.order_type === 'dine_in' ? 'Dine-in' : 'Delivery'}`}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <StatusBadge status={o.status} size="sm" />
+                              <p className="text-palacio-gold font-bold text-sm mt-1">${o.total_amount}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* ROOMS TAB */}
             {currentTab === 'rooms' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -890,7 +822,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               </div>
             )}
 
-            {/* MENU TAB */}
             {currentTab === 'menu' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -900,7 +831,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       setFormData({});
                       setShowModal(true);
                     }}
-                    className="gold-glow-btn"
+                    className className="gold-glow-btn"
                   >
                     <Plus className="inline mr-2" size={18} />
                     Add Menu Item
@@ -998,7 +929,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               </div>
             )}
 
-            {/* BOOKINGS TAB */}
             {currentTab === 'bookings' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -1184,7 +1114,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               </div>
             )}
 
-            {/* ORDERS TAB */}
             {currentTab === 'orders' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -1312,7 +1241,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         )}
       </div>
 
-      {/* Add/Edit Modal */}
       <Modal
         isOpen={showModal}
         onClose={() => {
@@ -1357,7 +1285,6 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}
