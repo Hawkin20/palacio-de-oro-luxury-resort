@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { 
   ArrowRight, Star, MapPin, 
   Calendar, Users, Clock, Award, Sparkles, Heart, Eye, 
-  Instagram, Mail, Phone 
+  Instagram, Mail, Phone, BedDouble, UtensilsCrossed, AlertCircle
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { Room } from '../lib/types';
+import { Room, Cottage, MenuItem } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
 
 interface HomeProps {
@@ -65,12 +65,13 @@ const amenitiesList = [
 ];
 
 export default function Home({ onNavigate }: HomeProps) {
-  const [rooms, setRooms] = useState([] as Room[]);
+  const [rooms, setRooms] = useState<<Room[]>([]);
+  const [cottages, setCottages] = useState<Cottage[]>([]);
+  const [menuItems, setMenuItems] = useState<<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [scrollY, setScrollY] = useState(0);
-  const [hoveredRoom, setHoveredRoom] = useState(null as number | null);
+  const [hoveredRoom, setHoveredRoom] = useState<number | null>(null);
   const [countdown, setCountdown] = useState({ days: 12, hours: 5, minutes: 43, seconds: 21 });
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -92,33 +93,61 @@ export default function Home({ onNavigate }: HomeProps) {
   }, []);
 
   useEffect(() => {
-    fetchRooms();
-    checkAdmin();
+    fetchData();
   }, []);
 
-  const checkAdmin = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-      setIsAdmin(data?.role === 'admin');
-    }
-  };
-
-  const fetchRooms = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const { data } = await supabase.from('rooms').select('*').limit(4);
-      if (data) setRooms(data);
+      const [roomsRes, cottagesRes, menuRes] = await Promise.all([
+        supabase.from('rooms').select('*'),
+        supabase.from('cottages').select('*'),
+        supabase.from('menu_items').select('*').eq('is_featured', true).limit(6),
+      ]);
+      if (roomsRes.data) setRooms(roomsRes.data);
+      if (cottagesRes.data) setCottages(cottagesRes.data);
+      if (menuRes.data) setMenuItems(menuRes.data);
     } catch (error) {
-      console.error('Error fetching rooms:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const getTotalAvailable = () => {
+    const roomAvailable = rooms.reduce((sum, r) => sum + (r.quantity || 0), 0);
+    const cottageAvailable = cottages.reduce((sum, c) => sum + (c.quantity || 0), 0);
+    return roomAvailable + cottageAvailable;
+  };
+
+  const getUrgencyMessage = () => {
+    const total = getTotalAvailable();
+    if (total === 0) return { text: 'Fully Booked!', color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/30' };
+    if (total <= 3) return { text: `Only ${total} rooms left!`, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/30' };
+    if (total <= 8) return { text: `${total} rooms remaining — Book now!`, color: 'text-orange-400', bg: 'bg-orange-500/20', border: 'border-orange-500/30' };
+    return { text: `${total} rooms available`, color: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/30' };
+  };
+
+  const getMenuOrderCount = (menuItemId: string) => {
+    return menuItems.find(m => m.id === menuItemId)?.order_count || 0;
+  };
+
+  const getTopBestsellers = () => {
+    const sorted = [...menuItems].sort((a, b) => (b.order_count || 0) - (a.order_count || 0));
+    return sorted.slice(0, 3).map(m => m.id);
+  };
+
+  const urgency = getUrgencyMessage();
+  const bestsellerIds = getTopBestsellers();
+  const allAccommodations = [...rooms, ...cottages];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-24 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palacio-gold" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-palacio-black">
@@ -147,9 +176,15 @@ export default function Home({ onNavigate }: HomeProps) {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
 
         <div className="relative text-center px-6 py-20 max-w-5xl mx-auto z-10">
-          <div className="inline-flex items-center gap-2 glass-card px-4 py-1.5 mb-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 glass-card px-4 py-1.5 mb-6 animate-fade-in">
             <Award size={14} className="text-palacio-gold" />
             <span className="text-palacio-gold text-xs font-cinzel tracking-widest">LUXURY RESORT & SPA</span>
+          </div>
+
+          {/* URGENCY BANNER */}
+          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${urgency.bg} border ${urgency.border}`}>
+            <AlertCircle size={16} className={urgency.color} />
+            <span className={`font-bold text-sm ${urgency.color}`}>{urgency.text}</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-9xl font-playfair text-palacio-gold mb-4 drop-shadow-2xl tracking-wide">
@@ -245,37 +280,52 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {rooms.map((room) => {
-                const isHovered = hoveredRoom === room.id;
+              {allAccommodations.slice(0, 8).map((item) => {
+                const isHovered = hoveredRoom === item.id;
+                const quantity = item.quantity || 0;
+                const isAvailable = quantity > 0 && item.status === 'available';
+                
                 return (
                   <div
-                    key={room.id}
+                    key={item.id}
                     className="group cursor-pointer relative"
                     style={{ 
                       transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
                       transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
                     }}
-                    onMouseEnter={() => setHoveredRoom(room.id)}
+                    onMouseEnter={() => setHoveredRoom(item.id)}
                     onMouseLeave={() => setHoveredRoom(null)}
                     onClick={() => onNavigate('rooms')}
                   >
                     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl group-hover:shadow-palacio-gold/10">
                       <div className="relative h-56 overflow-hidden">
                         <img
-                          src={room.image_url}
-                          alt={room.name}
+                          src={item.image_url}
+                          alt={item.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                         
-                        <div className="absolute top-4 right-4 bg-palacio-gold text-palacio-black px-4 py-2 rounded-xl font-cinzel font-bold text-sm shadow-lg">
-                          ${room.price_per_night}
-                          <span className="text-[10px] font-normal block">/night</span>
+                        {/* QUANTITY BADGE */}
+                        <div className="absolute top-4 right-4">
+                          <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg ${
+                            isAvailable
+                              ? 'bg-green-500/90 text-white'
+                              : 'bg-red-500/90 text-white'
+                          }`}>
+                            {isAvailable ? `${quantity} left` : 'Fully Booked'}
+                          </span>
                         </div>
 
                         <div className="absolute top-4 left-4">
-                          <StatusBadge status={room.status} size="sm" />
+                          <StatusBadge status={item.status} size="sm" />
                         </div>
+
+                        {!isAvailable && (
+                          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                            <span className="text-red-400 font-bold text-lg font-cinzel tracking-wider">SOLD OUT</span>
+                          </div>
+                        )}
 
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
                           <div className="text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
@@ -290,7 +340,7 @@ export default function Home({ onNavigate }: HomeProps) {
                       <div className="p-5">
                         <div className="flex justify-between items-start mb-3">
                           <h3 className="font-playfair text-lg text-palacio-gold group-hover:text-white transition-colors duration-300">
-                            {room.name}
+                            {item.name}
                           </h3>
                           <div className="flex items-center gap-1 text-yellow-400 text-xs">
                             <Star size={12} fill="currentColor" />
@@ -301,11 +351,11 @@ export default function Home({ onNavigate }: HomeProps) {
                         <div className="flex items-center gap-4 text-gray-500 text-xs mb-4">
                           <span className="flex items-center gap-1">
                             <Users size={12} />
-                            {room.capacity} Guests
+                            {item.capacity} Guests
                           </span>
                           <span className="flex items-center gap-1">
-                            <MapPin size={12} />
-                            {room.view || 'Ocean View'}
+                            <BedDouble size={12} />
+                            {quantity} available
                           </span>
                         </div>
 
@@ -321,12 +371,14 @@ export default function Home({ onNavigate }: HomeProps) {
                           <div>
                             <span className="text-gray-500 text-[10px] font-cinzel">FROM</span>
                             <span className="text-palacio-gold font-cinzel font-bold text-xl ml-1">
-                              ${room.price_per_night}
+                              ${item.price_per_night}
                             </span>
                             <span className="text-gray-600 text-[10px]">/NIGHT</span>
                           </div>
-                          <span className="text-xs font-cinzel text-palacio-gold flex items-center gap-1 group-hover:gap-2 transition-all">
-                            VIEW DETAILS
+                          <span className={`text-xs font-cinzel flex items-center gap-1 group-hover:gap-2 transition-all ${
+                            isAvailable ? 'text-palacio-gold' : 'text-gray-500'
+                          }`}>
+                            {isAvailable ? 'VIEW DETAILS' : 'UNAVAILABLE'}
                             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                           </span>
                         </div>
@@ -352,6 +404,83 @@ export default function Home({ onNavigate }: HomeProps) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* FEATURED MENU SECTION */}
+      <div className="py-24 bg-gradient-to-b from-palacio-black via-orange-900/10 to-palacio-black relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Culinary Excellence</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">Signature Dishes</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base">
+              Savor the finest flavors crafted by our world-renowned chefs.
+            </p>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {menuItems.slice(0, 4).map((item) => {
+              const orderCount = item.order_count || 0;
+              const isBestseller = bestsellerIds.includes(item.id);
+              
+              return (
+                <div key={item.id} className="group cursor-pointer" onClick={() => onNavigate('menu')}>
+                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl">
+                    <div className="relative h-48 overflow-hidden">
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      
+                      {/* BESTSELLER BADGE */}
+                      {isBestseller && (
+                        <div className="absolute top-3 left-3 px-3 py-1.5 bg-palacio-gold text-palacio-black rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg">
+                          <Star size={12} fill="currentColor" /> BESTSELLER
+                        </div>
+                      )}
+
+                      {/* AVAILABLE BADGE */}
+                      {!item.available && (
+                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                          <span className="text-red-400 font-bold font-cinzel">UNAVAILABLE</span>
+                        </div>
+                      )}
+
+                      {/* ORDER COUNT */}
+                      <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/50 rounded text-xs text-gray-300">
+                        {orderCount} sold
+                      </div>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-playfair text-palacio-gold text-lg">{item.name}</h3>
+                        <span className="text-palacio-gold font-cinzel font-bold">${item.price}</span>
+                      </div>
+                      <p className="text-gray-400 text-xs capitalize mb-3">{item.category}</p>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          item.available 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {item.available ? 'Available' : 'Not Available'}
+                        </span>
+                        <span className="text-palacio-gold text-xs font-cinzel flex items-center gap-1 group-hover:gap-2 transition-all">
+                          ORDER NOW <ArrowRight size={12} />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
