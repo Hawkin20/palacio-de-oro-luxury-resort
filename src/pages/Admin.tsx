@@ -18,7 +18,8 @@ import {
   ShoppingBag,
   Clock3,
   BarChart3,
-  Trash
+  Trash,
+  Star
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem, Booking, Order } from '../lib/types';
@@ -39,6 +40,7 @@ interface Toast {
 }
 
 type TimeRange = 'today' | 'week' | 'month' | 'year';
+type ModalType = 'room' | 'cottage' | 'menu' | null;
 
 export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'rooms' | 'menu' | 'bookings' | 'orders'>('dashboard');
@@ -49,8 +51,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [formData, setFormData] = useState<any>({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,6 +72,21 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showTabScroll, setShowTabScroll] = useState(false);
   const [previousCounts, setPreviousCounts] = useState({ bookings: 0, orders: 0 });
+
+  const [formData, setFormData] = useState({
+    name: '',
+    price_per_night: 0,
+    capacity: 1,
+    status: 'available' as 'available' | 'booked' | 'closed' | 'maintenance',
+    image_url: '',
+    description: '',
+    quantity: 1,
+    category: 'appetizers' as MenuItem['category'],
+    price: 0,
+    available: true,
+    is_featured: false,
+    is_bestseller: false,
+  });
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now().toString();
@@ -294,6 +311,156 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     }
   };
 
+  const openEditModal = (item: any, type: ModalType) => {
+    setEditingItem(item);
+    setModalType(type);
+    if (type === 'room' || type === 'cottage') {
+      setFormData({
+        name: item.name || '',
+        price_per_night: item.price_per_night || 0,
+        capacity: item.capacity || 1,
+        status: item.status || 'available',
+        image_url: item.image_url || '',
+        description: item.description || '',
+        quantity: item.quantity || 1,
+        category: 'appetizers',
+        price: 0,
+        available: true,
+        is_featured: false,
+        is_bestseller: false,
+      });
+    } else {
+      setFormData({
+        name: item.name || '',
+        price: item.price || 0,
+        category: item.category || 'appetizers',
+        image_url: item.image_url || '',
+        description: item.description || '',
+        available: item.available !== false,
+        is_featured: item.is_featured || false,
+        is_bestseller: item.is_bestseller || false,
+        price_per_night: 0,
+        capacity: 1,
+        status: 'available',
+        quantity: 1,
+      });
+    }
+    setShowModal(true);
+  };
+
+  const openAddModal = (type: ModalType) => {
+    setEditingItem(null);
+    setModalType(type);
+    setFormData({
+      name: '',
+      price_per_night: 0,
+      capacity: 1,
+      status: 'available',
+      image_url: '',
+      description: '',
+      quantity: 1,
+      category: 'appetizers',
+      price: 0,
+      available: true,
+      is_featured: false,
+      is_bestseller: false,
+    });
+    setShowModal(true);
+  };
+
+  const handleSaveItem = async () => {
+    try {
+      if (modalType === 'room') {
+        const data = {
+          name: formData.name,
+          price_per_night: Number(formData.price_per_night),
+          capacity: Number(formData.capacity),
+          status: formData.status,
+          image_url: formData.image_url,
+          description: formData.description,
+          quantity: Number(formData.quantity),
+          room_type: 'standard' as const,
+        };
+        if (editingItem) {
+          const { error } = await supabase.from('rooms').update(data).eq('id', editingItem.id);
+          if (error) throw error;
+          setRooms(prev => prev.map(r => r.id === editingItem.id ? { ...r, ...data } : r));
+          showToast('Room updated successfully');
+        } else {
+          const { data: newItem, error } = await supabase.from('rooms').insert(data).select().single();
+          if (error) throw error;
+          setRooms(prev => [...prev, newItem]);
+          showToast('Room added successfully');
+        }
+      } else if (modalType === 'cottage') {
+        const data = {
+          name: formData.name,
+          price_per_night: Number(formData.price_per_night),
+          capacity: Number(formData.capacity),
+          status: formData.status,
+          image_url: formData.image_url,
+          description: formData.description,
+          quantity: Number(formData.quantity),
+          cottage_type: 'small' as const,
+        };
+        if (editingItem) {
+          const { error } = await supabase.from('cottages').update(data).eq('id', editingItem.id);
+          if (error) throw error;
+          setCottages(prev => prev.map(c => c.id === editingItem.id ? { ...c, ...data } : c));
+          showToast('Cottage updated successfully');
+        } else {
+          const { data: newItem, error } = await supabase.from('cottages').insert(data).select().single();
+          if (error) throw error;
+          setCottages(prev => [...prev, newItem]);
+          showToast('Cottage added successfully');
+        }
+      } else if (modalType === 'menu') {
+        const data = {
+          name: formData.name,
+          price: Number(formData.price),
+          category: formData.category,
+          image_url: formData.image_url,
+          description: formData.description,
+          available: formData.available,
+          is_featured: formData.is_featured,
+          is_bestseller: formData.is_bestseller,
+        };
+        if (editingItem) {
+          const { error } = await supabase.from('menu_items').update(data).eq('id', editingItem.id);
+          if (error) throw error;
+          setMenu(prev => prev.map(m => m.id === editingItem.id ? { ...m, ...data } : m));
+          showToast('Menu item updated successfully');
+        } else {
+          const { data: newItem, error } = await supabase.from('menu_items').insert(data).select().single();
+          if (error) throw error;
+          setMenu(prev => [...prev, newItem]);
+          showToast('Menu item added successfully');
+        }
+      }
+      setShowModal(false);
+      setEditingItem(null);
+    } catch (err: any) {
+      showToast(`Failed to save: ${err.message}`, 'error');
+    }
+  };
+
+  const getMenuOrderCount = (menuItemId: string) => {
+    return orders.filter(o => o.menu_item_id === menuItemId && o.status === 'completed').length;
+  };
+
+  const getTopBestsellers = () => {
+    const orderCounts = new Map<string, number>();
+    orders.filter(o => o.status === 'completed').forEach(o => {
+      if (o.menu_item_id) {
+        orderCounts.set(o.menu_item_id, (orderCounts.get(o.menu_item_id) || 0) + (o.quantity || 1));
+      }
+    });
+    return Array.from(orderCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id]) => id);
+  };
+
   const getDateRange = (range: TimeRange) => {
     const now = new Date();
     const start = new Date(now);
@@ -437,6 +604,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     .reduce((sum, b) => sum + (b.total_price || 0), 0);
   const canDeleteBooking = (status: string) => status === 'completed' || status === 'cancelled';
   const canDeleteOrder = (status: string) => status === 'completed' || status === 'cancelled';
+  const bestsellerIds = getTopBestsellers();
 
   if (!isLoggedIn || !isAdmin) {
     return (
@@ -734,17 +902,16 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'rooms' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <button
-                    onClick={() => {
-                      setEditingItem(null);
-                      setFormData({});
-                      setShowModal(true);
-                    }}
-                    className="gold-glow-btn"
-                  >
-                    <Plus className="inline mr-2" size={18} />
-                    Add Room
-                  </button>
+                  <div className="flex gap-3">
+                    <button onClick={() => openAddModal('room')} className="gold-glow-btn">
+                      <Plus className="inline mr-2" size={18} />
+                      Add Room
+                    </button>
+                    <button onClick={() => openAddModal('cottage')} className="gold-glow-btn">
+                      <Plus className="inline mr-2" size={18} />
+                      Add Cottage
+                    </button>
+                  </div>
                   
                   <div className="relative w-full sm:w-64">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -780,9 +947,18 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       <GlassCard key={item.id} className="p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h3 className="font-playfair text-lg text-palacio-gold font-medium">
-                              {item.name}
-                            </h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-playfair text-lg text-palacio-gold font-medium">
+                                {item.name}
+                              </h3>
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                (item.quantity || 0) > 0 
+                                  ? 'bg-green-500/20 text-green-400' 
+                                  : 'bg-red-500/20 text-red-400'
+                              }`}>
+                                {(item.quantity || 0) > 0 ? `${item.quantity} available` : 'Fully Booked'}
+                              </span>
+                            </div>
                             <p className="text-gray-300 text-sm font-medium">
                               ${item.price_per_night}/night - {item.capacity} guests
                             </p>
@@ -792,11 +968,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => {
-                                setEditingItem(item);
-                                setFormData(item);
-                                setShowModal(true);
-                              }}
+                              onClick={() => openEditModal(item, 'room')}
                               className="p-2 hover:bg-palacio-gold/20 rounded smooth-transition"
                               title="Edit"
                             >
@@ -821,14 +993,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'menu' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <button
-                    onClick={() => {
-                      setEditingItem(null);
-                      setFormData({});
-                      setShowModal(true);
-                    }}
-                    className="gold-glow-btn"
-                  >
+                  <button onClick={() => openAddModal('menu')} className="gold-glow-btn">
                     <Plus className="inline mr-2" size={18} />
                     Add Menu Item
                   </button>
@@ -877,49 +1042,64 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   </GlassCard>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredMenu.map((item) => (
-                      <GlassCard key={item.id} className="p-4 group">
-                        <div className="relative overflow-hidden rounded mb-3">
-                          <img
-                            src={item.image_url || '/placeholder-food.jpg'}
-                            alt={item.name}
-                            className="w-full h-32 object-cover smooth-transition group-hover:scale-105"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/placeholder-food.jpg';
-                            }}
-                          />
-                        </div>
-                        <h3 className="font-playfair text-palacio-gold mb-1 font-medium">
-                          {item.name}
-                        </h3>
-                        <p className="text-gray-300 text-xs mb-2 capitalize font-medium">
-                          {item.category}
-                        </p>
-                        <p className="font-cinzel text-palacio-gold mb-3 font-medium">
-                          ${item.price}
-                        </p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingItem(item);
-                              setFormData(item);
-                              setShowModal(true);
-                            }}
-                            className="flex-1 p-2 hover:bg-palacio-gold/20 rounded text-sm smooth-transition"
-                          >
-                            <Edit2 size={14} className="inline mr-1 text-palacio-gold" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => openDeleteModal(item.id, item.name, 'menu')}
-                            className="flex-1 p-2 hover:bg-red-900/30 rounded text-sm smooth-transition"
-                          >
-                            <Trash2 size={14} className="inline mr-1 text-red-400" />
-                            Delete
-                          </button>
-                        </div>
-                      </GlassCard>
-                    ))}
+                    {filteredMenu.map((item) => {
+                      const orderCount = getMenuOrderCount(item.id);
+                      const isBestseller = bestsellerIds.includes(item.id);
+                      return (
+                        <GlassCard key={item.id} className="p-4 group">
+                          <div className="relative overflow-hidden rounded mb-3">
+                            <img
+                              src={item.image_url || '/placeholder-food.jpg'}
+                              alt={item.name}
+                              className="w-full h-32 object-cover smooth-transition group-hover:scale-105"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/placeholder-food.jpg';
+                              }}
+                            />
+                            {isBestseller && (
+                              <div className="absolute top-2 right-2 px-2 py-1 bg-palacio-gold text-palacio-black rounded text-xs font-bold flex items-center gap-1">
+                                <Star size={12} /> Bestseller
+                              </div>
+                            )}
+                            {!item.available && (
+                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                <span className="text-red-400 font-bold text-sm">Not Available</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-playfair text-palacio-gold font-medium">
+                              {item.name}
+                            </h3>
+                            <span className="text-gray-400 text-xs">
+                              {orderCount} sold
+                            </span>
+                          </div>
+                          <p className="text-gray-300 text-xs mb-2 capitalize font-medium">
+                            {item.category}
+                          </p>
+                          <p className="font-cinzel text-palacio-gold mb-3 font-medium">
+                            ${item.price}
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => openEditModal(item, 'menu')}
+                              className="flex-1 p-2 hover:bg-palacio-gold/20 rounded text-sm smooth-transition"
+                            >
+                              <Edit2 size={14} className="inline mr-1 text-palacio-gold" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(item.id, item.name, 'menu')}
+                              className="flex-1 p-2 hover:bg-red-900/30 rounded text-sm smooth-transition"
+                            >
+                              <Trash2 size={14} className="inline mr-1 text-red-400" />
+                              Delete
+                            </button>
+                          </div>
+                        </GlassCard>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1242,7 +1422,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         onClose={() => {
           setShowModal(false);
           setEditingItem(null);
-          setFormData({});
+          setModalType(null);
         }}
         title={editingItem ? 'Edit Item' : 'Add Item'}
         footer={
@@ -1251,17 +1431,14 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               onClick={() => {
                 setShowModal(false);
                 setEditingItem(null);
-                setFormData({});
+                setModalType(null);
               }}
               className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition"
             >
               Cancel
             </button>
             <button 
-              onClick={() => {
-                showToast(editingItem ? 'Item updated (demo)' : 'Item added (demo)');
-                setShowModal(false);
-              }}
+              onClick={handleSaveItem}
               className="flex-1 px-4 py-2 bg-palacio-gold text-palacio-black rounded font-cinzel font-semibold hover:bg-palacio-gold/80 smooth-transition"
             >
               Save
@@ -1269,15 +1446,179 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
           <p className="text-gray-300 text-sm font-medium">
-            {editingItem ? 'Editing: ' + (editingItem.name || 'Item') : 'Create new item'}
+            {editingItem ? `Editing: ${editingItem.name || 'Item'}` : `Create new ${modalType === 'room' ? 'room' : modalType === 'cottage' ? 'cottage' : 'menu item'}`}
           </p>
-          <div className="p-4 bg-white/10 rounded-lg border border-white/20">
-            <p className="text-gray-400 text-sm text-center">
-              Form fields coming soon - connect to your Supabase schema
-            </p>
-          </div>
+
+          {(modalType === 'room' || modalType === 'cottage') && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-gray-300 text-xs font-bold block mb-1">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  placeholder="Accommodation name"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 text-xs font-bold block mb-1">Price/Night ($)</label>
+                  <input
+                    type="number"
+                    value={formData.price_per_night}
+                    onChange={(e) => setFormData({ ...formData, price_per_night: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-300 text-xs font-bold block mb-1">Capacity</label>
+                  <input
+                    type="number"
+                    value={formData.capacity}
+                    onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 text-xs font-bold block mb-1">Quantity Available</label>
+                  <input
+                    type="number"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-300 text-xs font-bold block mb-1">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  >
+                    <option value="available" className="bg-palacio-black">Available</option>
+                    <option value="booked" className="bg-palacio-black">Booked</option>
+                    <option value="closed" className="bg-palacio-black">Closed</option>
+                    <option value="maintenance" className="bg-palacio-black">Maintenance</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-gray-300 text-xs font-bold block mb-1">Image URL</label>
+                <input
+                  type="text"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <label className="text-gray-300 text-xs font-bold block mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50 h-20 resize-none"
+                  placeholder="Description..."
+                />
+              </div>
+            </div>
+          )}
+
+          {modalType === 'menu' && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-gray-300 text-xs font-bold block mb-1">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  placeholder="Menu item name"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-gray-300 text-xs font-bold block mb-1">Price ($)</label>
+                  <input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-gray-300 text-xs font-bold block mb-1">Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  >
+                    <option value="appetizers" className="bg-palacio-black">Appetizers</option>
+                    <option value="main_course" className="bg-palacio-black">Main Course</option>
+                    <option value="seafood" className="bg-palacio-black">Seafood</option>
+                    <option value="grilled" className="bg-palacio-black">Grilled</option>
+                    <option value="desserts" className="bg-palacio-black">Desserts</option>
+                    <option value="cocktails" className="bg-palacio-black">Cocktails</option>
+                    <option value="wine" className="bg-palacio-black">Wine</option>
+                    <option value="non_alcoholic" className="bg-palacio-black">Non-Alcoholic</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-gray-300 text-xs font-bold block mb-1">Image URL</label>
+                <input
+                  type="text"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <label className="text-gray-300 text-xs font-bold block mb-1">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50 h-20 resize-none"
+                  placeholder="Menu description..."
+                />
+              </div>
+              <div className="flex items-center gap-4 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.available}
+                    onChange={(e) => setFormData({ ...formData, available: e.checked })}
+                    className="w-4 h-4 accent-palacio-gold"
+                  />
+                  <span className="text-gray-300 text-sm">Available</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_featured}
+                    onChange={(e) => setFormData({ ...formData, is_featured: e.checked })}
+                    className="w-4 h-4 accent-palacio-gold"
+                  />
+                  <span className="text-gray-300 text-sm">Featured</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_bestseller}
+                    onChange={(e) => setFormData({ ...formData, is_bestseller: e.checked })}
+                    className="w-4 h-4 accent-palacio-gold"
+                  />
+                  <span className="text-gray-300 text-sm">Bestseller</span>
+                </label>
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
 
