@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../lib/supabase';
 import { User, Mail, Phone, Calendar, Award, MapPin, Edit2, Camera, Save, X } from 'lucide-react';
 
 export default function Profile() {
