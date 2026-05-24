@@ -9,12 +9,15 @@ import Bookings from './pages/Bookings';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
 import Auth from './pages/Auth';
+import Profile from './pages/Profile';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string>();
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [userEmail, setUserEmail] = useState<string>();
+  const [userName, setUserName] = useState<string>();
+  const [cart, setCart] = useState<<CartItem[]>([]);
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
@@ -24,9 +27,13 @@ function App() {
         if (session?.user) {
           setIsLoggedIn(true);
           setUserId(session.user.id);
+          setUserEmail(session.user.email);
+          setUserName(session.user.user_metadata?.full_name);
         } else {
           setIsLoggedIn(false);
           setUserId(undefined);
+          setUserEmail(undefined);
+          setUserName(undefined);
         }
       }
     );
@@ -40,6 +47,8 @@ function App() {
     if (session?.user) {
       setIsLoggedIn(true);
       setUserId(session.user.id);
+      setUserEmail(session.user.email);
+      setUserName(session.user.user_metadata?.full_name);
     }
   };
 
@@ -47,6 +56,8 @@ function App() {
     await supabase.auth.signOut();
     setIsLoggedIn(false);
     setUserId(undefined);
+    setUserEmail(undefined);
+    setUserName(undefined);
     setCurrentPage('home');
   };
 
@@ -64,6 +75,8 @@ function App() {
         return <Contact />;
       case 'admin':
         return <Admin isLoggedIn={isLoggedIn} />;
+      case 'profile':
+        return <Profile />;
       default:
         return <Home onNavigate={setCurrentPage} />;
     }
@@ -82,6 +95,8 @@ function App() {
         isLoggedIn={isLoggedIn}
         onLogout={handleLogout}
         onShowAuth={() => setShowAuth(true)}
+        userEmail={userEmail}
+        userName={userName}
       />
       <main className="flex-1">
         {renderPage()}
