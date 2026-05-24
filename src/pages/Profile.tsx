@@ -56,7 +56,7 @@ export default function Profile() {
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e: React.MouseEvent<<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -126,8 +126,14 @@ export default function Profile() {
             transition: 'transform 0.2s ease-out'
           }}
         >
-          <div className="h-40 bg-gradient-to-r from-[#FFD700]/30 via-[#FFA500]/20 to-[#FFD700]/10 relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23FFD700\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30" />
+          <div className="h-48 relative overflow-hidden">
+            <img 
+              src="https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=1200&h=400&fit=crop&q=80"
+              alt="Cover" 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0f0f1e]" />
+            <div className="absolute inset-0 bg-[#0a0a1a]/30" />
             <div className="absolute top-4 right-4 flex gap-2">
               <div className="w-2 h-2 bg-[#FFD700] rounded-full animate-pulse" />
               <div className="w-2 h-2 bg-[#FFA500] rounded-full animate-pulse delay-75" />
