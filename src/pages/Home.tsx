@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   ArrowRight, Star, MapPin, 
   Calendar, Users, Clock, Award, Sparkles, Heart, Eye, 
@@ -7,6 +7,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
+import { motion, useInView, useScroll, useTransform } from 'framer-motion';
 
 interface HomeProps {
   onNavigate: (page: string) => void;
@@ -64,6 +65,85 @@ const amenitiesList = [
   { icon: "🎯", label: "Private Beach" },
 ];
 
+function AnimatedSection({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 60 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
+      transition={{ duration: 0.8, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function StaggerContainer({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  
+  return (
+    <motion.div
+      ref={ref}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={{
+        hidden: { opacity: 0 },
+        visible: {
+          opacity: 1,
+          transition: { staggerChildren: 0.15, delayChildren: 0.2 }
+        }
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function StaggerItem({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+  return (
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 40, scale: 0.9 },
+        visible: { 
+          opacity: 1, 
+          y: 0, 
+          scale: 1,
+          transition: { type: "spring", stiffness: 100, damping: 12 }
+        }
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function ParallaxImage({ src, alt, className = "" }: { src: string, alt: string, className?: string }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
+  
+  return (
+    <div ref={ref} className={`overflow-hidden ${className}`}>
+      <motion.img 
+        src={src} 
+        alt={alt} 
+        className="w-full h-full object-cover"
+        style={{ y, scale: 1.2 }}
+      />
+    </div>
+  );
+}
+
 export default function Home({ onNavigate }: HomeProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cottages, setCottages] = useState<Cottage[]>([]);
@@ -72,6 +152,12 @@ export default function Home({ onNavigate }: HomeProps) {
   const [scrollY, setScrollY] = useState(0);
   const [hoveredRoom, setHoveredRoom] = useState<number | null>(null);
   const [countdown, setCountdown] = useState({ days: 12, hours: 5, minutes: 43, seconds: 21 });
+
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 1.1]);
+  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -144,16 +230,31 @@ export default function Home({ onNavigate }: HomeProps) {
   if (loading) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-palacio-gold" />
+        <motion.div 
+          className="w-12 h-12 border-b-2 border-palacio-gold rounded-full"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-palacio-black">
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black py-2.5 px-4 text-center font-cinzel shadow-lg">
+      {/* STICKY BANNER */}
+      <motion.div 
+        className="sticky top-0 z-50 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black py-2.5 px-4 text-center font-cinzel shadow-lg"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 100 }}
+      >
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Sparkles size={16} className="animate-pulse-slow" />
+          <motion.div
+            animate={{ rotate: [0, 15, -15, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Sparkles size={16} />
+          </motion.div>
           <span className="font-bold text-sm md:text-base">SUMMER EXCLUSIVE:</span>
           <span className="text-sm hidden sm:inline">Book 3 nights, get the 4th FREE + complimentary spa session</span>
           <div className="flex items-center gap-1.5 bg-palacio-black/20 px-3 py-1 rounded-full text-xs font-mono">
@@ -161,476 +262,806 @@ export default function Home({ onNavigate }: HomeProps) {
             <span>{countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s</span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="relative w-full min-h-[100vh] flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center scale-110"
-          style={{
-            backgroundImage: 'url("https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80")',
-            transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
-          }}
-        />
+      {/* HERO SECTION */}
+      <div ref={heroRef} className="relative w-full min-h-[100vh] flex items-center justify-center overflow-hidden">
+        <motion.div
+          className="absolute inset-0"
+          style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center scale-110"
+            style={{
+              backgroundImage: 'url("https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80")',
+              transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
+            }}
+          />
+        </motion.div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-orange-900/20 via-transparent to-purple-900/20" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
 
         <div className="relative text-center px-6 py-20 max-w-5xl mx-auto z-10">
-          <div className="inline-flex items-center gap-2 glass-card px-4 py-1.5 mb-6 animate-fade-in">
+          <motion.div 
+            className="inline-flex items-center gap-2 glass-card px-4 py-1.5 mb-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             <Award size={14} className="text-palacio-gold" />
             <span className="text-palacio-gold text-xs font-cinzel tracking-widest">LUXURY RESORT & SPA</span>
-          </div>
+          </motion.div>
 
           {/* URGENCY BANNER */}
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${urgency.bg} border ${urgency.border}`}>
+          <motion.div 
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${urgency.bg} border ${urgency.border}`}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, type: "spring" }}
+          >
             <AlertCircle size={16} className={urgency.color} />
             <span className={`font-bold text-sm ${urgency.color}`}>{urgency.text}</span>
-          </div>
+          </motion.div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-9xl font-playfair text-palacio-gold mb-4 drop-shadow-2xl tracking-wide">
+          <motion.h1 
+            className="text-5xl md:text-7xl lg:text-9xl font-playfair text-palacio-gold mb-4 drop-shadow-2xl tracking-wide"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
             Palacio de Oro
-          </h1>
+          </motion.h1>
 
-          <p className="text-lg md:text-2xl lg:text-3xl text-white/90 font-poppins mb-4 drop-shadow-lg italic font-light">
+          <motion.p 
+            className="text-lg md:text-2xl lg:text-3xl text-white/90 font-poppins mb-4 drop-shadow-lg italic font-light"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
             Where Gold Meets Summer Paradise
-          </p>
+          </motion.p>
 
-          <div className="flex items-center justify-center gap-2 text-white/60 mb-12">
+          <motion.div 
+            className="flex items-center justify-center gap-2 text-white/60 mb-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+          >
             <MapPin size={16} className="text-palacio-gold" />
             <span className="text-sm font-cinzel">Boracay Island, Philippines</span>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <button
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <motion.button
               onClick={() => onNavigate('rooms')}
-              className="group relative w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)] hover:shadow-[0_0_60px_rgba(212,175,55,0.5)] hover:scale-105 active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[320px]"
+              className="group relative w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)] min-w-[280px] sm:min-w-[320px]"
+              whileHover={{ scale: 1.05, boxShadow: "0 0 60px rgba(212,175,55,0.5)" }}
+              whileTap={{ scale: 0.95 }}
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 <Calendar size={20} />
                 BOOK YOUR SUMMER STAY
               </span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={() => onNavigate('menu')}
-              className="w-full sm:w-auto px-10 py-5 bg-white/5 backdrop-blur-xl border-2 border-white/60 text-white font-cinzel font-bold text-lg md:text-xl rounded-xl hover:bg-white/15 hover:border-palacio-gold hover:text-palacio-gold hover:scale-105 active:scale-95 transition-all duration-300 min-w-[280px] sm:min-w-[320px] shadow-xl group"
+              className="w-full sm:w-auto px-10 py-5 bg-white/5 backdrop-blur-xl border-2 border-white/60 text-white font-cinzel font-bold text-lg md:text-xl rounded-xl min-w-[280px] sm:min-w-[320px] shadow-xl group"
+              whileHover={{ scale: 1.05, borderColor: "#FFD700", color: "#FFD700" }}
+              whileTap={{ scale: 0.95 }}
             >
               <span className="flex items-center justify-center gap-2">
                 <Sparkles size={20} />
                 EXPLORE ROOMS
                 <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform duration-300" />
               </span>
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
-          <div className="flex justify-center gap-8 md:gap-16 mt-16">
+          <motion.div 
+            className="flex justify-center gap-8 md:gap-16 mt-16"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1 }}
+          >
             {[
               { value: "4.9", label: "Guest Rating", icon: Star },
               { value: "500+", label: "Happy Guests", icon: Heart },
               { value: "24/7", label: "Concierge", icon: Clock },
             ].map((stat, i) => (
-              <div key={i} className="text-center group cursor-default">
-                <stat.icon size={20} className="mx-auto text-palacio-gold mb-2 group-hover:scale-125 transition-transform" />
+              <motion.div 
+                key={i} 
+                className="text-center group cursor-default"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2 + i * 0.1 }}
+                whileHover={{ scale: 1.1 }}
+              >
+                <motion.div
+                  whileHover={{ rotate: 15, scale: 1.2 }}
+                  transition={{ type: "spring" }}
+                >
+                  <stat.icon size={20} className="mx-auto text-palacio-gold mb-2" />
+                </motion.div>
                 <div className="text-2xl md:text-3xl font-playfair text-white font-bold">{stat.value}</div>
                 <div className="text-white/50 text-xs font-cinzel">{stat.label}</div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
 
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce-slow cursor-pointer group">
+        <motion.div 
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer group"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, y: [0, 10, 0] }}
+          transition={{ opacity: { delay: 1.5 }, y: { duration: 2, repeat: Infinity } }}
+        >
           <span className="text-white/40 text-[10px] font-cinzel tracking-widest group-hover:text-palacio-gold transition-colors">SCROLL</span>
           <div className="w-6 h-10 border-2 border-white/30 group-hover:border-palacio-gold rounded-full flex justify-center pt-2 transition-colors">
-            <div className="w-1 h-2.5 bg-palacio-gold rounded-full animate-scroll-down" />
+            <motion.div 
+              className="w-1 h-2.5 bg-palacio-gold rounded-full"
+              animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="py-8 bg-gradient-to-r from-palacio-black via-palacio-black/95 to-palacio-black border-y border-white/5">
+      {/* AMENITIES */}
+      <AnimatedSection className="py-8 bg-gradient-to-r from-palacio-black via-palacio-black/95 to-palacio-black border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             {amenitiesList.map((amenity, i) => (
-              <div key={i} className="flex items-center gap-3 group cursor-default">
-                <span className="text-2xl group-hover:scale-125 transition-transform duration-300">{amenity.icon}</span>
+              <motion.div 
+                key={i} 
+                className="flex items-center gap-3 group cursor-default"
+                whileHover={{ scale: 1.1, y: -5 }}
+                transition={{ type: "spring" }}
+              >
+                <motion.span 
+                  className="text-2xl"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {amenity.icon}
+                </motion.span>
                 <span className="text-white/60 font-cinzel text-sm group-hover:text-palacio-gold transition-colors">{amenity.label}</span>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
-      </div>
+      </AnimatedSection>
 
+      {/* ROOMS SECTION */}
       <div className="py-24 bg-palacio-black relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.03)_0%,transparent_70%)]" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Stay With Us</span>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">Luxury Accommodations</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base">
+          <AnimatedSection className="text-center mb-16">
+            <motion.span 
+              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
+              initial={{ opacity: 0, letterSpacing: "0.1em" }}
+              whileInView={{ opacity: 1, letterSpacing: "0.3em" }}
+              transition={{ duration: 1 }}
+            >
+              Stay With Us
+            </motion.span>
+            <motion.h2 
+              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              Luxury Accommodations
+            </motion.h2>
+            <motion.p 
+              className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               Each room is thoughtfully designed with golden accents, premium linens, and breathtaking views.
-            </p>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6" />
-          </div>
+            </motion.p>
+            <motion.div 
+              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              transition={{ duration: 1 }}
+            />
+          </AnimatedSection>
 
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-80 bg-white/5 rounded-2xl animate-pulse" />
+                <motion.div 
+                  key={i} 
+                  className="h-80 bg-white/5 rounded-2xl"
+                  animate={{ opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {allAccommodations.slice(0, 8).map((item) => {
                 const isHovered = hoveredRoom === item.id;
                 const quantity = item.quantity || 0;
                 const isAvailable = quantity > 0 && item.status === 'available';
                 
                 return (
-                  <div
-                    key={item.id}
-                    className="group cursor-pointer relative"
-                    style={{ 
-                      transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
-                      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    }}
-                    onMouseEnter={() => setHoveredRoom(item.id)}
-                    onMouseLeave={() => setHoveredRoom(null)}
-                    onClick={() => onNavigate('rooms')}
-                  >
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl group-hover:shadow-palacio-gold/10">
-                      <div className="relative h-56 overflow-hidden">
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                        
-                        {/* QUANTITY BADGE */}
-                        <div className="absolute top-4 right-4">
-                          <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg ${
-                            isAvailable
-                              ? 'bg-green-500/90 text-white'
-                              : 'bg-red-500/90 text-white'
-                          }`}>
-                            {isAvailable ? `${quantity} left` : 'Fully Booked'}
-                          </span>
-                        </div>
+                  <StaggerItem key={item.id}>
+                    <motion.div
+                      className="group cursor-pointer relative"
+                      onMouseEnter={() => setHoveredRoom(item.id)}
+                      onMouseLeave={() => setHoveredRoom(null)}
+                      onClick={() => onNavigate('rooms')}
+                      whileHover={{ y: -12, transition: { type: "spring", stiffness: 300 } }}
+                    >
+                      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl group-hover:shadow-palacio-gold/10">
+                        <div className="relative h-56 overflow-hidden">
+                          <ParallaxImage src={item.image_url} alt={item.name} className="h-56" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                          
+                          <motion.div 
+                            className="absolute top-4 right-4"
+                            initial={{ opacity: 0, x: 20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 }}
+                          >
+                            <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg ${
+                              isAvailable
+                                ? 'bg-green-500/90 text-white'
+                                : 'bg-red-500/90 text-white'
+                            }`}>
+                              {isAvailable ? `${quantity} left` : 'Fully Booked'}
+                            </span>
+                          </motion.div>
 
-                        <div className="absolute top-4 left-4">
-                          <StatusBadge status={item.status} size="sm" />
-                        </div>
-
-                        {!isAvailable && (
-                          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                            <span className="text-red-400 font-bold text-lg font-cinzel tracking-wider">SOLD OUT</span>
+                          <div className="absolute top-4 left-4">
+                            <StatusBadge status={item.status} size="sm" />
                           </div>
-                        )}
 
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
-                          <div className="text-center transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                            <div className="w-16 h-16 glass-card rounded-full flex items-center justify-center mx-auto mb-3">
-                              <Eye size={28} className="text-palacio-gold" />
+                          {!isAvailable && (
+                            <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                              <motion.span 
+                                className="text-red-400 font-bold text-lg font-cinzel tracking-wider"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring" }}
+                              >
+                                SOLD OUT
+                              </motion.span>
                             </div>
-                            <span className="text-white font-cinzel text-sm">Quick Preview</span>
+                          )}
+
+                          <motion.div 
+                            className="absolute inset-0 bg-black/60 flex items-center justify-center"
+                            initial={{ opacity: 0 }}
+                            whileHover={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <motion.div 
+                              className="text-center"
+                              initial={{ y: 20, opacity: 0 }}
+                              whileHover={{ y: 0, opacity: 1 }}
+                            >
+                              <motion.div 
+                                className="w-16 h-16 glass-card rounded-full flex items-center justify-center mx-auto mb-3"
+                                whileHover={{ scale: 1.1, rotate: 10 }}
+                              >
+                                <Eye size={28} className="text-palacio-gold" />
+                              </motion.div>
+                              <span className="text-white font-cinzel text-sm">Quick Preview</span>
+                            </motion.div>
+                          </motion.div>
+                        </div>
+
+                        <div className="p-5">
+                          <div className="flex justify-between items-start mb-3">
+                            <h3 className="font-playfair text-lg text-palacio-gold group-hover:text-white transition-colors duration-300">
+                              {item.name}
+                            </h3>
+                            <div className="flex items-center gap-1 text-yellow-400 text-xs">
+                              <Star size={12} fill="currentColor" />
+                              <span className="font-bold">4.9</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4 text-gray-500 text-xs mb-4">
+                            <span className="flex items-center gap-1">
+                              <Users size={12} />
+                              {item.capacity} Guests
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <BedDouble size={12} />
+                              {quantity} available
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1.5 mb-4">
+                            {['WiFi', 'AC', 'Mini Bar'].map((amenity) => (
+                              <motion.span 
+                                key={amenity} 
+                                className="text-[10px] bg-white/5 text-gray-400 px-2 py-1 rounded-md border border-white/5"
+                                whileHover={{ scale: 1.1, backgroundColor: "rgba(255,215,0,0.1)" }}
+                              >
+                                {amenity}
+                              </motion.span>
+                            ))}
+                          </div>
+
+                          <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                            <div>
+                              <span className="text-gray-500 text-[10px] font-cinzel">FROM</span>
+                              <span className="text-palacio-gold font-cinzel font-bold text-xl ml-1">
+                                ${item.price_per_night}
+                              </span>
+                              <span className="text-gray-600 text-[10px]">/NIGHT</span>
+                            </div>
+                            <motion.span 
+                              className={`text-xs font-cinzel flex items-center gap-1 group-hover:gap-2 transition-all ${
+                                isAvailable ? 'text-palacio-gold' : 'text-gray-500'
+                              }`}
+                              whileHover={{ x: 5 }}
+                            >
+                              {isAvailable ? 'VIEW DETAILS' : 'UNAVAILABLE'}
+                              <ArrowRight size={14} />
+                            </motion.span>
                           </div>
                         </div>
                       </div>
-
-                      <div className="p-5">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-playfair text-lg text-palacio-gold group-hover:text-white transition-colors duration-300">
-                            {item.name}
-                          </h3>
-                          <div className="flex items-center gap-1 text-yellow-400 text-xs">
-                            <Star size={12} fill="currentColor" />
-                            <span className="font-bold">4.9</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4 text-gray-500 text-xs mb-4">
-                          <span className="flex items-center gap-1">
-                            <Users size={12} />
-                            {item.capacity} Guests
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <BedDouble size={12} />
-                            {quantity} available
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {['WiFi', 'AC', 'Mini Bar'].map((amenity) => (
-                            <span key={amenity} className="text-[10px] bg-white/5 text-gray-400 px-2 py-1 rounded-md border border-white/5">
-                              {amenity}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="flex justify-between items-center pt-3 border-t border-white/5">
-                          <div>
-                            <span className="text-gray-500 text-[10px] font-cinzel">FROM</span>
-                            <span className="text-palacio-gold font-cinzel font-bold text-xl ml-1">
-                              ${item.price_per_night}
-                            </span>
-                            <span className="text-gray-600 text-[10px]">/NIGHT</span>
-                          </div>
-                          <span className={`text-xs font-cinzel flex items-center gap-1 group-hover:gap-2 transition-all ${
-                            isAvailable ? 'text-palacio-gold' : 'text-gray-500'
-                          }`}>
-                            {isAvailable ? 'VIEW DETAILS' : 'UNAVAILABLE'}
-                            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    </motion.div>
+                  </StaggerItem>
                 );
               })}
-            </div>
+            </StaggerContainer>
           )}
         </div>
       </div>
 
-      <div className="py-16 border-y border-white/5 bg-gradient-to-r from-palacio-black via-palacio-black/90 to-palacio-black">
+      {/* AWARDS */}
+      <AnimatedSection className="py-16 border-y border-white/5 bg-gradient-to-r from-palacio-black via-palacio-black/90 to-palacio-black">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 transition-opacity duration-700">
+          <motion.div 
+            className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 transition-opacity duration-700"
+            whileInView={{ opacity: 1 }}
+          >
             {awards.map((award, i) => (
-              <div key={i} className="flex items-center gap-3 group cursor-default grayscale hover:grayscale-0 transition-all duration-500 hover:scale-110">
-                <span className="text-3xl">{award.icon}</span>
+              <motion.div 
+                key={i} 
+                className="flex items-center gap-3 group cursor-default grayscale hover:grayscale-0 transition-all duration-500"
+                whileHover={{ scale: 1.15, y: -5 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <motion.span 
+                  className="text-3xl"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  {award.icon}
+                </motion.span>
                 <div>
                   <div className="text-white font-cinzel font-bold text-sm">{award.name}</div>
                   <div className="text-palacio-gold text-xs">{award.year}</div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </AnimatedSection>
 
-      {/* FEATURED MENU SECTION */}
+      {/* FEATURED MENU */}
       <div className="py-24 bg-gradient-to-b from-palacio-black via-orange-900/10 to-palacio-black relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl" />
+        <motion.div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Culinary Excellence</span>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">Signature Dishes</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base">
+          <AnimatedSection className="text-center mb-16">
+            <motion.span 
+              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+            >
+              Culinary Excellence
+            </motion.span>
+            <motion.h2 
+              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              Signature Dishes
+            </motion.h2>
+            <motion.p 
+              className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               Savor the finest flavors crafted by our world-renowned chefs.
-            </p>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6" />
-          </div>
+            </motion.p>
+            <motion.div 
+              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              transition={{ duration: 1 }}
+            />
+          </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {menuItems.slice(0, 4).map((item) => {
               const orderCount = item.order_count || 0;
               const isBestseller = bestsellerIds.includes(item.id);
               
               return (
-                <div key={item.id} className="group cursor-pointer" onClick={() => onNavigate('menu')}>
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl">
-                    <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                      
-                      {/* BESTSELLER BADGE */}
-                      {isBestseller && (
-                        <div className="absolute top-3 left-3 px-3 py-1.5 bg-palacio-gold text-palacio-black rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg">
-                          <Star size={12} fill="currentColor" /> BESTSELLER
-                        </div>
-                      )}
+                <StaggerItem key={item.id}>
+                  <motion.div 
+                    className="group cursor-pointer" 
+                    onClick={() => onNavigate('menu')}
+                    whileHover={{ y: -10 }}
+                    transition={{ type: "spring" }}
+                  >
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl">
+                      <div className="relative h-48 overflow-hidden">
+                        <motion.img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          whileHover={{ scale: 1.15 }}
+                          transition={{ duration: 0.6 }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        
+                        {isBestseller && (
+                          <motion.div 
+                            className="absolute top-3 left-3 px-3 py-1.5 bg-palacio-gold text-palacio-black rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg"
+                            initial={{ x: -50, opacity: 0 }}
+                            whileInView={{ x: 0, opacity: 1 }}
+                            transition={{ type: "spring" }}
+                          >
+                            <Star size={12} fill="currentColor" /> BESTSELLER
+                          </motion.div>
+                        )}
 
-                      {/* AVAILABLE BADGE */}
-                      {!item.available && (
-                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                          <span className="text-red-400 font-bold font-cinzel">UNAVAILABLE</span>
-                        </div>
-                      )}
+                        {!item.available && (
+                          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                            <span className="text-red-400 font-bold font-cinzel">UNAVAILABLE</span>
+                          </div>
+                        )}
 
-                      {/* ORDER COUNT */}
-                      <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/50 rounded text-xs text-gray-300">
-                        {orderCount} sold
+                        <motion.div 
+                          className="absolute bottom-3 right-3 px-2 py-1 bg-black/50 rounded text-xs text-gray-300"
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          {orderCount} sold
+                        </motion.div>
+                      </div>
+
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-playfair text-palacio-gold text-lg">{item.name}</h3>
+                          <span className="text-palacio-gold font-cinzel font-bold">${item.price}</span>
+                        </div>
+                        <p className="text-gray-400 text-xs capitalize mb-3">{item.category}</p>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            item.available 
+                              ? 'bg-green-500/20 text-green-400' 
+                              : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {item.available ? 'Available' : 'Not Available'}
+                          </span>
+                          <motion.span 
+                            className="text-palacio-gold text-xs font-cinzel flex items-center gap-1"
+                            whileHover={{ x: 5 }}
+                          >
+                            ORDER NOW <ArrowRight size={12} />
+                          </motion.span>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-playfair text-palacio-gold text-lg">{item.name}</h3>
-                        <span className="text-palacio-gold font-cinzel font-bold">${item.price}</span>
-                      </div>
-                      <p className="text-gray-400 text-xs capitalize mb-3">{item.category}</p>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          item.available 
-                            ? 'bg-green-500/20 text-green-400' 
-                            : 'bg-red-500/20 text-red-400'
-                        }`}>
-                          {item.available ? 'Available' : 'Not Available'}
-                        </span>
-                        <span className="text-palacio-gold text-xs font-cinzel flex items-center gap-1 group-hover:gap-2 transition-all">
-                          ORDER NOW <ArrowRight size={12} />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerContainer>
         </div>
       </div>
 
+      {/* TESTIMONIALS */}
       <div className="py-24 bg-gradient-to-b from-palacio-black via-orange-900/10 to-palacio-black relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl" />
+        <motion.div 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl"
+          animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
+          transition={{ duration: 10, repeat: Infinity }}
+        />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16">
-            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Guest Stories</span>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">What Our Guests Say</h2>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto" />
-          </div>
+          <AnimatedSection className="text-center mb-16">
+            <motion.span 
+              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+            >
+              Guest Stories
+            </motion.span>
+            <motion.h2 
+              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+            >
+              What Our Guests Say
+            </motion.h2>
+            <motion.div 
+              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              transition={{ duration: 1 }}
+            />
+          </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((t) => (
-              <div
-                key={t.id}
-                className="relative p-8 rounded-3xl glass-card hover:border-palacio-gold/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(212,175,55,0.1)] group"
-              >
-                <div className="absolute top-6 right-8 text-7xl text-palacio-gold/10 font-serif leading-none">"</div>
-                
-                <div className="flex gap-1 mb-6">
-                  {[...Array(t.rating)].map((_, j) => (
-                    <Star key={j} size={16} className="text-yellow-400 fill-yellow-400" />
-                  ))}
-                </div>
-
-                <p className="text-gray-300 italic mb-8 leading-relaxed text-sm md:text-base relative z-10">
-                  "{t.quote}"
-                </p>
-
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <img 
-                      src={t.avatar} 
-                      alt={t.name} 
-                      className="w-14 h-14 rounded-full object-cover border-2 border-palacio-gold/50 group-hover:border-palacio-gold transition-colors"
-                    />
-                    <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-palacio-black" />
+              <StaggerItem key={t.id}>
+                <motion.div
+                  className="relative p-8 rounded-3xl glass-card hover:border-palacio-gold/30 transition-all duration-500 group"
+                  whileHover={{ y: -10, boxShadow: "0 20px 60px rgba(212,175,55,0.1)" }}
+                >
+                  <motion.div 
+                    className="absolute top-6 right-8 text-7xl text-palacio-gold/10 font-serif leading-none"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 5, repeat: Infinity }}
+                  >
+                    "
+                  </motion.div>
+                  
+                  <div className="flex gap-1 mb-6">
+                    {[...Array(t.rating)].map((_, j) => (
+                      <motion.div
+                        key={j}
+                        initial={{ opacity: 0, scale: 0 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: j * 0.1 }}
+                      >
+                        <Star size={16} className="text-yellow-400 fill-yellow-400" />
+                      </motion.div>
+                    ))}
                   </div>
-                  <div>
-                    <h4 className="text-palacio-gold font-cinzel font-bold">{t.name}</h4>
-                    <p className="text-gray-500 text-xs">{t.role}</p>
+
+                  <p className="text-gray-300 italic mb-8 leading-relaxed text-sm md:text-base relative z-10">
+                    "{t.quote}"
+                  </p>
+
+                  <div className="flex items-center gap-4">
+                    <motion.div 
+                      className="relative"
+                      whileHover={{ scale: 1.1 }}
+                    >
+                      <img 
+                        src={t.avatar} 
+                        alt={t.name} 
+                        className="w-14 h-14 rounded-full object-cover border-2 border-palacio-gold/50 group-hover:border-palacio-gold transition-colors"
+                      />
+                      <motion.div 
+                        className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-palacio-black"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    </motion.div>
+                    <div>
+                      <h4 className="text-palacio-gold font-cinzel font-bold">{t.name}</h4>
+                      <p className="text-gray-500 text-xs">{t.role}</p>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </div>
 
-      <div className="py-24 bg-palacio-black">
+      {/* INSTAGRAM */}
+      <AnimatedSection className="py-24 bg-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Follow Us</span>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">@PalacioDeOro</h2>
-            <p className="text-gray-400 text-sm">Share your golden moments with us</p>
-            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6" />
+            <motion.span 
+              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+            >
+              Follow Us
+            </motion.span>
+            <motion.h2 
+              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+            >
+              @PalacioDeOro
+            </motion.h2>
+            <motion.p 
+              className="text-gray-400 text-sm"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              Share your golden moments with us
+            </motion.p>
+            <motion.div 
+              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              transition={{ duration: 1 }}
+            />
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {instagramPhotos.map((photo) => (
-              <div 
-                key={photo.id} 
-                className="relative aspect-square group overflow-hidden rounded-xl cursor-pointer"
-              >
-                <img 
-                  src={photo.url} 
-                  alt={`Instagram ${photo.id}`} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-2">
-                  <Heart size={24} className="text-white fill-white" />
-                  <span className="text-white font-cinzel text-sm">{photo.likes.toLocaleString()} likes</span>
-                </div>
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Instagram size={16} className="text-white" />
-                </div>
-              </div>
+              <StaggerItem key={photo.id}>
+                <motion.div 
+                  className="relative aspect-square group overflow-hidden rounded-xl cursor-pointer"
+                  whileHover={{ scale: 1.05, zIndex: 10 }}
+                  transition={{ type: "spring" }}
+                >
+                  <motion.img 
+                    src={photo.url} 
+                    alt={`Instagram ${photo.id}`} 
+                    className="w-full h-full object-cover"
+                    whileHover={{ scale: 1.2 }}
+                    transition={{ duration: 0.5 }}
+                  />
+                  <motion.div 
+                    className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2"
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                  >
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      whileHover={{ scale: 1 }}
+                      transition={{ type: "spring" }}
+                    >
+                      <Heart size={24} className="text-white fill-white" />
+                    </motion.div>
+                    <span className="text-white font-cinzel text-sm">{photo.likes.toLocaleString()} likes</span>
+                  </motion.div>
+                  <motion.div 
+                    className="absolute top-2 right-2"
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                  >
+                    <Instagram size={16} className="text-white" />
+                  </motion.div>
+                </motion.div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
-      </div>
+      </AnimatedSection>
 
-      <div className="py-20 bg-gradient-to-b from-palacio-black to-palacio-black/95 border-t border-white/5">
+      {/* NEWSLETTER */}
+      <AnimatedSection className="py-20 bg-gradient-to-b from-palacio-black to-palacio-black/95 border-t border-white/5">
         <div className="max-w-2xl mx-auto px-4 text-center">
-          <Sparkles size={32} className="mx-auto text-palacio-gold mb-4" />
-          <h3 className="text-3xl md:text-4xl font-playfair text-palacio-gold mb-3">Join the Golden Circle</h3>
-          <p className="text-gray-400 text-sm mb-8">Subscribe for exclusive offers, early access to seasonal packages, and insider perks.</p>
+          <motion.div
+            animate={{ rotate: [0, 15, -15, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            <Sparkles size={32} className="mx-auto text-palacio-gold mb-4" />
+          </motion.div>
+          <motion.h3 
+            className="text-3xl md:text-4xl font-playfair text-palacio-gold mb-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+          >
+            Join the Golden Circle
+          </motion.h3>
+          <motion.p 
+            className="text-gray-400 text-sm mb-8"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            Subscribe for exclusive offers, early access to seasonal packages, and insider perks.
+          </motion.p>
           
-          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <input 
               type="email" 
               placeholder="Enter your email"
               className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-palacio-gold/50 focus:ring-1 focus:ring-palacio-gold/30 transition-all font-cinzel text-sm"
             />
-            <button className="px-8 py-4 bg-palacio-gold text-palacio-black font-cinzel font-bold rounded-xl hover:bg-yellow-400 transition-colors shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+            <motion.button 
+              className="px-8 py-4 bg-palacio-gold text-palacio-black font-cinzel font-bold rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(212,175,55,0.4)" }}
+              whileTap={{ scale: 0.95 }}
+            >
               SUBSCRIBE
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
           
           <p className="text-gray-600 text-[10px] mt-4">By subscribing, you agree to our Privacy Policy. Unsubscribe anytime.</p>
         </div>
-      </div>
+      </AnimatedSection>
 
+      {/* FOOTER */}
       <footer className="bg-palacio-black border-t border-white/5 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <h4 className="text-palacio-gold font-playfair text-xl mb-4">Palacio de Oro</h4>
-              <p className="text-gray-500 text-sm leading-relaxed">Where Gold Meets Comfort. Experience luxury like never before.</p>
-            </div>
-            <div>
-              <h5 className="text-palacio-gold font-cinzel text-sm mb-4">QUICK LINKS</h5>
-              <ul className="space-y-2">
-                <li><button onClick={() => onNavigate('about')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">About Us</button></li>
-                <li><button onClick={() => onNavigate('privacy')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Privacy Policy</button></li>
-                <li><button onClick={() => onNavigate('terms')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Terms & Conditions</button></li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="text-palacio-gold font-cinzel text-sm mb-4">SERVICES</h5>
-              <ul className="space-y-2">
-                <li><button onClick={() => onNavigate('rooms')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Room Booking</button></li>
-                <li><button onClick={() => onNavigate('menu')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Fine Dining</button></li>
-                <li><button onClick={() => onNavigate('events')} className="text-gray-500 text-sm hover:text-palacio-gold transition-colors">Events</button></li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="text-palacio-gold font-cinzel text-sm mb-4">CONTACT</h5>
-              <ul className="space-y-2">
-                <li className="flex items-center gap-2 text-gray-500 text-sm">
-                  <Mail size={14} className="text-palacio-gold" />
-                  reservations@palaciodeoro.com
-                </li>
-                <li className="flex items-center gap-2 text-gray-500 text-sm">
-                  <Phone size={14} className="text-palacio-gold" />
-                  +63 912 345 6789
-                </li>
-              </ul>
-            </div>
+            {[
+              { title: "Palacio de Oro", content: "Where Gold Meets Comfort. Experience luxury like never before." },
+              { title: "QUICK LINKS", links: ['About Us', 'Privacy Policy', 'Terms & Conditions'] },
+              { title: "SERVICES", links: ['Room Booking', 'Fine Dining', 'Events'] },
+              { title: "CONTACT", items: ['reservations@palaciodeoro.com', '+63 912 345 6789'] }
+            ].map((section, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                {section.title === "Palacio de Oro" ? (
+                  <>
+                    <h4 className="text-palacio-gold font-playfair text-xl mb-4">{section.title}</h4>
+                    <p className="text-gray-500 text-sm leading-relaxed">{section.content}</p>
+                  </>
+                ) : section.links ? (
+                  <>
+                    <h5 className="text-palacio-gold font-cinzel text-sm mb-4">{section.title}</h5>
+                    <ul className="space-y-2">
+                      {section.links.map((link) => (
+                        <li key={link}>
+                          <motion.button 
+                            onClick={() => onNavigate(link.toLowerCase().replace(' ', ''))}
+                            className="text-gray-500 text-sm hover:text-palacio-gold transition-colors"
+                            whileHover={{ x: 5 }}
+                          >
+                            {link}
+                          </motion.button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <>
+                    <h5 className="text-palacio-gold font-cinzel text-sm mb-4">{section.title}</h5>
+                    <ul className="space-y-2">
+                      {section.items?.map((item) => (
+                        <li key={item} className="flex items-center gap-2 text-gray-500 text-sm">
+                          {item.includes('@') ? <Mail size={14} className="text-palacio-gold" /> : <Phone size={14} className="text-palacio-gold" />}
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </motion.div>
+            ))}
           </div>
           
-          <div className="border-t border-white/5 pt-8 text-center">
+          <motion.div 
+            className="border-t border-white/5 pt-8 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+          >
             <p className="text-gray-600 text-sm"> 2026 Palacio de Oro. All rights reserved.</p>
             <p className="text-gray-700 text-[10px] mt-2 font-cinzel tracking-wider">
               DEVELOPED BY VINCENT ECALDRE | EDUCATIONAL PROJECT
             </p>
-          </div>
+          </motion.div>
         </div>
       </footer>
     </div>
