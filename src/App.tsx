@@ -17,7 +17,7 @@ function App() {
   const [userId, setUserId] = useState<string>();
   const [userEmail, setUserEmail] = useState<string>();
   const [userName, setUserName] = useState<string>();
-  const [cart, setCart] = useState<<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
