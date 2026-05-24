@@ -63,7 +63,12 @@ export default function Navbar({
     setIsLogout(false);
   };
 
-  const displayName = userName || userEmail?.split('@')[0] || 'Guest';
+  const capitalizeFirst = (str: string) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  const displayName = capitalizeFirst(userName || userEmail?.split('@')[0] || 'Guest');
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
