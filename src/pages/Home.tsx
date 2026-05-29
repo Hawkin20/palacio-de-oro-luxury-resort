@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { 
   ArrowRight, Star, MapPin, 
   Calendar, Users, Clock, Award, Sparkles, Heart, Eye, 
@@ -7,7 +7,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 
 interface HomeProps {
   onNavigate: (page: string) => void;
@@ -65,24 +65,45 @@ const amenitiesList = [
   { icon: "🎯", label: "Private Beach" },
 ];
 
-function AnimatedSection({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) {
+const fadeUpVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+const staggerContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+  }
+};
+
+const staggerItemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
+};
+
+const AnimatedSection = memo(({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
   
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 60 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 60 }}
-      transition={{ duration: 0.8, delay, ease: "easeOut" }}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      variants={{
+        hidden: fadeUpVariants.hidden,
+        visible: { ...fadeUpVariants.visible, transition: { ...fadeUpVariants.visible.transition, delay } }
+      }}
       className={className}
     >
       {children}
     </motion.div>
   );
-}
+});
 
-function StaggerContainer({ children, className = "" }: { children: React.ReactNode, className?: string }) {
+const StaggerContainer = memo(({ children, className = "" }: { children: React.ReactNode, className?: string }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
   
@@ -91,79 +112,27 @@ function StaggerContainer({ children, className = "" }: { children: React.ReactN
       ref={ref}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
-      variants={{
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: { staggerChildren: 0.15, delayChildren: 0.2 }
-        }
-      }}
+      variants={staggerContainerVariants}
       className={className}
     >
       {children}
     </motion.div>
   );
-}
+});
 
-function StaggerItem({ children, className = "" }: { children: React.ReactNode, className?: string }) {
-  return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 40, scale: 0.9 },
-        visible: { 
-          opacity: 1, 
-          y: 0, 
-          scale: 1,
-          transition: { type: "spring", stiffness: 100, damping: 12 }
-        }
-      }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function ParallaxImage({ src, alt, className = "" }: { src: string, alt: string, className?: string }) {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"]
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["-20%", "20%"]);
-  
-  return (
-    <div ref={ref} className={`overflow-hidden ${className}`}>
-      <motion.img 
-        src={src} 
-        alt={alt} 
-        className="w-full h-full object-cover"
-        style={{ y, scale: 1.2 }}
-      />
-    </div>
-  );
-}
+const StaggerItem = memo(({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
+  <motion.div variants={staggerItemVariants} className={className}>
+    {children}
+  </motion.div>
+));
 
 export default function Home({ onNavigate }: HomeProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cottages, setCottages] = useState<Cottage[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scrollY, setScrollY] = useState(0);
   const [hoveredRoom, setHoveredRoom] = useState<number | null>(null);
   const [countdown, setCountdown] = useState({ days: 12, hours: 5, minutes: 43, seconds: 21 });
-
-  const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 1.1]);
-  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -214,10 +183,6 @@ export default function Home({ onNavigate }: HomeProps) {
     return { text: `${total} rooms available`, color: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/30' };
   };
 
-  const getMenuOrderCount = (menuItemId: string) => {
-    return menuItems.find(m => m.id === menuItemId)?.order_count || 0;
-  };
-
   const getTopBestsellers = () => {
     const sorted = [...menuItems].sort((a, b) => (b.order_count || 0) - (a.order_count || 0));
     return sorted.slice(0, 3).map(m => m.id);
@@ -241,20 +206,9 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-palacio-black">
-      {/* STICKY BANNER */}
-      <motion.div 
-        className="sticky top-0 z-50 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black py-2.5 px-4 text-center font-cinzel shadow-lg"
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 100 }}
-      >
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black py-2.5 px-4 text-center font-cinzel shadow-lg">
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <motion.div
-            animate={{ rotate: [0, 15, -15, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Sparkles size={16} />
-          </motion.div>
+          <Sparkles size={16} />
           <span className="font-bold text-sm md:text-base">SUMMER EXCLUSIVE:</span>
           <span className="text-sm hidden sm:inline">Book 3 nights, get the 4th FREE + complimentary spa session</span>
           <div className="flex items-center gap-1.5 bg-palacio-black/20 px-3 py-1 rounded-full text-xs font-mono">
@@ -262,22 +216,15 @@ export default function Home({ onNavigate }: HomeProps) {
             <span>{countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s</span>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* HERO SECTION */}
-      <div ref={heroRef} className="relative w-full min-h-[100vh] flex items-center justify-center overflow-hidden">
-        <motion.div
-          className="absolute inset-0"
-          style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-        >
-          <div
-            className="absolute inset-0 bg-cover bg-center scale-110"
-            style={{
-              backgroundImage: 'url("https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80")',
-              transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
-            }}
-          />
-        </motion.div>
+      <div className="relative w-full min-h-[100vh] flex items-center justify-center overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center scale-110"
+          style={{
+            backgroundImage: 'url("https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&q=80")',
+          }}
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90" />
         <div className="absolute inset-0 bg-gradient-to-r from-orange-900/20 via-transparent to-purple-900/20" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.6)_100%)]" />
@@ -293,7 +240,6 @@ export default function Home({ onNavigate }: HomeProps) {
             <span className="text-palacio-gold text-xs font-cinzel tracking-widest">LUXURY RESORT & SPA</span>
           </motion.div>
 
-          {/* URGENCY BANNER */}
           <motion.div 
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 ${urgency.bg} border ${urgency.border}`}
             initial={{ opacity: 0, scale: 0.8 }}
@@ -338,30 +284,26 @@ export default function Home({ onNavigate }: HomeProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
           >
-            <motion.button
+            <button
               onClick={() => onNavigate('rooms')}
-              className="group relative w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)] min-w-[280px] sm:min-w-[320px]"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 60px rgba(212,175,55,0.5)" }}
-              whileTap={{ scale: 0.95 }}
+              className="group relative w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg md:text-xl rounded-xl shadow-[0_0_40px_rgba(212,175,55,0.3)] min-w-[280px] sm:min-w-[320px] hover:scale-105 hover:shadow-[0_0_60px_rgba(212,175,55,0.5)] active:scale-95 transition-all duration-300"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 <Calendar size={20} />
                 BOOK YOUR SUMMER STAY
               </span>
-            </motion.button>
+            </button>
 
-            <motion.button
+            <button
               onClick={() => onNavigate('menu')}
-              className="w-full sm:w-auto px-10 py-5 bg-white/5 backdrop-blur-xl border-2 border-white/60 text-white font-cinzel font-bold text-lg md:text-xl rounded-xl min-w-[280px] sm:min-w-[320px] shadow-xl group"
-              whileHover={{ scale: 1.05, borderColor: "#FFD700", color: "#FFD700" }}
-              whileTap={{ scale: 0.95 }}
+              className="w-full sm:w-auto px-10 py-5 bg-white/5 backdrop-blur-xl border-2 border-white/60 text-white font-cinzel font-bold text-lg md:text-xl rounded-xl min-w-[280px] sm:min-w-[320px] shadow-xl hover:scale-105 hover:border-palacio-gold hover:text-palacio-gold active:scale-95 transition-all duration-300"
             >
               <span className="flex items-center justify-center gap-2">
                 <Sparkles size={20} />
                 EXPLORE ROOMS
                 <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform duration-300" />
               </span>
-            </motion.button>
+            </button>
           </motion.div>
 
           <motion.div 
@@ -375,105 +317,49 @@ export default function Home({ onNavigate }: HomeProps) {
               { value: "500+", label: "Happy Guests", icon: Heart },
               { value: "24/7", label: "Concierge", icon: Clock },
             ].map((stat, i) => (
-              <motion.div 
-                key={i} 
-                className="text-center group cursor-default"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2 + i * 0.1 }}
-                whileHover={{ scale: 1.1 }}
-              >
-                <motion.div
-                  whileHover={{ rotate: 15, scale: 1.2 }}
-                  transition={{ type: "spring" }}
-                >
-                  <stat.icon size={20} className="mx-auto text-palacio-gold mb-2" />
-                </motion.div>
+              <div key={i} className="text-center group cursor-default">
+                <stat.icon size={20} className="mx-auto text-palacio-gold mb-2 group-hover:rotate-12 transition-transform duration-300" />
                 <div className="text-2xl md:text-3xl font-playfair text-white font-bold">{stat.value}</div>
                 <div className="text-white/50 text-xs font-cinzel">{stat.label}</div>
-              </motion.div>
+              </div>
             ))}
           </motion.div>
         </div>
 
-        <motion.div 
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer group"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1, y: [0, 10, 0] }}
-          transition={{ opacity: { delay: 1.5 }, y: { duration: 2, repeat: Infinity } }}
-        >
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer group">
           <span className="text-white/40 text-[10px] font-cinzel tracking-widest group-hover:text-palacio-gold transition-colors">SCROLL</span>
           <div className="w-6 h-10 border-2 border-white/30 group-hover:border-palacio-gold rounded-full flex justify-center pt-2 transition-colors">
-            <motion.div 
-              className="w-1 h-2.5 bg-palacio-gold rounded-full"
-              animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
+            <div className="w-1 h-2.5 bg-palacio-gold rounded-full animate-bounce" />
           </div>
-        </motion.div>
+        </div>
       </div>
 
-      {/* AMENITIES */}
       <AnimatedSection className="py-8 bg-gradient-to-r from-palacio-black via-palacio-black/95 to-palacio-black border-y border-white/5">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex flex-wrap justify-center gap-8 md:gap-16">
             {amenitiesList.map((amenity, i) => (
-              <motion.div 
-                key={i} 
-                className="flex items-center gap-3 group cursor-default"
-                whileHover={{ scale: 1.1, y: -5 }}
-                transition={{ type: "spring" }}
-              >
-                <motion.span 
-                  className="text-2xl"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {amenity.icon}
-                </motion.span>
+              <div key={i} className="flex items-center gap-3 group cursor-default hover:scale-110 hover:-translate-y-1 transition-transform duration-300">
+                <span className="text-2xl group-hover:rotate-12 transition-transform duration-300">{amenity.icon}</span>
                 <span className="text-white/60 font-cinzel text-sm group-hover:text-palacio-gold transition-colors">{amenity.label}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </AnimatedSection>
 
-      {/* ROOMS SECTION */}
       <div className="py-24 bg-palacio-black relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.03)_0%,transparent_70%)]" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <AnimatedSection className="text-center mb-16">
-            <motion.span 
-              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
-              initial={{ opacity: 0, letterSpacing: "0.1em" }}
-              whileInView={{ opacity: 1, letterSpacing: "0.3em" }}
-              transition={{ duration: 1 }}
-            >
-              Stay With Us
-            </motion.span>
-            <motion.h2 
-              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Stay With Us</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">
               Luxury Accommodations
-            </motion.h2>
-            <motion.p 
-              className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base">
               Each room is thoughtfully designed with golden accents, premium linens, and breathtaking views.
-            </motion.p>
-            <motion.div 
-              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              transition={{ duration: 1 }}
-            />
+            </p>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6" />
           </AnimatedSection>
 
           {loading ? (
@@ -496,24 +382,23 @@ export default function Home({ onNavigate }: HomeProps) {
                 
                 return (
                   <StaggerItem key={item.id}>
-                    <motion.div
-                      className="group cursor-pointer relative"
+                    <div
+                      className="group cursor-pointer relative hover:-translate-y-3 transition-transform duration-300"
                       onMouseEnter={() => setHoveredRoom(item.id)}
                       onMouseLeave={() => setHoveredRoom(null)}
                       onClick={() => onNavigate('rooms')}
-                      whileHover={{ y: -12, transition: { type: "spring", stiffness: 300 } }}
                     >
                       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl group-hover:shadow-palacio-gold/10">
                         <div className="relative h-56 overflow-hidden">
-                          <ParallaxImage src={item.image_url} alt={item.name} className="h-56" />
+                          <img 
+                            src={item.image_url} 
+                            alt={item.name} 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            loading="lazy"
+                          />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                           
-                          <motion.div 
-                            className="absolute top-4 right-4"
-                            initial={{ opacity: 0, x: 20 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                          >
+                          <div className="absolute top-4 right-4">
                             <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg ${
                               isAvailable
                                 ? 'bg-green-500/90 text-white'
@@ -521,7 +406,7 @@ export default function Home({ onNavigate }: HomeProps) {
                             }`}>
                               {isAvailable ? `${quantity} left` : 'Fully Booked'}
                             </span>
-                          </motion.div>
+                          </div>
 
                           <div className="absolute top-4 left-4">
                             <StatusBadge status={item.status} size="sm" />
@@ -529,37 +414,18 @@ export default function Home({ onNavigate }: HomeProps) {
 
                           {!isAvailable && (
                             <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                              <motion.span 
-                                className="text-red-400 font-bold text-lg font-cinzel tracking-wider"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring" }}
-                              >
-                                SOLD OUT
-                              </motion.span>
+                              <span className="text-red-400 font-bold text-lg font-cinzel tracking-wider">SOLD OUT</span>
                             </div>
                           )}
 
-                          <motion.div 
-                            className="absolute inset-0 bg-black/60 flex items-center justify-center"
-                            initial={{ opacity: 0 }}
-                            whileHover={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <motion.div 
-                              className="text-center"
-                              initial={{ y: 20, opacity: 0 }}
-                              whileHover={{ y: 0, opacity: 1 }}
-                            >
-                              <motion.div 
-                                className="w-16 h-16 glass-card rounded-full flex items-center justify-center mx-auto mb-3"
-                                whileHover={{ scale: 1.1, rotate: 10 }}
-                              >
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="text-center">
+                              <div className="w-16 h-16 glass-card rounded-full flex items-center justify-center mx-auto mb-3 hover:scale-110 hover:rotate-6 transition-transform duration-300">
                                 <Eye size={28} className="text-palacio-gold" />
-                              </motion.div>
+                              </div>
                               <span className="text-white font-cinzel text-sm">Quick Preview</span>
-                            </motion.div>
-                          </motion.div>
+                            </div>
+                          </div>
                         </div>
 
                         <div className="p-5">
@@ -586,13 +452,12 @@ export default function Home({ onNavigate }: HomeProps) {
 
                           <div className="flex flex-wrap gap-1.5 mb-4">
                             {['WiFi', 'AC', 'Mini Bar'].map((amenity) => (
-                              <motion.span 
+                              <span 
                                 key={amenity} 
-                                className="text-[10px] bg-white/5 text-gray-400 px-2 py-1 rounded-md border border-white/5"
-                                whileHover={{ scale: 1.1, backgroundColor: "rgba(255,215,0,0.1)" }}
+                                className="text-[10px] bg-white/5 text-gray-400 px-2 py-1 rounded-md border border-white/5 hover:bg-palacio-gold/10 hover:scale-105 transition-all duration-200"
                               >
                                 {amenity}
-                              </motion.span>
+                              </span>
                             ))}
                           </div>
 
@@ -604,19 +469,16 @@ export default function Home({ onNavigate }: HomeProps) {
                               </span>
                               <span className="text-gray-600 text-[10px]">/NIGHT</span>
                             </div>
-                            <motion.span 
-                              className={`text-xs font-cinzel flex items-center gap-1 group-hover:gap-2 transition-all ${
-                                isAvailable ? 'text-palacio-gold' : 'text-gray-500'
-                              }`}
-                              whileHover={{ x: 5 }}
-                            >
+                            <span className={`text-xs font-cinzel flex items-center gap-1 group-hover:gap-2 transition-all duration-300 ${
+                              isAvailable ? 'text-palacio-gold' : 'text-gray-500'
+                            }`}>
                               {isAvailable ? 'VIEW DETAILS' : 'UNAVAILABLE'}
-                              <ArrowRight size={14} />
-                            </motion.span>
+                              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
+                            </span>
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   </StaggerItem>
                 );
               })}
@@ -625,78 +487,38 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* AWARDS */}
       <AnimatedSection className="py-16 border-y border-white/5 bg-gradient-to-r from-palacio-black via-palacio-black/90 to-palacio-black">
         <div className="max-w-7xl mx-auto px-4">
-          <motion.div 
-            className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 transition-opacity duration-700"
-            whileInView={{ opacity: 1 }}
-          >
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 hover:opacity-100 transition-opacity duration-700">
             {awards.map((award, i) => (
-              <motion.div 
+              <div 
                 key={i} 
-                className="flex items-center gap-3 group cursor-default grayscale hover:grayscale-0 transition-all duration-500"
-                whileHover={{ scale: 1.15, y: -5 }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
+                className="flex items-center gap-3 group cursor-default grayscale hover:grayscale-0 hover:scale-115 hover:-translate-y-1 transition-all duration-500"
               >
-                <motion.span 
-                  className="text-3xl"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  {award.icon}
-                </motion.span>
+                <span className="text-3xl group-hover:rotate-12 transition-transform duration-300">{award.icon}</span>
                 <div>
                   <div className="text-white font-cinzel font-bold text-sm">{award.name}</div>
                   <div className="text-palacio-gold text-xs">{award.year}</div>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </AnimatedSection>
 
-      {/* FEATURED MENU */}
       <div className="py-24 bg-gradient-to-b from-palacio-black via-orange-900/10 to-palacio-black relative overflow-hidden">
-        <motion.div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl animate-pulse" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <AnimatedSection className="text-center mb-16">
-            <motion.span 
-              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-            >
-              Culinary Excellence
-            </motion.span>
-            <motion.h2 
-              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
+            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Culinary Excellence</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">
               Signature Dishes
-            </motion.h2>
-            <motion.p 
-              className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-sm md:text-base">
               Savor the finest flavors crafted by our world-renowned chefs.
-            </motion.p>
-            <motion.div 
-              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              transition={{ duration: 1 }}
-            />
+            </p>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6" />
           </AnimatedSection>
 
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -706,32 +528,24 @@ export default function Home({ onNavigate }: HomeProps) {
               
               return (
                 <StaggerItem key={item.id}>
-                  <motion.div 
-                    className="group cursor-pointer" 
+                  <div 
+                    className="group cursor-pointer hover:-translate-y-2 transition-transform duration-300"
                     onClick={() => onNavigate('menu')}
-                    whileHover={{ y: -10 }}
-                    transition={{ type: "spring" }}
                   >
                     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 group-hover:border-palacio-gold/40 transition-all duration-500 shadow-xl">
                       <div className="relative h-48 overflow-hidden">
-                        <motion.img
+                        <img
                           src={item.image_url}
                           alt={item.name}
-                          className="w-full h-full object-cover"
-                          whileHover={{ scale: 1.15 }}
-                          transition={{ duration: 0.6 }}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                         
                         {isBestseller && (
-                          <motion.div 
-                            className="absolute top-3 left-3 px-3 py-1.5 bg-palacio-gold text-palacio-black rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg"
-                            initial={{ x: -50, opacity: 0 }}
-                            whileInView={{ x: 0, opacity: 1 }}
-                            transition={{ type: "spring" }}
-                          >
+                          <div className="absolute top-3 left-3 px-3 py-1.5 bg-palacio-gold text-palacio-black rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg">
                             <Star size={12} fill="currentColor" /> BESTSELLER
-                          </motion.div>
+                          </div>
                         )}
 
                         {!item.available && (
@@ -740,12 +554,9 @@ export default function Home({ onNavigate }: HomeProps) {
                           </div>
                         )}
 
-                        <motion.div 
-                          className="absolute bottom-3 right-3 px-2 py-1 bg-black/50 rounded text-xs text-gray-300"
-                          whileHover={{ scale: 1.1 }}
-                        >
+                        <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/50 rounded text-xs text-gray-300">
                           {orderCount} sold
-                        </motion.div>
+                        </div>
                       </div>
 
                       <div className="p-4">
@@ -762,16 +573,13 @@ export default function Home({ onNavigate }: HomeProps) {
                           }`}>
                             {item.available ? 'Available' : 'Not Available'}
                           </span>
-                          <motion.span 
-                            className="text-palacio-gold text-xs font-cinzel flex items-center gap-1"
-                            whileHover={{ x: 5 }}
-                          >
+                          <span className="text-palacio-gold text-xs font-cinzel flex items-center gap-1 group-hover:translate-x-1 transition-transform duration-300">
                             ORDER NOW <ArrowRight size={12} />
-                          </motion.span>
+                          </span>
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </StaggerItem>
               );
             })}
@@ -779,63 +587,27 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </div>
 
-      {/* TESTIMONIALS */}
       <div className="py-24 bg-gradient-to-b from-palacio-black via-orange-900/10 to-palacio-black relative overflow-hidden">
-        <motion.div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl"
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 10, repeat: Infinity }}
-        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-palacio-gold/5 rounded-full blur-3xl animate-pulse" />
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <AnimatedSection className="text-center mb-16">
-            <motion.span 
-              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-            >
-              Guest Stories
-            </motion.span>
-            <motion.h2 
-              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-            >
+            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Guest Stories</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">
               What Our Guests Say
-            </motion.h2>
-            <motion.div 
-              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              transition={{ duration: 1 }}
-            />
+            </h2>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto" />
           </AnimatedSection>
 
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((t) => (
               <StaggerItem key={t.id}>
-                <motion.div
-                  className="relative p-8 rounded-3xl glass-card hover:border-palacio-gold/30 transition-all duration-500 group"
-                  whileHover={{ y: -10, boxShadow: "0 20px 60px rgba(212,175,55,0.1)" }}
-                >
-                  <motion.div 
-                    className="absolute top-6 right-8 text-7xl text-palacio-gold/10 font-serif leading-none"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 5, repeat: Infinity }}
-                  >
-                    "
-                  </motion.div>
+                <div className="relative p-8 rounded-3xl glass-card hover:border-palacio-gold/30 hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(212,175,55,0.1)] transition-all duration-500 group">
+                  <div className="absolute top-6 right-8 text-7xl text-palacio-gold/10 font-serif leading-none">"</div>
                   
                   <div className="flex gap-1 mb-6">
                     {[...Array(t.rating)].map((_, j) => (
-                      <motion.div
-                        key={j}
-                        initial={{ opacity: 0, scale: 0 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: j * 0.1 }}
-                      >
-                        <Star size={16} className="text-yellow-400 fill-yellow-400" />
-                      </motion.div>
+                      <Star key={j} size={16} className="text-yellow-400 fill-yellow-400" />
                     ))}
                   </div>
 
@@ -844,160 +616,89 @@ export default function Home({ onNavigate }: HomeProps) {
                   </p>
 
                   <div className="flex items-center gap-4">
-                    <motion.div 
-                      className="relative"
-                      whileHover={{ scale: 1.1 }}
-                    >
+                    <div className="relative hover:scale-110 transition-transform duration-300">
                       <img 
                         src={t.avatar} 
                         alt={t.name} 
                         className="w-14 h-14 rounded-full object-cover border-2 border-palacio-gold/50 group-hover:border-palacio-gold transition-colors"
+                        loading="lazy"
                       />
-                      <motion.div 
-                        className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-palacio-black"
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                    </motion.div>
+                      <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-palacio-black" />
+                    </div>
                     <div>
                       <h4 className="text-palacio-gold font-cinzel font-bold">{t.name}</h4>
                       <p className="text-gray-500 text-xs">{t.role}</p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </StaggerItem>
             ))}
           </StaggerContainer>
         </div>
       </div>
 
-      {/* INSTAGRAM */}
       <AnimatedSection className="py-24 bg-palacio-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <motion.span 
-              className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-            >
-              Follow Us
-            </motion.span>
-            <motion.h2 
-              className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-            >
+            <span className="text-palacio-gold/60 text-xs font-cinzel tracking-[0.3em] uppercase">Follow Us</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-playfair text-palacio-gold mt-2 mb-4">
               @PalacioDeOro
-            </motion.h2>
-            <motion.p 
-              className="text-gray-400 text-sm"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
+            </h2>
+            <p className="text-gray-400 text-sm">
               Share your golden moments with us
-            </motion.p>
-            <motion.div 
-              className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6"
-              initial={{ scaleX: 0 }}
-              whileInView={{ scaleX: 1 }}
-              transition={{ duration: 1 }}
-            />
+            </p>
+            <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-palacio-gold to-transparent mx-auto mt-6" />
           </div>
 
           <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {instagramPhotos.map((photo) => (
               <StaggerItem key={photo.id}>
-                <motion.div 
-                  className="relative aspect-square group overflow-hidden rounded-xl cursor-pointer"
-                  whileHover={{ scale: 1.05, zIndex: 10 }}
-                  transition={{ type: "spring" }}
-                >
-                  <motion.img 
+                <div className="relative aspect-square group overflow-hidden rounded-xl cursor-pointer hover:scale-105 hover:z-10 transition-transform duration-300">
+                  <img 
                     src={photo.url} 
                     alt={`Instagram ${photo.id}`} 
-                    className="w-full h-full object-cover"
-                    whileHover={{ scale: 1.2 }}
-                    transition={{ duration: 0.5 }}
+                    className="w-full h-full object-cover group-hover:scale-120 transition-transform duration-500"
+                    loading="lazy"
                   />
-                  <motion.div 
-                    className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2"
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                  >
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      whileHover={{ scale: 1 }}
-                      transition={{ type: "spring" }}
-                    >
-                      <Heart size={24} className="text-white fill-white" />
-                    </motion.div>
+                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Heart size={24} className="text-white fill-white" />
                     <span className="text-white font-cinzel text-sm">{photo.likes.toLocaleString()} likes</span>
-                  </motion.div>
-                  <motion.div 
-                    className="absolute top-2 right-2"
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                  >
+                  </div>
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Instagram size={16} className="text-white" />
-                  </motion.div>
-                </motion.div>
+                  </div>
+                </div>
               </StaggerItem>
             ))}
           </StaggerContainer>
         </div>
       </AnimatedSection>
 
-      {/* NEWSLETTER */}
       <AnimatedSection className="py-20 bg-gradient-to-b from-palacio-black to-palacio-black/95 border-t border-white/5">
         <div className="max-w-2xl mx-auto px-4 text-center">
-          <motion.div
-            animate={{ rotate: [0, 15, -15, 0] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
-            <Sparkles size={32} className="mx-auto text-palacio-gold mb-4" />
-          </motion.div>
-          <motion.h3 
-            className="text-3xl md:text-4xl font-playfair text-palacio-gold mb-3"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-          >
+          <Sparkles size={32} className="mx-auto text-palacio-gold mb-4 animate-pulse" />
+          <h3 className="text-3xl md:text-4xl font-playfair text-palacio-gold mb-3">
             Join the Golden Circle
-          </motion.h3>
-          <motion.p 
-            className="text-gray-400 text-sm mb-8"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
+          </h3>
+          <p className="text-gray-400 text-sm mb-8">
             Subscribe for exclusive offers, early access to seasonal packages, and insider perks.
-          </motion.p>
+          </p>
           
-          <motion.div 
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
+          <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
             <input 
               type="email" 
               placeholder="Enter your email"
               className="flex-1 px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-palacio-gold/50 focus:ring-1 focus:ring-palacio-gold/30 transition-all font-cinzel text-sm"
             />
-            <motion.button 
-              className="px-8 py-4 bg-palacio-gold text-palacio-black font-cinzel font-bold rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.2)]"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(212,175,55,0.4)" }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <button className="px-8 py-4 bg-palacio-gold text-palacio-black font-cinzel font-bold rounded-xl shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] active:scale-95 transition-all duration-300">
               SUBSCRIBE
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
           
           <p className="text-gray-600 text-[10px] mt-4">By subscribing, you agree to our Privacy Policy. Unsubscribe anytime.</p>
         </div>
       </AnimatedSection>
 
-      {/* FOOTER */}
       <footer className="bg-palacio-black border-t border-white/5 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
@@ -1007,12 +708,7 @@ export default function Home({ onNavigate }: HomeProps) {
               { title: "SERVICES", links: ['Room Booking', 'Fine Dining', 'Events'] },
               { title: "CONTACT", items: ['reservations@palaciodeoro.com', '+63 912 345 6789'] }
             ].map((section, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-              >
+              <div key={i}>
                 {section.title === "Palacio de Oro" ? (
                   <>
                     <h4 className="text-palacio-gold font-playfair text-xl mb-4">{section.title}</h4>
@@ -1024,13 +720,12 @@ export default function Home({ onNavigate }: HomeProps) {
                     <ul className="space-y-2">
                       {section.links.map((link) => (
                         <li key={link}>
-                          <motion.button 
+                          <button 
                             onClick={() => onNavigate(link.toLowerCase().replace(' ', ''))}
-                            className="text-gray-500 text-sm hover:text-palacio-gold transition-colors"
-                            whileHover={{ x: 5 }}
+                            className="text-gray-500 text-sm hover:text-palacio-gold hover:translate-x-1 transition-all duration-200"
                           >
                             {link}
-                          </motion.button>
+                          </button>
                         </li>
                       ))}
                     </ul>
@@ -1048,20 +743,16 @@ export default function Home({ onNavigate }: HomeProps) {
                     </ul>
                   </>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
           
-          <motion.div 
-            className="border-t border-white/5 pt-8 text-center"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-          >
+          <div className="border-t border-white/5 pt-8 text-center">
             <p className="text-gray-600 text-sm"> 2026 Palacio de Oro. All rights reserved.</p>
             <p className="text-gray-700 text-[10px] mt-2 font-cinzel tracking-wider">
               DEVELOPED BY VINCENT ECALDRE | EDUCATIONAL PROJECT
             </p>
-          </motion.div>
+          </div>
         </div>
       </footer>
     </div>
