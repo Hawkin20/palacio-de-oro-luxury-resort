@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, LogOut, LogIn, User, ChevronDown, Calendar, Heart, Settings, Sparkles } from 'lucide-react';
 import Auth from '../pages/Auth';
 import PalacioLogo from './PalacioLogo';
+import Soundscape from './Soundscape';
+import CurrencySelector from './CurrencySelector';
 
 interface NavbarProps {
   currentPage: string;
@@ -155,7 +157,9 @@ export default function Navbar({
                 ))}
               </div>
 
-              <div className="hidden lg:flex items-center space-x-4">
+              <div className="hidden lg:flex items-center space-x-3">
+                <Soundscape />
+                <CurrencySelector />
                 {userRole === 'admin' && (
                   <button
                     onClick={() => onNavigate('admin')}
@@ -283,6 +287,10 @@ export default function Navbar({
 
           {isOpen && (
             <div className="lg:hidden px-6 py-6 space-y-3 bg-[#0a0a0a] border-b border-palacio-bronze/30 shadow-2xl">
+              <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                <Soundscape />
+                <CurrencySelector />
+              </div>
               {navItems.map((item) => (
                 <button
                   key={item.value}

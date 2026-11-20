@@ -4,6 +4,7 @@ import { Booking, Order } from '../lib/types';
 import GlassCard from '../components/GlassCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusBadge from '../components/StatusBadge';
+import { useCurrency } from '../lib/currency';
 import { 
   Bell, Calendar, Clock, User, DollarSign, Home, UtensilsCrossed, 
   Package, MapPin, CreditCard, ChevronDown, ChevronUp, Sparkles, 
@@ -55,6 +56,7 @@ const STATUS_CONFIG: Record<string, {
 };
 
 export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsProps) {
+  const { formatPrice } = useCurrency();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -366,7 +368,7 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
                           <span className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Total</span>
                         </div>
                         <p className="font-cinzel font-bold text-palacio-bronze text-lg">
-                          ${booking.total_price?.toFixed(2)}
+                          {formatPrice(booking.total_price || 0)}
                         </p>
                       </div>
                     </div>
@@ -384,7 +386,7 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
                       {booking.downpayment_amount > 0 && (
                         <div className="flex items-center gap-2 text-palacio-bronze">
                           <Receipt size={13} />
-                          <span>Deposit Paid: ${booking.downpayment_amount.toFixed(2)}</span>
+                          <span>Deposit Paid: {formatPrice(booking.downpayment_amount || 0)}</span>
                         </div>
                       )}
                     </div>
@@ -427,7 +429,7 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
                                   </div>
                                   <div className="flex items-center gap-4">
                                     <span className="font-cinzel font-bold text-palacio-bronze text-sm">
-                                      ${order.total_amount?.toFixed(2)}
+                                      {formatPrice(order.total_amount || 0)}
                                     </span>
                                     <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full ${orderStatus.bg} ${orderStatus.border} border`}>
                                       <OrderStatusIcon size={10} className={orderStatus.color} />
@@ -531,7 +533,7 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
                                 <p className="text-palacio-alabaster font-poppins text-xs">{order.product_name}</p>
                               </div>
                               <span className="font-cinzel font-bold text-palacio-bronze text-base">
-                                ${order.total_amount?.toFixed(2)}
+                                {formatPrice(order.total_amount || 0)}
                               </span>
                             </div>
                             <p className="text-palacio-alabaster/50 text-xs capitalize">

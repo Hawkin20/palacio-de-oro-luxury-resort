@@ -12,6 +12,7 @@ import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusBadge from '../components/StatusBadge';
 import { handleImageFallback } from '../lib/images';
+import { useCurrency } from '../lib/currency';
 
 interface RoomsProps {
   userId?: string;
@@ -41,6 +42,7 @@ const featuredAmenities = [
 ];
 
 export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
+  const { formatPrice } = useCurrency();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cottages, setCottages] = useState<Cottage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -506,7 +508,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                             <div className="absolute bottom-4 right-4 text-right">
                               <p className="text-[9px] text-palacio-alabaster/60 uppercase font-cinzel tracking-wider">Starts at</p>
                               <p className="text-palacio-bronze font-cinzel font-bold text-2xl drop-shadow-lg">
-                                ${item.price_per_night}
+                                {formatPrice(item.price_per_night)}
                                 <span className="text-xs text-palacio-alabaster/60 font-normal"> /night</span>
                               </p>
                             </div>
@@ -632,7 +634,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                   <p className="text-gray-400 text-sm italic">{quickViewRoom.description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-playfair text-palacio-bronze">${quickViewRoom.price_per_night}</p>
+                  <p className="text-3xl font-playfair text-palacio-bronze">{formatPrice(quickViewRoom.price_per_night)}</p>
                   <p className="text-gray-500 text-xs">per night</p>
                 </div>
               </div>
@@ -704,7 +706,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
               <tr className="border-b border-white/5">
                 <td className="py-3 px-4 text-gray-400 font-cinzel text-xs">Price/Night</td>
                 {compareList.map(room => (
-                  <td key={room.id} className="py-3 px-4 text-center text-palacio-bronze font-bold font-cinzel">${room.price_per_night}</td>
+                  <td key={room.id} className="py-3 px-4 text-center text-palacio-bronze font-bold font-cinzel">{formatPrice(room.price_per_night)}</td>
                 ))}
               </tr>
               <tr className="border-b border-white/5">
@@ -870,7 +872,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                 </div>
                 <div>
                   <span className="text-[10px] text-palacio-alabaster/50 font-cinzel block uppercase">Total Amount</span>
-                  <span className="text-palacio-bronze font-cinzel font-bold text-sm">${confirmedTotal.toFixed(2)}</span>
+                  <span className="text-palacio-bronze font-cinzel font-bold text-sm">{formatPrice(confirmedTotal)}</span>
                 </div>
               </div>
             </div>
@@ -895,7 +897,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                 <div className="flex flex-col justify-center">
                   <h4 className="text-palacio-alabaster font-playfair text-base">{selectedRoom.name}</h4>
                   <p className="text-palacio-alabaster/60 text-xs">
-                    <span className="text-palacio-bronze font-cinzel font-bold">${selectedRoom.price_per_night}</span> / night • Max {selectedRoom.capacity} guests
+                    <span className="text-palacio-bronze font-cinzel font-bold">{formatPrice(selectedRoom.price_per_night)}</span> / night • Max {selectedRoom.capacity} guests
                   </p>
                 </div>
               </div>
@@ -979,8 +981,8 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                   return (
                     <>
                       <div className="flex justify-between text-xs text-palacio-alabaster/70">
-                        <span>${selectedRoom.price_per_night.toFixed(2)} × {nights} night{nights > 1 ? 's' : ''}</span>
-                        <span className="font-mono text-palacio-alabaster">${subtotal.toFixed(2)}</span>
+                        <span>{formatPrice(selectedRoom.price_per_night)} × {nights} night{nights > 1 ? 's' : ''}</span>
+                        <span className="font-mono text-palacio-alabaster">{formatPrice(subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-xs text-palacio-alabaster/70">
                         <span>Resort Services & Amenities</span>
@@ -990,13 +992,13 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                       {bookingData.downpayment && (
                         <div className="pt-2 border-t border-white/[0.06] flex justify-between text-xs text-palacio-bronze">
                           <span>Deposit Due Now (50%)</span>
-                          <span className="font-mono font-semibold">${downpaymentAmount.toFixed(2)}</span>
+                          <span className="font-mono font-semibold">{formatPrice(downpaymentAmount)}</span>
                         </div>
                       )}
 
                       <div className="flex justify-between text-base font-semibold border-t border-white/[0.08] pt-2">
                         <span className="font-cinzel text-palacio-alabaster text-xs tracking-wider uppercase">Estimated Total</span>
-                        <span className="font-cinzel text-palacio-bronze text-xl">${subtotal.toFixed(2)}</span>
+                        <span className="font-cinzel text-palacio-bronze text-xl">{formatPrice(subtotal)}</span>
                       </div>
                     </>
                   );

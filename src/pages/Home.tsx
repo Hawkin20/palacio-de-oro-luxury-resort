@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
 import { handleImageFallback } from '../lib/images';
+import { useCurrency } from '../lib/currency';
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 interface HomeProps {
@@ -264,6 +265,7 @@ const GoldParticles = memo(() => {
 
 // ===== MAIN COMPONENT =====
 export default function Home({ onNavigate }: HomeProps) {
+  const { formatPrice } = useCurrency();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cottages, setCottages] = useState<Cottage[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -661,7 +663,7 @@ export default function Home({ onNavigate }: HomeProps) {
                           <div>
                             <span className="text-gray-500 text-[10px] font-cinzel">FROM</span>
                             <span className="text-palacio-gold font-cinzel font-bold text-2xl ml-2">
-                              ${item.price_per_night}
+                              {formatPrice(item.price_per_night)}
                             </span>
                             <span className="text-gray-600 text-[10px]">/NIGHT</span>
                           </div>
@@ -802,7 +804,7 @@ export default function Home({ onNavigate }: HomeProps) {
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-3">
                         <h3 className="font-playfair text-palacio-gold text-xl">{item.name}</h3>
-                        <span className="text-palacio-gold font-cinzel font-bold text-xl">${item.price}</span>
+                        <span className="text-palacio-gold font-cinzel font-bold text-xl">{formatPrice(item.price)}</span>
                       </div>
                       <p className="text-gray-400 text-sm capitalize mb-4">{item.category}</p>
                       <div className="flex items-center justify-between">

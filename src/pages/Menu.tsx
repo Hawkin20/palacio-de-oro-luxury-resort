@@ -5,6 +5,7 @@ import { MenuItem, CartItem } from '../lib/types';
 import GlassCard from '../components/GlassCard';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useCurrency } from '../lib/currency';
 
 interface MenuProps {
   userId?: string;
@@ -49,6 +50,7 @@ const getImageUrl = (item: MenuItem) => {
 };
 
 export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
+  const { formatPrice } = useCurrency();
   const [menuItems, setMenuItems] = useState([] as MenuItem[]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('appetizers');
@@ -335,7 +337,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                     <div className="absolute bottom-3 left-3 right-3">
                       <h3 className="font-playfair text-lg text-palacio-alabaster mb-1">{item.name}</h3>
                       <div className="flex justify-between items-center">
-                        <span className="font-cinzel font-bold text-palacio-bronze text-lg">${item.price.toFixed(2)}</span>
+                        <span className="font-cinzel font-bold text-palacio-bronze text-lg">{formatPrice(item.price)}</span>
                         <div className="w-8 h-8 rounded-full bg-palacio-bronze flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <Plus size={15} className="text-palacio-obsidian" />
                         </div>
@@ -494,11 +496,11 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                       <div className="flex flex-col">
                         {item.original_price && item.original_price > item.price && (
                           <span className="text-gray-500 text-xs line-through font-cinzel">
-                            ${item.original_price.toFixed(2)}
+                            {formatPrice(item.original_price)}
                           </span>
                         )}
                         <span className="font-cinzel font-bold text-palacio-bronze text-2xl tracking-tight">
-                          ${item.price.toFixed(2)}
+                          {formatPrice(item.price)}
                         </span>
                       </div>
                       <button
@@ -618,7 +620,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                       <div className="flex-1 min-w-0">
                         <h4 className="font-playfair text-palacio-alabaster text-sm truncate mb-1">{item.menuItem.name}</h4>
                         <p className="text-palacio-bronze font-cinzel text-xs font-bold mb-3">
-                          ${item.menuItem.price.toFixed(2)}
+                          {formatPrice(item.menuItem.price)}
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center bg-black/40 rounded-full px-2 py-1 border border-white/10">
@@ -690,7 +692,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
 
                   <div className="flex justify-between items-center pt-3 border-t border-white/[0.08]">
                     <span className="text-palacio-alabaster/60 font-cinzel text-xs tracking-wider uppercase">Estimated Total</span>
-                    <span className="font-cinzel font-bold text-palacio-bronze text-2xl">${cartTotal.toFixed(2)}</span>
+                    <span className="font-cinzel font-bold text-palacio-bronze text-2xl">{formatPrice(cartTotal)}</span>
                   </div>
                 </div>
               </>
@@ -705,7 +707,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                 className="w-full py-3.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold tracking-widest uppercase hover:bg-palacio-alabaster disabled:opacity-50 smooth-transition shadow-xl flex items-center justify-center gap-2"
               >
                 <ShoppingCart size={16} />
-                Place Order — ${cartTotal.toFixed(2)}
+                Place Order — {formatPrice(cartTotal)}
               </button>
             </div>
           )}
