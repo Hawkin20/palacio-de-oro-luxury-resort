@@ -11,7 +11,13 @@ export default {
       colors: {
         palacio: {
           black: '#0B0B0B',
+          obsidian: '#080808',
           gold: '#D4AF37',
+          bronze: '#C5A880',
+          'gold-light': '#F4E4BC',
+          'gold-dark': '#997A15',
+          alabaster: '#F6F4EF',
+          charcoal: '#292720',
           'dark-green': '#0F2A1D',
           white: '#FFFFFF',
         },

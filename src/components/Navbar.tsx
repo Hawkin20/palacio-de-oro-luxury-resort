@@ -114,20 +114,20 @@ export default function Navbar({
         <nav
           className={`w-full smooth-transition ${
             isScrolled
-              ? 'bg-palacio-black/95 backdrop-blur-glass shadow-glass border-b border-palacio-gold/20'
-              : 'bg-transparent'
+              ? 'bg-[#080808]/90 backdrop-blur-md border-b border-white/[0.08] shadow-2xl'
+              : 'bg-gradient-to-b from-black/80 via-black/30 to-transparent'
           }`}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-20">
               <button
                 onClick={() => onNavigate('home')}
-                className="flex-shrink-0 flex items-center space-x-2 hover:opacity-80 transition"
+                className="group flex-shrink-0 flex items-center space-x-2.5 hover:opacity-90 transition-opacity"
               >
-                <div className="w-8 h-8 bg-palacio-gold rounded flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-palacio-gold to-[#997A15] rounded-md flex items-center justify-center shadow-md">
                   <span className="font-cinzel font-bold text-palacio-black text-lg">P</span>
                 </div>
-                <span className="hidden sm:block font-playfair text-xl font-bold text-palacio-gold">
+                <span className="hidden sm:block font-playfair text-xl font-bold tracking-wider text-palacio-alabaster group-hover:text-palacio-gold transition-colors">
                   Palacio de Oro
                 </span>
               </button>
@@ -140,10 +140,10 @@ export default function Navbar({
                       onNavigate(item.value);
                       setIsOpen(false);
                     }}
-                    className={`px-3 py-2 rounded-md text-sm font-cinzel smooth-transition ${
+                    className={`px-3.5 py-1.5 rounded text-xs font-cinzel tracking-[0.2em] uppercase smooth-transition ${
                       currentPage === item.value
-                        ? 'text-palacio-gold bg-palacio-gold/10'
-                        : 'text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/5'
+                        ? 'text-palacio-gold bg-palacio-gold/10 font-bold border-b border-palacio-gold/50'
+                        : 'text-palacio-alabaster/70 hover:text-palacio-gold hover:bg-white/[0.03]'
                     }`}
                   >
                     {item.label}

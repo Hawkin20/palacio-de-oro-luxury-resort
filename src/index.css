@@ -40,6 +40,18 @@
    COMPONENTS
    ═══════════════════════════════════════════════════════════════ */
 @layer components {
+  .editorial-card {
+    @apply bg-white/[0.04] backdrop-blur-md border border-white/[0.08] transition-all duration-500 hover:border-palacio-bronze/40;
+  }
+
+  .btn-editorial-primary {
+    @apply relative px-8 py-4 bg-palacio-bronze text-palacio-obsidian font-cinzel text-xs font-semibold tracking-[0.25em] uppercase transition-all duration-300 hover:bg-palacio-gold hover:shadow-[0_10px_30px_rgba(197,168,128,0.25)];
+  }
+
+  .btn-editorial-secondary {
+    @apply relative px-8 py-4 bg-black/40 backdrop-blur-md border border-white/20 text-palacio-alabaster font-cinzel text-xs font-semibold tracking-[0.25em] uppercase transition-all duration-300 hover:border-palacio-bronze hover:text-palacio-bronze;
+  }
+
   .glass-card {
     @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-lg;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);

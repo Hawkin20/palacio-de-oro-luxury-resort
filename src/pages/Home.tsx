@@ -354,6 +354,7 @@ export default function Home({ onNavigate }: HomeProps) {
     });
   };
 
+  const totalAvailable = getTotalAvailable();
   const urgency = getUrgencyMessage();
   const bestsellerIds = getTopBestsellers();
   const allAccommodations = [...rooms, ...cottages];
@@ -389,9 +390,8 @@ export default function Home({ onNavigate }: HomeProps) {
         />
         
         {/* Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-900/30 via-transparent to-purple-900/30" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.7)_100%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-palacio-obsidian" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(197,168,128,0.06)_0%,rgba(8,8,8,0.75)_100%)]" />
         
         {/* Gold Particles */}
         <GoldParticles />
@@ -399,81 +399,70 @@ export default function Home({ onNavigate }: HomeProps) {
         {/* Content */}
         <div className="relative text-center px-6 py-20 max-w-6xl mx-auto z-20">
           <motion.div 
-            className="inline-flex items-center gap-2 glass-card px-5 py-2 mb-8"
-            initial={{ opacity: 0, y: 30, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
+            className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
           >
-            <Crown size={16} className="text-palacio-gold" />
-            <span className="text-palacio-gold text-xs font-cinzel tracking-[0.2em]">LUXURY RESORT & SPA</span>
-          </motion.div>
-
-          <motion.div 
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-8 ${urgency.bg} border ${urgency.border} backdrop-blur-sm`}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-          >
-            <Zap size={16} className={urgency.color} />
-            <span className={`font-bold text-sm ${urgency.color}`}>{urgency.text}</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-palacio-gold animate-pulse" />
+            <span className="text-palacio-alabaster/90 text-[11px] font-cinzel tracking-[0.3em] uppercase">
+              Private Island Sanctuary · Boracay
+            </span>
+            {totalAvailable > 0 && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-white/30" />
+                <span className="text-palacio-gold text-[11px] font-cinzel font-semibold tracking-wider">
+                  {urgency.text}
+                </span>
+              </>
+            )}
           </motion.div>
 
           <motion.h1 
-            className="text-6xl md:text-8xl lg:text-9xl font-playfair text-palacio-gold mb-6 drop-shadow-2xl tracking-wide"
-            initial={{ opacity: 0, y: 60 }}
+            className="text-6xl md:text-8xl lg:text-9xl font-playfair font-normal text-palacio-alabaster mb-4 tracking-tight drop-shadow-2xl"
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            Palacio de Oro
+            Palacio <span className="italic font-serif text-palacio-gold font-light">de</span> Oro
           </motion.h1>
 
           <motion.p 
-            className="text-xl md:text-3xl lg:text-4xl text-white/90 font-poppins mb-4 drop-shadow-lg italic font-light"
-            initial={{ opacity: 0, y: 30 }}
+            className="text-lg md:text-2xl text-palacio-alabaster/80 font-poppins font-light max-w-2xl mx-auto mb-10 leading-relaxed italic"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            Where Gold Meets Paradise
+            Where Old-World European Grandeur Meets the Pristine Warmth of the Tropics.
           </motion.p>
 
           <motion.div 
-            className="flex items-center justify-center gap-2 text-white/60 mb-14"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-          >
-            <MapPin size={16} className="text-palacio-gold" />
-            <span className="text-sm font-cinzel tracking-wider">Boracay Island, Philippines</span>
-          </motion.div>
-
-          <motion.div 
-            className="flex flex-col sm:flex-row gap-5 justify-center items-center"
-            initial={{ opacity: 0, y: 40 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
+            transition={{ delay: 0.8 }}
           >
             <motion.button
               onClick={() => onNavigate('rooms')}
-              className="group relative w-full sm:w-auto px-12 py-5 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black font-cinzel font-bold text-lg rounded-2xl shadow-[0_0_50px_rgba(212,175,55,0.3)] min-w-[300px] overflow-hidden"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 70px rgba(212,175,55,0.5)" }}
+              className="group relative w-full sm:w-auto px-10 py-4 bg-palacio-bronze text-palacio-obsidian font-cinzel font-semibold text-xs tracking-[0.25em] uppercase transition-all duration-300 hover:bg-palacio-gold shadow-[0_10px_35px_rgba(197,168,128,0.25)] min-w-[260px] overflow-hidden rounded-md"
+              whileHover={{ y: -3 }}
               whileTap={{ scale: 0.98 }}
             >
               <span className="relative z-10 flex items-center justify-center gap-3">
-                <Calendar size={20} />
-                BOOK YOUR STAY
-                <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+                <Calendar size={16} />
+                RESERVE YOUR STAY
+                <ArrowRight size={14} className="group-hover:translate-x-1.5 transition-transform duration-300" />
               </span>
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
             </motion.button>
 
             <motion.button
               onClick={() => onNavigate('menu')}
-              className="w-full sm:w-auto px-12 py-5 bg-white/5 backdrop-blur-xl border-2 border-white/40 text-white font-cinzel font-bold text-lg rounded-2xl min-w-[300px] hover:border-palacio-gold hover:text-palacio-gold transition-all duration-300"
-              whileHover={{ scale: 1.05 }}
+              className="w-full sm:w-auto px-10 py-4 bg-black/40 backdrop-blur-md border border-white/20 text-palacio-alabaster font-cinzel font-semibold text-xs tracking-[0.25em] uppercase hover:border-palacio-bronze hover:text-palacio-bronze transition-all duration-300 min-w-[260px] rounded-md"
+              whileHover={{ y: -3 }}
               whileTap={{ scale: 0.98 }}
             >
               <span className="flex items-center justify-center gap-3">
-                <UtensilsCrossed size={20} />
+                <UtensilsCrossed size={16} />
                 EXPLORE DINING
               </span>
             </motion.button>
@@ -575,7 +564,7 @@ export default function Home({ onNavigate }: HomeProps) {
                 <StaggerItem key={item.id}>
                   <TiltCard className="group cursor-pointer">
                     <div
-                      className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 hover:border-palacio-gold/50 transition-all duration-500 shadow-xl hover:shadow-palacio-gold/20"
+                      className="relative overflow-hidden rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08] hover:border-palacio-bronze/50 transition-all duration-500 shadow-lg hover:shadow-2xl"
                       onMouseEnter={() => setHoveredRoom(item.id)}
                       onMouseLeave={() => setHoveredRoom(null)}
                       onClick={() => onNavigate('rooms')}
@@ -585,8 +574,9 @@ export default function Home({ onNavigate }: HomeProps) {
                         <motion.img 
                           src={item.image_url} 
                           alt={item.name} 
+                          onError={(e) => handleImageFallback(e, 'room')}
                           className="w-full h-full object-cover"
-                          animate={{ scale: isHovered ? 1.1 : 1 }}
+                          animate={{ scale: isHovered ? 1.08 : 1 }}
                           transition={{ duration: 0.7 }}
                           loading="lazy"
                         />
@@ -594,12 +584,12 @@ export default function Home({ onNavigate }: HomeProps) {
                         
                         {/* Badges */}
                         <div className="absolute top-4 right-4">
-                          <span className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg backdrop-blur-sm ${
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-cinzel font-medium tracking-wider backdrop-blur-md border ${
                             isAvailable
-                              ? 'bg-green-500/90 text-white'
-                              : 'bg-red-500/90 text-white'
+                              ? 'bg-black/60 border-emerald-500/40 text-emerald-300'
+                              : 'bg-black/60 border-rose-500/40 text-rose-300'
                           }`}>
-                            {isAvailable ? `${quantity} left` : 'Fully Booked'}
+                            {isAvailable ? `${quantity} available` : 'Fully Booked'}
                           </span>
                         </div>
                         <div className="absolute top-4 left-4">
@@ -768,16 +758,17 @@ export default function Home({ onNavigate }: HomeProps) {
                 <motion.div 
                   key={item.id}
                   className="flex-shrink-0 w-80 snap-start group cursor-pointer"
-                  whileHover={{ y: -10 }}
+                  whileHover={{ y: -8 }}
                   onClick={() => onNavigate('menu')}
                 >
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/10 to-white/5 border border-white/10 hover:border-palacio-gold/40 transition-all duration-500 shadow-xl">
+                  <div className="relative overflow-hidden rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08] hover:border-palacio-bronze/50 transition-all duration-500 shadow-xl">
                     <div className="relative h-56 overflow-hidden">
                       <motion.img
                         src={item.image_url}
                         alt={item.name}
+                        onError={(e) => handleImageFallback(e, 'dining')}
                         className="w-full h-full object-cover"
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.08 }}
                         transition={{ duration: 0.7 }}
                         loading="lazy"
                       />
