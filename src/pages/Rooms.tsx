@@ -474,11 +474,6 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                             {/* Top Badges */}
                             <div className="absolute top-4 left-4 flex gap-2">
                               <StatusBadge status={item.status} size="sm" />
-                              {item.status === 'available' && (
-                                <span className="px-2.5 py-1 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-cinzel rounded-full">
-                                  AVAILABLE NOW
-                                </span>
-                              )}
                             </div>
 
                             {/* Top Right Actions */}

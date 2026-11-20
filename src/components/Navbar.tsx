@@ -57,9 +57,9 @@ export default function Navbar({
 
   const navItems = [
     { label: 'Home', value: 'home' },
-    { label: 'Rooms', value: 'rooms' },
-    { label: 'Menu', value: 'menu' },
-    { label: 'Bookings', value: 'bookings' },
+    { label: 'Accommodations', value: 'rooms' },
+    { label: 'Restaurant & Dining', value: 'menu' },
+    { label: 'Guest Portal', value: 'bookings' },
     { label: 'Contact', value: 'contact' },
   ];
 
@@ -257,16 +257,32 @@ export default function Navbar({
               )}
             </div>
 
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-palacio-alabaster hover:text-palacio-bronze"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            {/* Mobile & Tablet actions (Cart + Hamburger) */}
+            <div className="lg:hidden flex items-center space-x-2">
+              <button
+                onClick={() => onNavigate('menu')}
+                className="relative p-2 text-palacio-alabaster/80 hover:text-palacio-bronze transition-colors"
+                aria-label="Selection Tray"
+              >
+                <ShoppingCart size={20} />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-palacio-obsidian bg-palacio-bronze rounded-full">
+                    {cartItemCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-palacio-alabaster hover:text-palacio-bronze focus:outline-none"
+                aria-label="Toggle Navigation"
+              >
+                {isOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
 
           {isOpen && (
-            <div className="lg:hidden px-6 py-6 space-y-3 bg-[#080808]/98 backdrop-blur-2xl border-b border-white/[0.08] shadow-2xl">
+            <div className="lg:hidden px-6 py-6 space-y-3 bg-[#0a0a0a] border-b border-palacio-bronze/30 shadow-2xl">
               {navItems.map((item) => (
                 <button
                   key={item.value}
@@ -283,7 +299,7 @@ export default function Navbar({
                   {item.label}
                 </button>
               ))}
-              {userRole === 'admin' && (
+              {userRole === 'admin' ? (
                 <button
                   onClick={() => {
                     onNavigate('admin');
@@ -291,9 +307,28 @@ export default function Navbar({
                   }}
                   className="block w-full text-left px-4 py-3 rounded-lg text-xs font-cinzel tracking-wider uppercase text-palacio-bronze hover:bg-white/[0.04]"
                 >
-                  Admin Console
+                  Admin Portal
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onNavigate('admin');
+                    setIsOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-3 rounded-lg text-xs font-cinzel tracking-wider uppercase text-palacio-alabaster/60 hover:text-palacio-bronze hover:bg-white/[0.04]"
+                >
+                  Admin Portal
                 </button>
               )}
+              <button
+                onClick={() => {
+                  onNavigate('rooms');
+                  setIsOpen(false);
+                }}
+                className="block w-full text-center px-4 py-3 rounded-lg text-xs font-cinzel tracking-[0.2em] uppercase font-bold text-palacio-obsidian bg-gradient-to-r from-palacio-bronze via-[#E5C9A3] to-palacio-bronze shadow-md hover:brightness-110 smooth-transition"
+              >
+                Book Sanctuary
+              </button>
               <button
                 onClick={() => {
                   onNavigate('menu');
