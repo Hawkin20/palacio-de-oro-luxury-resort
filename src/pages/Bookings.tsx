@@ -72,24 +72,56 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
     try {
       setLoading(true);
       
-      const [bookingsRes, ordersRes] = await Promise.all([
+      // Fetch bookings, rooms, cottages in parallel
+      const [bookingsRes, roomsRes, cottagesRes] = await Promise.all([
         supabase
           .from('bookings')
           .select('*')
           .eq('guest_id', userId)
           .order('created_at', { ascending: false }),
-        supabase
+        supabase.from('rooms').select('id, name'),
+        supabase.from('cottages').select('id, name')
+      ]);
+
+      if (!bookingsRes.error && bookingsRes.data) {
+        const roomMap = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
+        const cottageMap = new Map((cottagesRes.data || []).map((c: any) => [c.id, c.name]));
+        
+        const enrichedBookings: Booking[] = bookingsRes.data.map((b: any) => ({
+          ...b,
+          room_name: b.room_name || roomMap.get(b.room_id) || '',
+          cottage_name: b.cottage_name || cottageMap.get(b.cottage_id) || '',
+          accommodation_name: b.accommodation_name || roomMap.get(b.room_id) || cottageMap.get(b.cottage_id) || 'Resort Sanctuary'
+        }));
+        setBookings(enrichedBookings);
+      } else if (bookingsRes.error) {
+        console.warn('Bookings fetch issue:', bookingsRes.error.message);
+      }
+
+      // Try full_order_tracking first; gracefully fall back to raw orders table if view is missing
+      try {
+        const ordersRes = await supabase
           .from('full_order_tracking')
           .select('*')
           .eq('guest_id', userId)
-          .order('created_at', { ascending: false })
-      ]);
+          .order('created_at', { ascending: false });
 
-      if (bookingsRes.error) throw bookingsRes.error;
-      if (ordersRes.error) throw ordersRes.error;
-
-      setBookings(bookingsRes.data || []);
-      setOrders(ordersRes.data || []);
+        if (!ordersRes.error && ordersRes.data) {
+          setOrders(ordersRes.data);
+        } else {
+          // Fallback to base orders table
+          const baseOrdersRes = await supabase
+            .from('orders')
+            .select('*')
+            .eq('guest_id', userId)
+            .order('created_at', { ascending: false });
+          if (!baseOrdersRes.error && baseOrdersRes.data) {
+            setOrders(baseOrdersRes.data as Order[]);
+          }
+        }
+      } catch (orderErr) {
+        console.warn('Orders tracking query fallback:', orderErr);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {

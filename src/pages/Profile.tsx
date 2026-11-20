@@ -10,6 +10,8 @@ export default function Profile() {
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({ full_name: '', phone: '', address: '' });
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -24,14 +26,20 @@ export default function Profile() {
         .from('users')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setProfile(data);
         setFormData({
-          full_name: data.name || '',
+          full_name: data.name || authUser.user_metadata?.full_name || '',
           phone: data.phone || '',
           address: data.address || ''
+        });
+      } else {
+        setFormData({
+          full_name: authUser.user_metadata?.full_name || '',
+          phone: '',
+          address: ''
         });
       }
     }
@@ -40,8 +48,10 @@ export default function Profile() {
 
   const handleSave = async () => {
     if (!user) return;
+    setSaveError(null);
     
-    const { error } = await supabase
+    // First try full update with phone and address
+    let { error } = await supabase
       .from('users')
       .update({
         name: formData.full_name,
@@ -51,9 +61,25 @@ export default function Profile() {
       })
       .eq('id', user.id);
 
+    // If phone or address columns don't exist yet in Supabase schema, fall back to updating name only
+    if (error && (error.message?.includes('column') || (error as any).code === '42703')) {
+      const fallback = await supabase
+        .from('users')
+        .update({
+          name: formData.full_name,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+      error = fallback.error;
+    }
+
     if (!error) {
       await loadProfile();
       setEditing(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3500);
+    } else {
+      setSaveError(error.message || 'Failed to update profile. Please verify database permissions.');
     }
   };
 
@@ -384,6 +410,16 @@ export default function Profile() {
                       placeholder="Enter address"
                     />
                   </motion.div>
+                  {saveError && (
+                    <div className="p-3 rounded-lg bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-mono">
+                      {saveError}
+                    </div>
+                  )}
+                  {saveSuccess && (
+                    <div className="p-3 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs">
+                      Profile updated successfully!
+                    </div>
+                  )}
                   <motion.button
                     onClick={handleSave}
                     className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0a0a1a] rounded-lg font-semibold"

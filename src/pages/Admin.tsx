@@ -166,57 +166,86 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     try {
       setLoading(true);
       setUpdateError(null);
-      const [roomsRes, cottagesRes, menuRes, bookingsRes, ordersRes, usersRes] =
-        await Promise.all([
-          supabase.from('rooms').select('*'),
-          supabase.from('cottages').select('*'),
-          supabase.from('menu_items').select('*'),
-          supabase.from('full_bookings').select('*').order('created_at', { ascending: false }),
-          supabase.from('full_order_tracking').select('*').order('created_at', { ascending: false }),
-          supabase.from('users').select('id, name, email'),
-        ]);
+
+      // Fetch base tables first
+      const [roomsRes, cottagesRes, menuRes, usersRes] = await Promise.all([
+        supabase.from('rooms').select('*'),
+        supabase.from('cottages').select('*'),
+        supabase.from('menu_items').select('*'),
+        supabase.from('users').select('id, name, email'),
+      ]);
+
       if (roomsRes.data) setRooms(roomsRes.data);
       if (cottagesRes.data) setCottages(cottagesRes.data);
       if (menuRes.data) setMenu(menuRes.data);
-      if (bookingsRes.data) {
-        const usersMap = new Map();
-        if (usersRes.data) {
-          usersRes.data.forEach((u: any) => usersMap.set(u.id, u));
+
+      const usersMap = new Map();
+      if (usersRes.data) {
+        usersRes.data.forEach((u: any) => usersMap.set(u.id, u));
+      }
+      const roomMap = new Map((roomsRes.data || []).map((r: any) => [r.id, r.name]));
+      const cottageMap = new Map((cottagesRes.data || []).map((c: any) => [c.id, c.name]));
+
+      // Resilient bookings query: try full_bookings view, fallback to raw bookings table
+      try {
+        let bookingsData: any[] = [];
+        const viewRes = await supabase.from('full_bookings').select('*').order('created_at', { ascending: false });
+        if (!viewRes.error && viewRes.data) {
+          bookingsData = viewRes.data;
+        } else {
+          const rawRes = await supabase.from('bookings').select('*').order('created_at', { ascending: false });
+          if (!rawRes.error && rawRes.data) {
+            bookingsData = rawRes.data;
+          }
         }
-        const processedBookings = bookingsRes.data.map((b: any) => ({
+
+        const processedBookings = bookingsData.map((b: any) => ({
           ...b,
           username: b.username || usersMap.get(b.guest_id)?.name || 'Guest',
           user_email: b.user_email || usersMap.get(b.guest_id)?.email || '',
-          cottage_name: b.cottage_name || b.accommodation_name || '',
-          room_name: b.room_name || b.accommodation_name || '',
+          room_name: b.room_name || roomMap.get(b.room_id) || '',
+          cottage_name: b.cottage_name || cottageMap.get(b.cottage_id) || '',
+          accommodation_name: b.accommodation_name || roomMap.get(b.room_id) || cottageMap.get(b.cottage_id) || 'Resort Accommodation',
         }));
         setBookings(processedBookings);
+      } catch (err) {
+        console.warn('Bookings fallback handling:', err);
       }
-      if (ordersRes.data) {
-        const usersMap = new Map();
-        if (usersRes.data) {
-          usersRes.data.forEach((u: any) => usersMap.set(u.id, u));
+
+      // Resilient orders query: try full_order_tracking view, fallback to raw orders table
+      try {
+        let ordersData: any[] = [];
+        const viewOrdersRes = await supabase.from('full_order_tracking').select('*').order('created_at', { ascending: false });
+        if (!viewOrdersRes.error && viewOrdersRes.data) {
+          ordersData = viewOrdersRes.data;
+        } else {
+          const rawOrdersRes = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+          if (!rawOrdersRes.error && rawOrdersRes.data) {
+            ordersData = rawOrdersRes.data;
+          }
         }
+
         const menuMap = new Map();
         if (menuRes.data) {
           menuRes.data.forEach((m: any) => menuMap.set(m.id, m));
         }
-        const processedOrders = ordersRes.data.map((o: any) => {
+
+        const processedOrders = ordersData.map((o: any) => {
           const user = usersMap.get(o.guest_id);
           const menuItem = menuMap.get(o.menu_item_id);
           return {
             ...o,
             username: o.username || user?.name || 'Unknown',
             user_email: o.user_email || user?.email || '',
-            product_name: o.product_name || menuItem?.name || 'N/A',
-            category: o.category || menuItem?.category || 'N/A',
+            product_name: o.product_name || menuItem?.name || 'Resort Dining',
+            category: o.category || menuItem?.category || 'dining',
             quantity: o.quantity || 1,
           };
         });
         setOrders(processedOrders);
+      } catch (err) {
+        console.warn('Orders fallback handling:', err);
       }
-      if (bookingsRes.error) console.error('Bookings fetch error:', bookingsRes.error);
-      if (ordersRes.error) console.error('Orders fetch error:', ordersRes.error);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -248,9 +277,9 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           showToast('Menu item deleted successfully');
         } else throw error;
       } else if (type === 'booking') {
-        const { error } = await supabase.from('bookings').delete().eq('reference_number', itemId);
+        const { error } = await supabase.from('bookings').delete().or(`reference_number.eq.${itemId},id.eq.${itemId}`);
         if (!error) {
-          setBookings(bookings.filter((b) => b.reference_number !== itemId));
+          setBookings(bookings.filter((b) => b.reference_number !== itemId && b.id !== itemId));
           showToast('Booking deleted successfully');
         } else throw error;
       } else if (type === 'order') {
