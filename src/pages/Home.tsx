@@ -589,12 +589,16 @@ export default function Home({ onNavigate }: HomeProps) {
                               ? 'bg-black/60 border-emerald-500/40 text-emerald-300'
                               : 'bg-black/60 border-rose-500/40 text-rose-300'
                           }`}>
-                            {isAvailable ? `${quantity} available` : 'Fully Booked'}
+                            {isAvailable ? `${quantity} Available` : 'Fully Booked'}
                           </span>
                         </div>
-                        <div className="absolute top-4 left-4">
-                          <StatusBadge status={item.status} size="sm" />
-                        </div>
+                        {item.room_type && (
+                          <div className="absolute top-4 left-4">
+                            <span className="px-2.5 py-1 rounded-full text-[9px] font-cinzel tracking-wider uppercase bg-black/60 border border-white/10 text-palacio-alabaster/80 backdrop-blur-md">
+                              {item.room_type}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Hover Overlay */}
                         <AnimatePresence>

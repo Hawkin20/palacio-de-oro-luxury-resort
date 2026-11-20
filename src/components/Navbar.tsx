@@ -136,7 +136,7 @@ export default function Navbar({
                 </div>
               </button>
 
-              <div className="hidden md:flex items-center space-x-1">
+              <div className="hidden lg:flex items-center space-x-1">
                 {navItems.map((item) => (
                   <button
                     key={item.value}
@@ -155,7 +155,7 @@ export default function Navbar({
                 ))}
               </div>
 
-              <div className="hidden md:flex items-center space-x-4">
+              <div className="hidden lg:flex items-center space-x-4">
                 {userRole === 'admin' && (
                   <button
                     onClick={() => onNavigate('admin')}
@@ -252,21 +252,21 @@ export default function Navbar({
                   className="flex items-center space-x-2 px-3 py-2 text-sm font-cinzel text-gray-300 hover:text-palacio-gold smooth-transition"
                 >
                   <LogIn size={18} />
-                  <span className="hidden sm:block">Login</span>
+                  <span>Login</span>
                 </button>
               )}
             </div>
 
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-palacio-gold"
+              className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-palacio-alabaster hover:text-palacio-bronze"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
           {isOpen && (
-            <div className="md:hidden pb-4 space-y-2 border-t border-palacio-gold/20">
+            <div className="lg:hidden px-6 py-6 space-y-3 bg-[#080808]/98 backdrop-blur-2xl border-b border-white/[0.08] shadow-2xl">
               {navItems.map((item) => (
                 <button
                   key={item.value}
@@ -274,10 +274,10 @@ export default function Navbar({
                     onNavigate(item.value);
                     setIsOpen(false);
                   }}
-                  className={`block w-full text-left px-3 py-2 rounded-md text-sm font-cinzel smooth-transition ${
+                  className={`block w-full text-left px-4 py-3 rounded-lg text-xs font-cinzel tracking-wider uppercase smooth-transition ${
                     currentPage === item.value
-                      ? 'text-palacio-gold bg-palacio-gold/10'
-                      : 'text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/5'
+                      ? 'text-palacio-bronze bg-white/[0.06] font-semibold border-l-2 border-palacio-bronze'
+                      : 'text-palacio-alabaster/70 hover:text-palacio-alabaster hover:bg-white/[0.04]'
                   }`}
                 >
                   {item.label}
@@ -289,9 +289,9 @@ export default function Navbar({
                     onNavigate('admin');
                     setIsOpen(false);
                   }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-cinzel text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/5"
+                  className="block w-full text-left px-4 py-3 rounded-lg text-xs font-cinzel tracking-wider uppercase text-palacio-bronze hover:bg-white/[0.04]"
                 >
-                  Admin
+                  Admin Console
                 </button>
               )}
               <button
@@ -299,11 +299,11 @@ export default function Navbar({
                   onNavigate('menu');
                   setIsOpen(false);
                 }}
-                className="block w-full text-left px-3 py-2 rounded-md text-sm font-cinzel text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/5 flex items-center justify-between"
+                className="w-full text-left px-4 py-3 rounded-lg text-xs font-cinzel tracking-wider uppercase text-palacio-alabaster/70 hover:text-palacio-alabaster hover:bg-white/[0.04] flex items-center justify-between"
               >
-                <span>Cart</span>
+                <span>Selection Tray</span>
                 {cartItemCount > 0 && (
-                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-palacio-black bg-palacio-gold rounded-full">
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold text-palacio-obsidian bg-palacio-bronze rounded-full">
                     {cartItemCount}
                   </span>
                 )}
@@ -311,30 +311,30 @@ export default function Navbar({
 
               {isLoggedIn ? (
                 <>
-                  <div className="px-3 py-2 flex items-center gap-3 border-t border-palacio-gold/10 mt-2 pt-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-palacio-gold to-orange-400 flex items-center justify-center text-palacio-black font-bold text-sm">
+                  <div className="px-4 py-3 flex items-center gap-3 border-t border-white/[0.08] mt-3 pt-3">
+                    <div className="w-8 h-8 rounded-full bg-palacio-bronze/20 border border-palacio-bronze/40 flex items-center justify-center text-palacio-bronze font-bold text-sm">
                       {initial}
                     </div>
                     <div>
-                      <p className="text-palacio-gold text-sm font-semibold">{displayName}</p>
-                      <p className="text-gray-400 text-xs">{userEmail}</p>
+                      <p className="text-palacio-alabaster text-sm font-medium">{displayName}</p>
+                      <p className="text-palacio-alabaster/50 text-xs">{userEmail}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => { onNavigate('profile'); setIsOpen(false); }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-sm font-cinzel text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/5"
+                    className="block w-full text-left px-4 py-2.5 rounded-lg text-xs font-cinzel text-palacio-alabaster/70 hover:text-palacio-alabaster hover:bg-white/[0.04]"
                   >
                     My Profile
                   </button>
                   <button
                     onClick={() => { onNavigate('bookings'); setIsOpen(false); }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-sm font-cinzel text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/5"
+                    className="block w-full text-left px-4 py-2.5 rounded-lg text-xs font-cinzel text-palacio-alabaster/70 hover:text-palacio-alabaster hover:bg-white/[0.04]"
                   >
                     My Bookings
                   </button>
                   <button
                     onClick={handleLogoutClick}
-                    className="block w-full text-left px-3 py-2 rounded-md text-sm font-cinzel text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    className="block w-full text-left px-4 py-2.5 rounded-lg text-xs font-cinzel text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
                   >
                     Logout
                   </button>
@@ -345,9 +345,9 @@ export default function Navbar({
                     onShowAuth?.();
                     setIsOpen(false);
                   }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-sm font-cinzel text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/5"
+                  className="block w-full text-left px-4 py-3 rounded-lg text-xs font-cinzel tracking-wider uppercase text-palacio-bronze bg-white/[0.04] hover:bg-white/[0.08]"
                 >
-                  Login
+                  Guest Login / Register
                 </button>
               )}
             </div>
