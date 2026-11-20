@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, LogOut, LogIn, User, ChevronDown, Calendar, Heart, Settings, Sparkles } from 'lucide-react';
 import Auth from '../pages/Auth';
+import PalacioLogo from './PalacioLogo';
 
 interface NavbarProps {
   currentPage: string;
@@ -122,14 +123,17 @@ export default function Navbar({
             <div className="flex justify-between items-center h-20">
               <button
                 onClick={() => onNavigate('home')}
-                className="group flex-shrink-0 flex items-center space-x-2.5 hover:opacity-90 transition-opacity"
+                className="group flex-shrink-0 flex items-center space-x-3 hover:opacity-95 transition-opacity"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-palacio-gold to-[#997A15] rounded-md flex items-center justify-center shadow-md">
-                  <span className="font-cinzel font-bold text-palacio-black text-lg">P</span>
+                <PalacioLogo size={36} />
+                <div className="flex flex-col text-left">
+                  <span className="font-playfair text-xl md:text-2xl font-bold tracking-wider text-palacio-alabaster group-hover:text-palacio-bronze transition-colors leading-none">
+                    Palacio de Oro
+                  </span>
+                  <span className="text-[9px] font-cinzel tracking-[0.25em] uppercase text-palacio-bronze/90 mt-0.5">
+                    Resort & Sanctuary
+                  </span>
                 </div>
-                <span className="hidden sm:block font-playfair text-xl font-bold tracking-wider text-palacio-alabaster group-hover:text-palacio-gold transition-colors">
-                  Palacio de Oro
-                </span>
               </button>
 
               <div className="hidden md:flex items-center space-x-1">

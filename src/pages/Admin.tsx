@@ -19,7 +19,8 @@ import {
   Clock3,
   BarChart3,
   Trash,
-  Star
+  Star,
+  Shield
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem, Booking, Order } from '../lib/types';
@@ -608,17 +609,29 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
 
   if (!isLoggedIn || !isAdmin) {
     return (
-      <div className="min-h-screen pt-24 flex items-center justify-center">
-        <GlassCard className="p-8 text-center max-w-md">
-          <h2 className="font-playfair text-2xl text-palacio-gold mb-4">
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center bg-palacio-obsidian px-4">
+        <div className="relative p-8 md:p-12 text-center max-w-lg w-full rounded-2xl bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl shadow-2xl">
+          <div className="w-16 h-16 rounded-full bg-palacio-bronze/10 border border-palacio-bronze/30 flex items-center justify-center mx-auto mb-6">
+            <Shield size={28} className="text-palacio-bronze" />
+          </div>
+          <span className="text-[10px] font-cinzel tracking-[0.25em] uppercase text-palacio-bronze block mb-2 font-semibold">
+            Executive Portal
+          </span>
+          <h2 className="font-playfair text-3xl text-palacio-alabaster mb-3">
             Admin Access Required
           </h2>
-          <p className="text-gray-400">
+          <p className="text-palacio-alabaster/70 text-sm leading-relaxed mb-8 font-light">
             {!isLoggedIn 
-              ? 'Please log in to access this panel.' 
-              : 'You do not have administrator privileges.'}
+              ? 'Please sign in with your authorized administrator credentials to manage resort operations.' 
+              : 'Your current account does not have administrator privileges to access executive management.'}
           </p>
-        </GlassCard>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center px-6 py-3 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-palacio-gold shadow-xl transition-all"
+          >
+            Return to Sanctuary
+          </a>
+        </div>
       </div>
     );
   }
@@ -644,11 +657,24 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="section-title mb-8">Admin Dashboard</h1>
+        <div className="mb-8">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-palacio-bronze/10 border border-palacio-bronze/20 rounded-full mb-3">
+            <Shield size={13} className="text-palacio-bronze" />
+            <span className="text-[10px] font-cinzel tracking-[0.25em] uppercase text-palacio-bronze font-semibold">
+              Executive Console
+            </span>
+          </div>
+          <h1 className="font-playfair font-normal text-3xl md:text-5xl text-palacio-alabaster">
+            Resort Operations
+          </h1>
+          <p className="text-palacio-alabaster/60 font-poppins text-xs md:text-sm mt-1 font-light">
+            Real-time management for suites, culinary orders, guest reservations, and inventory.
+          </p>
+        </div>
 
         {updateError && (
-          <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200 flex items-center gap-2">
-            <AlertTriangle size={18} />
+          <div className="mb-6 p-4 bg-red-950/40 border border-red-500/30 rounded-xl text-red-300 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+            <AlertTriangle size={16} />
             {updateError}
           </div>
         )}
@@ -660,18 +686,18 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           >
             {[
               { value: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-              { value: 'rooms', label: 'Rooms & Cottages', icon: BedDouble },
-              { value: 'menu', label: 'Menu', icon: UtensilsCrossed },
-              { value: 'bookings', label: 'Bookings', icon: Calendar },
-              { value: 'orders', label: 'Orders', icon: ShoppingBag },
+              { value: 'rooms', label: 'Suites & Villas', icon: BedDouble },
+              { value: 'menu', label: 'Culinary Menu', icon: UtensilsCrossed },
+              { value: 'bookings', label: 'Reservations', icon: Calendar },
+              { value: 'orders', label: 'Dining Orders', icon: ShoppingBag },
             ].map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setCurrentTab(tab.value as any)}
-                className={`px-4 py-2 rounded-lg font-cinzel text-sm smooth-transition whitespace-nowrap flex items-center gap-2 ${
+                className={`px-4 py-2.5 rounded-lg font-cinzel text-xs tracking-wider uppercase smooth-transition whitespace-nowrap flex items-center gap-2 border ${
                   currentTab === tab.value
-                    ? 'bg-palacio-gold text-palacio-black'
-                    : 'bg-palacio-gold/10 text-palacio-gold hover:bg-palacio-gold/20'
+                    ? 'bg-palacio-bronze text-palacio-obsidian font-bold border-palacio-bronze shadow-md'
+                    : 'bg-white/[0.03] text-palacio-alabaster/70 border-white/[0.08] hover:bg-white/[0.06] hover:text-palacio-alabaster'
                 }`}
               >
                 <tab.icon size={14} />
@@ -692,29 +718,31 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { val: rooms.length + cottages.length, label: 'Total Accommodations' },
-                    { val: menu.length, label: 'Menu Items' },
+                    { val: rooms.length + cottages.length, label: 'Accommodations' },
+                    { val: menu.length, label: 'Menu Offerings' },
                     { val: bookings.filter(b => b.status === 'pending').length, label: 'Pending Bookings' },
                     { val: orders.filter(o => o.status === 'pending').length, label: 'Pending Orders' },
                   ].map((s, i) => (
-                    <GlassCard key={i} className="p-4 md:p-6 text-center !bg-white/15 !border-white/25">
-                      <div className="text-2xl md:text-3xl font-playfair text-palacio-gold mb-1 font-bold">{s.val}</div>
-                      <p className="text-gray-100 text-xs md:text-sm font-bold">{s.label}</p>
-                    </GlassCard>
+                    <div key={i} className="p-4 md:p-6 text-center rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/40 transition-all shadow-lg">
+                      <div className="text-2xl md:text-3xl font-cinzel text-palacio-bronze mb-1 font-bold">{s.val}</div>
+                      <p className="text-palacio-alabaster/60 text-xs uppercase tracking-wider font-cinzel">{s.label}</p>
+                    </div>
                   ))}
                 </div>
 
-                <div className="bg-white/15 border border-white/25 rounded-xl p-5">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
-                    <div className="flex items-center gap-2">
-                      <BarChart3 size={20} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Business Analytics</h3>
+                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6 shadow-xl">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <BarChart3 size={18} className="text-palacio-bronze" />
+                      <h3 className="font-playfair text-xl text-palacio-alabaster">Executive Analytics</h3>
                     </div>
                     <div className="flex gap-2">
                       {(['today','week','month','year'] as TimeRange[]).map(r => (
                         <button key={r} onClick={() => setAnalyticsRange(r)}
-                          className={`px-3 py-1.5 rounded text-xs font-bold smooth-transition ${
-                            analyticsRange === r ? 'bg-palacio-gold text-black' : 'bg-black/30 text-gray-200 hover:bg-black/50'
+                          className={`px-3 py-1.5 rounded-lg text-xs font-cinzel tracking-wider uppercase smooth-transition ${
+                            analyticsRange === r 
+                              ? 'bg-palacio-bronze text-palacio-obsidian font-bold shadow-md' 
+                              : 'bg-white/[0.04] text-palacio-alabaster/60 hover:text-palacio-alabaster border border-white/[0.06]'
                           }`}>
                           {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : '1Y'}
                         </button>
@@ -722,40 +750,43 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-                    <div className="bg-black/40 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Total Revenue</p>
-                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.totalRevenue.toLocaleString()}</p>
-                      <p className={`text-xs font-bold mt-1 ${analytics.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {analytics.revenueChange >= 0 ? '▲' : '▼'} {Math.abs(analytics.revenueChange).toFixed(1)}% vs last period
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-black/30 rounded-lg p-4 border border-white/[0.06]">
+                      <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Total Revenue</p>
+                      <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.totalRevenue.toLocaleString()}</p>
+                      <p className={`text-xs font-medium mt-1 ${analytics.revenueChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {analytics.revenueChange >= 0 ? '▲' : '▼'} {Math.abs(analytics.revenueChange).toFixed(1)}% vs previous
                       </p>
                     </div>
-                    <div className="bg-black/40 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Booking Revenue</p>
-                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.bookingRevenue.toLocaleString()}</p>
-                      <p className="text-gray-400 text-xs font-bold mt-1">{analytics.totalBookings} bookings</p>
+                    <div className="bg-black/30 rounded-lg p-4 border border-white/[0.06]">
+                      <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Booking Revenue</p>
+                      <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.bookingRevenue.toLocaleString()}</p>
+                      <p className="text-palacio-alabaster/50 text-xs mt-1">{analytics.totalBookings} reservations</p>
                     </div>
-                    <div className="bg-black/40 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-300 text-[10px] font-bold uppercase tracking-wider mb-1">Order Revenue</p>
-                      <p className="text-2xl font-playfair text-palacio-gold font-bold">${analytics.orderRevenue.toLocaleString()}</p>
-                      <p className="text-gray-400 text-xs font-bold mt-1">{analytics.totalOrders} orders</p>
+                    <div className="bg-black/30 rounded-lg p-4 border border-white/[0.06]">
+                      <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Dining Orders Revenue</p>
+                      <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.orderRevenue.toLocaleString()}</p>
+                      <p className="text-palacio-alabaster/50 text-xs mt-1">{analytics.totalOrders} dining orders</p>
                     </div>
                   </div>
 
                   {analytics.chartData.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-gray-300 text-xs font-bold mb-2">Revenue Trend (Last 7 Days)</p>
-                      <div className="flex items-end gap-2 h-28">
+                    <div className="mb-6">
+                      <p className="text-palacio-alabaster/60 font-cinzel text-xs uppercase tracking-wider mb-3">Revenue Trend (Last 7 Days)</p>
+                      <div className="flex items-end gap-2 h-28 pt-2">
                         {analytics.chartData.map((day, i) => {
                           const maxVal = Math.max(...analytics.chartData.map(d => d.total), 1);
                           const h = maxVal > 0 ? (day.total / maxVal) * 100 : 0;
                           return (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                              <div className="text-[9px] text-palacio-gold font-bold">${Math.round(day.total)}</div>
-                              <div className="w-full bg-gray-700 rounded-t-sm relative" style={{ height: `${Math.max(h, 5)}%` }}>
-                                <div className="absolute inset-0 bg-palacio-gold rounded-t-sm opacity-90" />
+                            <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                              <div className="text-[10px] text-palacio-bronze font-mono font-medium">${Math.round(day.total)}</div>
+                              <div className="w-full bg-white/[0.06] rounded-t-sm relative h-full flex items-end">
+                                <div 
+                                  className="w-full bg-palacio-bronze rounded-t-sm hover:brightness-110 transition-all" 
+                                  style={{ height: `${Math.max(h, 6)}%` }} 
+                                />
                               </div>
-                              <div className="text-[9px] text-gray-400 font-bold">{day.date.split(' ')[0]}</div>
+                              <div className="text-[9px] text-palacio-alabaster/50 font-cinzel">{day.date.split(' ')[0]}</div>
                             </div>
                           );
                         })}
@@ -763,23 +794,23 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-white/10">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300 text-sm font-bold">Avg Booking</span>
-                      <span className="text-palacio-gold font-bold">${analytics.avgBookingValue.toFixed(0)}</span>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/[0.08]">
+                    <div className="flex justify-between items-center">
+                      <span className="text-palacio-alabaster/60 font-cinzel text-xs uppercase">Avg Booking Value</span>
+                      <span className="text-palacio-bronze font-cinzel font-bold text-sm">${analytics.avgBookingValue.toFixed(0)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-300 text-sm font-bold">Avg Order</span>
-                      <span className="text-palacio-gold font-bold">${analytics.avgOrderValue.toFixed(0)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-palacio-alabaster/60 font-cinzel text-xs uppercase">Avg Order Value</span>
+                      <span className="text-palacio-bronze font-cinzel font-bold text-sm">${analytics.avgOrderValue.toFixed(0)}</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white/15 border border-white/25 rounded-xl p-5">
+                  <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6 shadow-xl">
                     <div className="flex items-center gap-2 mb-4">
-                      <DollarSign size={18} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Revenue Overview</h3>
+                      <DollarSign size={18} className="text-palacio-bronze" />
+                      <h3 className="font-playfair text-lg text-palacio-alabaster">Revenue Overview</h3>
                     </div>
                     <div className="space-y-3">
                       {[
@@ -787,34 +818,34 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                         { label: 'This Month (Bookings)', val: analytics.bookingRevenue },
                         { label: 'This Month (Orders)', val: analytics.orderRevenue },
                       ].map((r, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-gray-100 font-bold text-sm">{r.label}</span>
-                          <span className="text-palacio-gold font-bold font-cinzel">${r.val.toLocaleString()}</span>
+                        <div key={i} className="flex justify-between items-center text-xs">
+                          <span className="text-palacio-alabaster/70 font-cinzel uppercase tracking-wider">{r.label}</span>
+                          <span className="text-palacio-bronze font-bold font-cinzel text-sm">${r.val.toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="bg-white/15 border border-white/25 rounded-xl p-5">
+                  <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6 shadow-xl">
                     <div className="flex items-center gap-2 mb-4">
-                      <BedDouble size={18} className="text-palacio-gold" />
-                      <h3 className="font-playfair text-lg text-palacio-gold font-bold">Occupancy Rate</h3>
+                      <BedDouble size={18} className="text-palacio-bronze" />
+                      <h3 className="font-playfair text-lg text-palacio-alabaster">Occupancy Rate</h3>
                     </div>
                     <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-100 font-bold text-sm">Occupied</span>
-                        <span className="text-palacio-gold font-bold font-cinzel">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-palacio-alabaster/70 font-cinzel uppercase tracking-wider">Occupied Suites</span>
+                        <span className="text-palacio-bronze font-bold font-cinzel text-sm">
                           {bookings.filter(b => b.status === 'confirmed').length} / {rooms.length + cottages.length}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-3">
-                        <div className="bg-palacio-gold h-3 rounded-full" style={{
+                      <div className="w-full bg-white/[0.06] rounded-full h-2">
+                        <div className="bg-palacio-bronze h-2 rounded-full transition-all duration-700" style={{
                           width: `${Math.min(100, (bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100)}%`
                         }} />
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300 text-xs font-bold">Rate</span>
-                        <span className="text-palacio-gold font-bold">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-palacio-alabaster/50 font-cinzel uppercase">Capacity Utilization</span>
+                        <span className="text-palacio-bronze font-bold font-cinzel">
                           {((bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100).toFixed(1)}%
                         </span>
                       </div>
@@ -823,31 +854,31 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-playfair text-lg text-palacio-gold font-bold flex items-center gap-2">
-                      <Clock3 size={16} /> Recent Bookings
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-playfair text-xl text-palacio-alabaster flex items-center gap-2">
+                      <Clock3 size={16} className="text-palacio-bronze" /> Recent Reservations
                     </h3>
-                    <button onClick={() => setCurrentTab('bookings')} className="text-palacio-gold text-xs font-bold hover:underline">
+                    <button onClick={() => setCurrentTab('bookings')} className="text-palacio-bronze text-xs font-cinzel tracking-wider uppercase hover:text-palacio-alabaster transition-colors">
                       View All →
                     </button>
                   </div>
                   {recentBookings.length === 0 ? (
-                    <div className="bg-white/10 border border-white/20 rounded-lg p-6 text-center">
-                      <p className="text-gray-300 font-bold">No bookings yet</p>
+                    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-8 text-center">
+                      <p className="text-palacio-alabaster/50 text-xs font-cinzel uppercase">No recent bookings recorded</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {recentBookings.map(b => (
-                        <div key={b.reference_number} className="bg-white/15 border border-white/25 rounded-lg p-4">
+                        <div key={b.reference_number} className="bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/30 rounded-xl p-4 transition-all">
                           <div className="flex justify-between items-start">
                             <div>
-                              <p className="text-palacio-gold font-bold text-sm">{b.username || 'Guest'}</p>
-                              <p className="text-gray-200 text-xs font-bold mt-0.5">{b.cottage_name || b.room_name || b.accommodation_name || 'N/A'}</p>
-                              <p className="text-gray-400 text-xs">{b.check_in_date} → {b.check_out_date}</p>
+                              <p className="text-palacio-alabaster font-medium text-sm">{b.username || 'Guest'}</p>
+                              <p className="text-palacio-alabaster/60 text-xs mt-0.5">{b.cottage_name || b.room_name || b.accommodation_name || 'N/A'}</p>
+                              <p className="text-palacio-alabaster/40 font-mono text-xs">{b.check_in_date} → {b.check_out_date}</p>
                             </div>
                             <div className="text-right">
                               <StatusBadge status={b.status} size="sm" />
-                              <p className="text-palacio-gold font-bold text-sm mt-1">${b.total_price}</p>
+                              <p className="text-palacio-bronze font-cinzel font-bold text-sm mt-1.5">${b.total_price}</p>
                             </div>
                           </div>
                         </div>
@@ -857,33 +888,33 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-playfair text-lg text-palacio-gold font-bold flex items-center gap-2">
-                      <ShoppingBag size={16} /> Recent Orders
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-playfair text-xl text-palacio-alabaster flex items-center gap-2">
+                      <ShoppingBag size={16} className="text-palacio-bronze" /> Recent Culinary Orders
                     </h3>
-                    <button onClick={() => setCurrentTab('orders')} className="text-palacio-gold text-xs font-bold hover:underline">
+                    <button onClick={() => setCurrentTab('orders')} className="text-palacio-bronze text-xs font-cinzel tracking-wider uppercase hover:text-palacio-alabaster transition-colors">
                       View All →
                     </button>
                   </div>
                   {recentOrders.length === 0 ? (
-                    <div className="bg-white/10 border border-white/20 rounded-lg p-6 text-center">
-                      <p className="text-gray-300 font-bold">No orders yet</p>
+                    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-8 text-center">
+                      <p className="text-palacio-alabaster/50 text-xs font-cinzel uppercase">No recent dining orders recorded</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {recentOrders.map(o => (
-                        <div key={o.id} className="bg-white/15 border border-white/25 rounded-lg p-4">
+                        <div key={o.id} className="bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/30 rounded-xl p-4 transition-all">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <p className="text-palacio-gold font-bold text-sm">
+                              <p className="text-palacio-alabaster font-medium text-sm">
                                 {o.product_name || o.reference_number || 'Order'}
                               </p>
-                              <p className="text-gray-200 text-xs font-bold mt-0.5">
-                                {o.username || o.user_email || 'Unknown Customer'}
+                              <p className="text-palacio-alabaster/60 text-xs mt-0.5">
+                                {o.username || o.user_email || 'Guest'}
                               </p>
-                              <p className="text-gray-400 text-xs">
+                              <p className="text-palacio-alabaster/40 text-xs">
                                 Qty: {o.quantity || 1} · ${o.total_amount}
-                                {o.order_type && ` · ${o.order_type === 'dine_in' ? 'Dine-in' : 'Delivery'}`}
+                                {o.order_type && ` · ${o.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}`}
                               </p>
                             </div>
                             <div className="text-right">
@@ -903,29 +934,35 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
                   <div className="flex gap-3">
-                    <button onClick={() => openAddModal('room')} className="gold-glow-btn">
-                      <Plus className="inline mr-2" size={18} />
+                    <button 
+                      onClick={() => openAddModal('room')} 
+                      className="px-4 py-2.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-palacio-gold shadow-md flex items-center gap-2 transition-all"
+                    >
+                      <Plus size={15} />
                       Add Room
                     </button>
-                    <button onClick={() => openAddModal('cottage')} className="gold-glow-btn">
-                      <Plus className="inline mr-2" size={18} />
+                    <button 
+                      onClick={() => openAddModal('cottage')} 
+                      className="px-4 py-2.5 bg-white/[0.04] border border-white/[0.1] text-palacio-alabaster rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-white/[0.08] hover:border-palacio-bronze/50 shadow-md flex items-center gap-2 transition-all"
+                    >
+                      <Plus size={15} />
                       Add Cottage
                     </button>
                   </div>
                   
                   <div className="relative w-full sm:w-64">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" />
                     <input
                       type="text"
-                      placeholder="Search rooms..."
+                      placeholder="Search suites & villas..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
+                      className="w-full pl-9 pr-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs placeholder-palacio-alabaster/40 focus:border-palacio-bronze/50 outline-none transition-all"
                     />
                     {searchQuery && (
                       <button 
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-palacio-alabaster/40 hover:text-palacio-alabaster"
                       >
                         <X size={14} />
                       </button>
@@ -934,56 +971,56 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 </div>
 
                 {filteredRooms.length === 0 ? (
-                  <GlassCard className="p-12 text-center">
-                    <BedDouble size={48} className="text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-300 text-lg mb-2 font-medium">No rooms found</p>
-                    <p className="text-gray-400 text-sm">
-                      {searchQuery ? 'Try adjusting your search' : 'Add your first room to get started'}
+                  <div className="p-12 text-center rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <BedDouble size={36} className="text-palacio-alabaster/30 mx-auto mb-3" />
+                    <p className="text-palacio-alabaster text-base mb-1 font-playfair">No accommodations found</p>
+                    <p className="text-palacio-alabaster/50 text-xs font-cinzel">
+                      {searchQuery ? 'Try adjusting your search criteria' : 'Create your first luxury suite or villa to get started'}
                     </p>
-                  </GlassCard>
+                  </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {filteredRooms.map((item) => (
-                      <GlassCard key={item.id} className="p-4">
+                      <div key={item.id} className="p-5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/40 transition-all shadow-md">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-playfair text-lg text-palacio-gold font-medium">
+                            <div className="flex items-center gap-3 mb-1">
+                              <h3 className="font-playfair text-lg text-palacio-alabaster">
                                 {item.name}
                               </h3>
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-cinzel font-semibold uppercase ${
                                 (item.quantity || 0) > 0 
-                                  ? 'bg-green-500/20 text-green-400' 
-                                  : 'bg-red-500/20 text-red-400'
+                                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
+                                  : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
                               }`}>
-                                {(item.quantity || 0) > 0 ? `${item.quantity} available` : 'Fully Booked'}
+                                {(item.quantity || 0) > 0 ? `${item.quantity} available` : 'Fully Reserved'}
                               </span>
                             </div>
-                            <p className="text-gray-300 text-sm font-medium">
-                              ${item.price_per_night}/night - {item.capacity} guests
+                            <p className="text-palacio-alabaster/60 text-xs">
+                              <span className="text-palacio-bronze font-cinzel font-bold text-sm">${item.price_per_night}</span> / night • Capacity: {item.capacity} guests
                             </p>
-                            <div className="mt-2">
+                            <div className="mt-2.5">
                               <StatusBadge status={item.status} size="sm" />
                             </div>
                           </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => openEditModal(item, 'room')}
-                              className="p-2 hover:bg-palacio-gold/20 rounded smooth-transition"
-                              title="Edit"
+                              className="p-2 hover:bg-white/[0.08] text-palacio-bronze hover:text-palacio-alabaster rounded-lg smooth-transition"
+                              title="Edit Accommodation"
                             >
-                              <Edit2 size={18} className="text-palacio-gold" />
+                              <Edit2 size={16} />
                             </button>
                             <button
                               onClick={() => openDeleteModal(item.id, item.name, 'room')}
-                              className="p-2 hover:bg-red-900/30 rounded smooth-transition"
-                              title="Delete"
+                              className="p-2 hover:bg-rose-950/40 text-rose-400 rounded-lg smooth-transition"
+                              title="Delete Accommodation"
                             >
-                              <Trash2 size={18} className="text-red-400" />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
-                      </GlassCard>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -993,8 +1030,11 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             {currentTab === 'menu' && (
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <button onClick={() => openAddModal('menu')} className="gold-glow-btn">
-                    <Plus className="inline mr-2" size={18} />
+                  <button 
+                    onClick={() => openAddModal('menu')} 
+                    className="px-4 py-2.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-palacio-gold shadow-md flex items-center gap-2 transition-all"
+                  >
+                    <Plus size={15} />
                     Add Menu Item
                   </button>
 
@@ -1002,28 +1042,28 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <select
                       value={menuCategoryFilter}
                       onChange={(e) => setMenuCategoryFilter(e.target.value)}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
+                      className="px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs focus:border-palacio-bronze/50 outline-none"
                     >
                       {menuCategories.map(cat => (
-                        <option key={cat} value={cat} className="bg-palacio-black">
+                        <option key={cat} value={cat} className="bg-palacio-obsidian text-palacio-alabaster">
                           {cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                         </option>
                       ))}
                     </select>
 
                     <div className="relative flex-1 sm:w-48">
-                      <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" />
                       <input
                         type="text"
                         placeholder="Search menu..."
                         value={menuSearch}
                         onChange={(e) => setMenuSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
+                        className="w-full pl-9 pr-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs placeholder-palacio-alabaster/40 focus:border-palacio-bronze/50 outline-none transition-all"
                       />
                       {menuSearch && (
                         <button 
                           onClick={() => setMenuSearch('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-palacio-alabaster/40 hover:text-palacio-alabaster"
                         >
                           <X size={14} />
                         </button>
@@ -1033,71 +1073,73 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 </div>
 
                 {filteredMenu.length === 0 ? (
-                  <GlassCard className="p-12 text-center">
-                    <UtensilsCrossed size={48} className="text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-300 text-lg mb-2 font-medium">No menu items found</p>
-                    <p className="text-gray-400 text-sm">
-                      {menuSearch || menuCategoryFilter !== 'all' ? 'Try adjusting your filters' : 'Add your first menu item'}
+                  <div className="p-12 text-center rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <UtensilsCrossed size={36} className="text-palacio-alabaster/30 mx-auto mb-3" />
+                    <p className="text-palacio-alabaster text-base mb-1 font-playfair">No culinary items found</p>
+                    <p className="text-palacio-alabaster/50 text-xs font-cinzel">
+                      {menuSearch || menuCategoryFilter !== 'all' ? 'Try adjusting your filters' : 'Add your first menu offering'}
                     </p>
-                  </GlassCard>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredMenu.map((item) => {
                       const orderCount = getMenuOrderCount(item.id);
                       const isBestseller = bestsellerIds.includes(item.id);
                       return (
-                        <GlassCard key={item.id} className="p-4 group">
-                          <div className="relative overflow-hidden rounded mb-3">
-                            <img
-                              src={item.image_url || '/placeholder-food.jpg'}
-                              alt={item.name}
-                              className="w-full h-32 object-cover smooth-transition group-hover:scale-105"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/placeholder-food.jpg';
-                              }}
-                            />
-                            {isBestseller && (
-                              <div className="absolute top-2 right-2 px-2 py-1 bg-palacio-gold text-palacio-black rounded text-xs font-bold flex items-center gap-1">
-                                <Star size={12} /> Bestseller
-                              </div>
-                            )}
-                            {!item.available && (
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                <span className="text-red-400 font-bold text-sm">Not Available</span>
-                              </div>
-                            )}
+                        <div key={item.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/40 group transition-all shadow-md flex flex-col justify-between">
+                          <div>
+                            <div className="relative overflow-hidden rounded-lg mb-3 h-36">
+                              <img
+                                src={item.image_url || '/placeholder-food.jpg'}
+                                alt={item.name}
+                                className="w-full h-full object-cover smooth-transition group-hover:scale-105"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80';
+                                }}
+                              />
+                              {isBestseller && (
+                                <div className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-palacio-bronze text-palacio-obsidian rounded-full text-[10px] font-cinzel font-bold flex items-center gap-1 shadow-md">
+                                  <Star size={10} className="fill-palacio-obsidian" /> BESTSELLER
+                                </div>
+                              )}
+                              {!item.available && (
+                                <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                                  <span className="text-rose-400 font-cinzel text-xs font-bold uppercase tracking-wider">Unavailable</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="font-playfair text-palacio-alabaster font-normal text-base group-hover:text-palacio-bronze transition-colors">
+                                {item.name}
+                              </h3>
+                              <span className="text-palacio-alabaster/50 text-xs font-cinzel">
+                                {orderCount} orders
+                              </span>
+                            </div>
+                            <p className="text-palacio-alabaster/50 text-xs mb-2 capitalize">
+                              {item.category}
+                            </p>
+                            <p className="font-cinzel text-palacio-bronze mb-4 font-bold text-base">
+                              ${item.price.toFixed(2)}
+                            </p>
                           </div>
-                          <div className="flex items-center justify-between mb-1">
-                            <h3 className="font-playfair text-palacio-gold font-medium">
-                              {item.name}
-                            </h3>
-                            <span className="text-gray-400 text-xs">
-                              {orderCount} sold
-                            </span>
-                          </div>
-                          <p className="text-gray-300 text-xs mb-2 capitalize font-medium">
-                            {item.category}
-                          </p>
-                          <p className="font-cinzel text-palacio-gold mb-3 font-medium">
-                            ${item.price}
-                          </p>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 pt-3 border-t border-white/[0.06]">
                             <button
                               onClick={() => openEditModal(item, 'menu')}
-                              className="flex-1 p-2 hover:bg-palacio-gold/20 rounded text-sm smooth-transition"
+                              className="flex-1 py-1.5 px-2 bg-white/[0.04] hover:bg-white/[0.08] text-palacio-bronze rounded text-xs font-cinzel uppercase tracking-wider smooth-transition flex items-center justify-center gap-1.5"
                             >
-                              <Edit2 size={14} className="inline mr-1 text-palacio-gold" />
+                              <Edit2 size={13} />
                               Edit
                             </button>
                             <button
                               onClick={() => openDeleteModal(item.id, item.name, 'menu')}
-                              className="flex-1 p-2 hover:bg-red-900/30 rounded text-sm smooth-transition"
+                              className="flex-1 py-1.5 px-2 bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 rounded text-xs font-cinzel uppercase tracking-wider smooth-transition flex items-center justify-center gap-1.5"
                             >
-                              <Trash2 size={14} className="inline mr-1 text-red-400" />
+                              <Trash2 size={13} />
                               Delete
                             </button>
                           </div>
-                        </GlassCard>
+                        </div>
                       );
                     })}
                   </div>
@@ -1112,29 +1154,29 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <select
                       value={bookingFilter}
                       onChange={(e) => setBookingFilter(e.target.value as any)}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
+                      className="px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs focus:border-palacio-bronze/50 outline-none"
                     >
-                      <option value="all" className="bg-palacio-black">All Status</option>
-                      <option value="pending" className="bg-palacio-black">Pending</option>
-                      <option value="confirmed" className="bg-palacio-black">Confirmed</option>
-                      <option value="cancelled" className="bg-palacio-black">Cancelled</option>
-                      <option value="completed" className="bg-palacio-black">Completed</option>
+                      <option value="all" className="bg-palacio-obsidian text-palacio-alabaster">All Statuses</option>
+                      <option value="pending" className="bg-palacio-obsidian text-palacio-alabaster">Pending</option>
+                      <option value="confirmed" className="bg-palacio-obsidian text-palacio-alabaster">Confirmed</option>
+                      <option value="cancelled" className="bg-palacio-obsidian text-palacio-alabaster">Cancelled</option>
+                      <option value="completed" className="bg-palacio-obsidian text-palacio-alabaster">Completed</option>
                     </select>
                   </div>
 
                   <div className="relative w-full sm:w-64">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" />
                     <input
                       type="text"
                       placeholder="Search by guest, ref, or room..."
                       value={bookingSearch}
                       onChange={(e) => setBookingSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
+                      className="w-full pl-9 pr-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs placeholder-palacio-alabaster/40 focus:border-palacio-bronze/50 outline-none transition-all"
                     />
                     {bookingSearch && (
                       <button 
                         onClick={() => setBookingSearch('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-palacio-alabaster/40 hover:text-palacio-alabaster"
                       >
                         <X size={14} />
                       </button>
@@ -1143,13 +1185,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 </div>
 
                 {filteredBookings.length === 0 ? (
-                  <GlassCard className="p-12 text-center">
-                    <Calendar size={48} className="text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-300 text-lg mb-2 font-medium">No bookings found</p>
-                    <p className="text-gray-400 text-sm">
-                      {bookingSearch || bookingFilter !== 'all' ? 'Try adjusting your filters' : 'No bookings yet'}
+                  <div className="p-12 text-center rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <Calendar size={36} className="text-palacio-alabaster/30 mx-auto mb-3" />
+                    <p className="text-palacio-alabaster text-base mb-1 font-playfair">No reservations found</p>
+                    <p className="text-palacio-alabaster/50 text-xs font-cinzel">
+                      {bookingSearch || bookingFilter !== 'all' ? 'Try adjusting your filters' : 'No guest reservations recorded yet'}
                     </p>
-                  </GlassCard>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {filteredBookings.map((booking) => {
@@ -1159,66 +1201,66 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                       const showDelete = canDeleteBooking(booking.status);
 
                       return (
-                        <GlassCard key={booking.reference_number} className="p-5">
+                        <div key={booking.reference_number} className="p-5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/30 transition-all shadow-md">
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-palacio-gold/20 flex items-center justify-center">
-                                <Bell size={20} className="text-palacio-gold" />
+                              <div className="w-10 h-10 rounded-xl bg-palacio-bronze/10 border border-palacio-bronze/20 flex items-center justify-center">
+                                <Bell size={18} className="text-palacio-bronze" />
                               </div>
                               <div>
-                                <h3 className="font-playfair text-lg text-palacio-gold font-medium">
-                                  New Booking Request
+                                <h3 className="font-playfair text-lg text-palacio-alabaster">
+                                  Reservation #{booking.reference_number}
                                 </h3>
-                                <p className="text-gray-400 text-xs">
-                                  {booking.created_at ? new Date(booking.created_at).toLocaleString() : 'Just now'}
+                                <p className="text-palacio-alabaster/50 text-xs font-cinzel">
+                                  {booking.created_at ? new Date(booking.created_at).toLocaleString() : 'Recently'}
                                 </p>
                               </div>
                             </div>
                             {showDelete && (
                               <button
                                 onClick={() => openDeleteModal(booking.reference_number, `Booking ${booking.reference_number}`, 'booking')}
-                                className="p-2 hover:bg-red-900/30 rounded smooth-transition"
+                                className="p-2 hover:bg-rose-950/40 text-rose-400 rounded-lg smooth-transition"
                                 title="Delete booking"
                               >
-                                <Trash size={18} className="text-red-400" />
+                                <Trash size={16} />
                               </button>
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/30 rounded-lg p-3">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 bg-black/30 rounded-lg p-3.5 border border-white/[0.06]">
                             <div className="flex items-center gap-2">
-                              <User size={14} className="text-gray-400" />
+                              <User size={13} className="text-palacio-bronze/60" />
                               <div>
-                                <p className="text-gray-400 text-xs font-medium">Guest</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {booking.username || 'Unknown'}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase">Guest</p>
+                                <p className="text-palacio-alabaster text-xs font-medium">
+                                  {booking.username || 'Guest'}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Calendar size={14} className="text-gray-400" />
+                              <Calendar size={13} className="text-palacio-bronze/60" />
                               <div>
-                                <p className="text-gray-400 text-xs font-medium">Dates</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  {booking.check_in_date} to {booking.check_out_date}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase">Dates</p>
+                                <p className="text-palacio-alabaster font-mono text-xs">
+                                  {booking.check_in_date} → {booking.check_out_date}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Home size={14} className="text-gray-400" />
+                              <Home size={13} className="text-palacio-bronze/60" />
                               <div>
-                                <p className="text-gray-400 text-xs font-medium">Accommodation</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase">Accommodation</p>
+                                <p className="text-palacio-alabaster text-xs font-medium">
                                   {booking.cottage_name || booking.room_name || booking.accommodation_name || 'N/A'}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <DollarSign size={14} className="text-gray-400" />
+                              <DollarSign size={13} className="text-palacio-bronze/60" />
                               <div>
-                                <p className="text-gray-400 text-xs font-medium">Total</p>
-                                <p className="font-cinzel text-palacio-gold text-sm font-medium">
-                                  ${booking.total_price}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase">Total</p>
+                                <p className="font-cinzel text-palacio-bronze font-bold text-sm">
+                                  ${booking.total_price?.toFixed(2)}
                                 </p>
                               </div>
                             </div>
@@ -1227,37 +1269,37 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                           {hasOrders && (
                             <div className="mb-4">
                               <div className="flex items-center gap-2 mb-2">
-                                <UtensilsCrossed size={14} className="text-palacio-gold" />
-                                <h4 className="font-cinzel text-sm text-palacio-gold font-medium">
-                                  Guest Orders
+                                <UtensilsCrossed size={13} className="text-palacio-bronze" />
+                                <h4 className="font-cinzel text-xs text-palacio-bronze tracking-wider uppercase">
+                                  Associated Dining Orders
                                   {pendingOrders > 0 && (
-                                    <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-medium">
+                                    <span className="ml-2 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] rounded-full font-bold">
                                       {pendingOrders} pending
                                     </span>
                                   )}
                                 </h4>
                               </div>
-                              <div className="space-y-2">
+                              <div className="space-y-1.5">
                                 {userOrders.map((order) => (
                                   <div 
                                     key={order.id} 
-                                    className="flex items-center justify-between bg-black/30 rounded-lg p-2 text-sm"
+                                    className="flex items-center justify-between bg-black/40 rounded-lg p-2.5 text-xs border border-white/[0.06]"
                                   >
                                     <div className="flex items-center gap-2">
-                                      <span className="text-gray-300 font-medium">{order.product_name}</span>
-                                      <span className="text-gray-500">x{order.quantity}</span>
-                                      <span className="text-palacio-gold/80 font-medium">${order.total_amount}</span>
+                                      <span className="text-palacio-alabaster font-medium">{order.product_name}</span>
+                                      <span className="text-palacio-alabaster/50">×{order.quantity}</span>
+                                      <span className="text-palacio-bronze font-mono font-medium">${order.total_amount?.toFixed(2)}</span>
                                     </div>
                                     <select
                                       value={order.status}
                                       onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                                      className="px-2 py-0.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold text-xs focus:outline-none cursor-pointer font-medium"
+                                      className="px-2.5 py-1 bg-white/[0.04] border border-white/[0.1] rounded text-palacio-bronze text-xs font-cinzel focus:border-palacio-bronze/50 outline-none cursor-pointer"
                                     >
-                                      <option value="pending">Pending</option>
-                                      <option value="preparing">Preparing</option>
-                                      <option value="ready">Ready</option>
-                                      <option value="completed">Completed</option>
-                                      <option value="cancelled">Cancelled</option>
+                                      <option value="pending" className="bg-palacio-obsidian">Pending</option>
+                                      <option value="preparing" className="bg-palacio-obsidian">Preparing</option>
+                                      <option value="ready" className="bg-palacio-obsidian">Ready</option>
+                                      <option value="completed" className="bg-palacio-obsidian">Completed</option>
+                                      <option value="cancelled" className="bg-palacio-obsidian">Cancelled</option>
                                     </select>
                                   </div>
                                 ))}
@@ -1265,24 +1307,24 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                             </div>
                           )}
 
-                          <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                            <p className="text-gray-500 text-xs font-mono">
+                          <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
+                            <p className="text-palacio-alabaster/40 text-xs font-mono">
                               Ref: {booking.reference_number}
                             </p>
                             <div className="flex items-center gap-2">
                               <select
                                 value={booking.status}
                                 onChange={(e) => handleUpdateBookingStatus(booking.reference_number, e.target.value)}
-                                className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium"
+                                className="px-3 py-1.5 bg-palacio-bronze/10 border border-palacio-bronze/30 rounded text-palacio-bronze font-cinzel text-xs uppercase tracking-wider focus:border-palacio-bronze/50 outline-none cursor-pointer font-semibold"
                               >
-                                <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="cancelled">Cancelled</option>
-                                <option value="completed">Completed</option>
+                                <option value="pending" className="bg-palacio-obsidian">Pending</option>
+                                <option value="confirmed" className="bg-palacio-obsidian">Confirmed</option>
+                                <option value="cancelled" className="bg-palacio-obsidian">Cancelled</option>
+                                <option value="completed" className="bg-palacio-obsidian">Completed</option>
                               </select>
                             </div>
                           </div>
-                        </GlassCard>
+                        </div>
                       );
                     })}
                   </div>
@@ -1297,30 +1339,30 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                     <select
                       value={orderFilter}
                       onChange={(e) => setOrderFilter(e.target.value as any)}
-                      className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none focus:border-palacio-gold/50"
+                      className="px-3 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs focus:border-palacio-bronze/50 outline-none"
                     >
-                      <option value="all" className="bg-palacio-black">All Status</option>
-                      <option value="pending" className="bg-palacio-black">Pending</option>
-                      <option value="preparing" className="bg-palacio-black">Preparing</option>
-                      <option value="ready" className="bg-palacio-black">Ready</option>
-                      <option value="completed" className="bg-palacio-black">Completed</option>
-                      <option value="cancelled" className="bg-palacio-black">Cancelled</option>
+                      <option value="all" className="bg-palacio-obsidian text-palacio-alabaster">All Statuses</option>
+                      <option value="pending" className="bg-palacio-obsidian text-palacio-alabaster">Pending</option>
+                      <option value="preparing" className="bg-palacio-obsidian text-palacio-alabaster">Preparing</option>
+                      <option value="ready" className="bg-palacio-obsidian text-palacio-alabaster">Ready</option>
+                      <option value="completed" className="bg-palacio-obsidian text-palacio-alabaster">Completed</option>
+                      <option value="cancelled" className="bg-palacio-obsidian text-palacio-alabaster">Cancelled</option>
                     </select>
                   </div>
 
                   <div className="relative w-full sm:w-64">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" />
                     <input
                       type="text"
                       placeholder="Search by customer, product..."
                       value={orderSearch}
                       onChange={(e) => setOrderSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-palacio-gold/50"
+                      className="w-full pl-9 pr-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs placeholder-palacio-alabaster/40 focus:border-palacio-bronze/50 outline-none transition-all"
                     />
                     {orderSearch && (
                       <button 
                         onClick={() => setOrderSearch('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-palacio-alabaster/40 hover:text-palacio-alabaster"
                       >
                         <X size={14} />
                       </button>
@@ -1329,84 +1371,84 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                 </div>
 
                 {filteredOrders.length === 0 ? (
-                  <GlassCard className="p-12 text-center">
-                    <ShoppingBag size={48} className="text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-300 text-lg mb-2 font-medium">No orders found</p>
-                    <p className="text-gray-400 text-sm">
-                      {orderSearch || orderFilter !== 'all' ? 'Try adjusting your filters' : 'No orders yet'}
+                  <div className="p-12 text-center rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <ShoppingBag size={36} className="text-palacio-alabaster/30 mx-auto mb-3" />
+                    <p className="text-palacio-alabaster text-base mb-1 font-playfair">No dining orders found</p>
+                    <p className="text-palacio-alabaster/50 text-xs font-cinzel">
+                      {orderSearch || orderFilter !== 'all' ? 'Try adjusting your filters' : 'No guest orders placed yet'}
                     </p>
-                  </GlassCard>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {filteredOrders.map((order) => {
                       const showDelete = canDeleteOrder(order.status);
                       return (
-                        <GlassCard key={order.id} className="p-6">
+                        <div key={order.id} className="p-6 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/30 transition-all shadow-md">
                           <div className="flex items-start justify-between mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
                               <div>
-                                <p className="text-gray-400 text-sm font-medium">Customer</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.username || 'Unknown'}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Customer</p>
+                                <p className="text-palacio-alabaster font-medium text-sm">
+                                  {order.username || 'Guest'}
                                 </p>
-                                <p className="text-gray-400 text-xs">{order.user_email}</p>
+                                <p className="text-palacio-alabaster/40 text-xs">{order.user_email}</p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm font-medium">Reference</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.reference_number}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-400 text-sm font-medium">Type</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Reference</p>
+                                <p className="font-mono text-palacio-bronze text-xs font-semibold">
+                                  #{order.reference_number}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm font-medium">Amount</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  ${order.total_amount}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Service Type</p>
+                                <p className="text-palacio-alabaster text-xs capitalize">
+                                  {order.order_type === 'dine_in' ? '🍽️ Dine-in' : '🚪 Room Suite Delivery'}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm font-medium">Product</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.product_name || 'N/A'}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Order Amount</p>
+                                <p className="font-cinzel text-palacio-bronze font-bold text-base">
+                                  ${order.total_amount?.toFixed(2)}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-gray-400 text-sm font-medium">Category</p>
-                                <p className="font-cinzel text-palacio-gold font-medium">
-                                  {order.category || 'N/A'}
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Selection</p>
+                                <p className="text-palacio-alabaster text-xs font-medium">
+                                  {order.product_name || 'Item'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Category</p>
+                                <p className="text-palacio-alabaster/60 text-xs capitalize">
+                                  {order.category || 'Culinary'}
                                 </p>
                               </div>
                             </div>
                             {showDelete && (
                               <button
                                 onClick={() => openDeleteModal(order.id, `Order ${order.reference_number}`, 'order')}
-                                className="p-2 hover:bg-red-900/30 rounded smooth-transition ml-4"
+                                className="p-2 hover:bg-rose-950/40 text-rose-400 rounded-lg smooth-transition ml-4"
                                 title="Delete order"
                               >
-                                <Trash size={18} className="text-red-400" />
+                                <Trash size={16} />
                               </button>
                             )}
                           </div>
                           
-                          <div className="flex justify-end items-center mt-4 pt-4 border-t border-white/10">
+                          <div className="flex justify-end items-center mt-4 pt-3 border-t border-white/[0.08]">
                             <select
                               value={order.status}
                               onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                              className="px-3 py-1.5 bg-palacio-gold/20 border border-palacio-gold/30 rounded text-palacio-gold font-cinzel text-sm focus:outline-none cursor-pointer font-medium"
+                              className="px-3 py-1.5 bg-palacio-bronze/10 border border-palacio-bronze/30 rounded text-palacio-bronze font-cinzel text-xs uppercase tracking-wider focus:border-palacio-bronze/50 outline-none cursor-pointer font-semibold"
                             >
-                              <option value="pending">Pending</option>
-                              <option value="preparing">Preparing</option>
-                              <option value="ready">Ready</option>
-                              <option value="completed">Completed</option>
-                              <option value="cancelled">Cancelled</option>
+                              <option value="pending" className="bg-palacio-obsidian">Pending</option>
+                              <option value="preparing" className="bg-palacio-obsidian">Preparing</option>
+                              <option value="ready" className="bg-palacio-obsidian">Ready</option>
+                              <option value="completed" className="bg-palacio-obsidian">Completed</option>
+                              <option value="cancelled" className="bg-palacio-obsidian">Cancelled</option>
                             </select>
                           </div>
-                        </GlassCard>
+                        </div>
                       );
                     })}
                   </div>
@@ -1424,106 +1466,106 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           setEditingItem(null);
           setModalType(null);
         }}
-        title={editingItem ? 'Edit Item' : 'Add Item'}
+        title={editingItem ? 'Edit Offering' : 'Add New Offering'}
         footer={
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full">
             <button
               onClick={() => {
                 setShowModal(false);
                 setEditingItem(null);
                 setModalType(null);
               }}
-              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition"
+              className="flex-1 px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] text-palacio-alabaster/70 rounded-lg font-cinzel text-xs uppercase tracking-wider hover:bg-white/[0.08] smooth-transition"
             >
               Cancel
             </button>
             <button 
               onClick={handleSaveItem}
-              className="flex-1 px-4 py-2 bg-palacio-gold text-palacio-black rounded font-cinzel font-semibold hover:bg-palacio-gold/80 smooth-transition"
+              className="flex-1 px-4 py-2.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-palacio-gold smooth-transition shadow-md"
             >
-              Save
+              Save Changes
             </button>
           </div>
         }
       >
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-          <p className="text-gray-300 text-sm font-medium">
-            {editingItem ? `Editing: ${editingItem.name || 'Item'}` : `Create new ${modalType === 'room' ? 'room' : modalType === 'cottage' ? 'cottage' : 'menu item'}`}
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+          <p className="text-palacio-alabaster/60 text-xs font-cinzel">
+            {editingItem ? `Editing: ${editingItem.name || 'Item'}` : `Create new ${modalType === 'room' ? 'suite' : modalType === 'cottage' ? 'cottage' : 'culinary menu item'}`}
           </p>
 
           {(modalType === 'room' || modalType === 'cottage') && (
             <div className="space-y-3">
               <div>
-                <label className="text-gray-300 text-xs font-bold block mb-1">Name</label>
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Accommodation Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
-                  placeholder="Accommodation name"
+                  className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
+                  placeholder="e.g. Royal Oceanfront Villa"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-gray-300 text-xs font-bold block mb-1">Price/Night ($)</label>
+                  <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Price/Night ($)</label>
                   <input
                     type="number"
                     value={formData.price_per_night}
                     onChange={(e) => setFormData({ ...formData, price_per_night: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                    className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-gray-300 text-xs font-bold block mb-1">Capacity</label>
+                  <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Max Guests</label>
                   <input
                     type="number"
                     value={formData.capacity}
                     onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                    className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-gray-300 text-xs font-bold block mb-1">Quantity Available</label>
+                  <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Available Quantity</label>
                   <input
                     type="number"
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                    className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-gray-300 text-xs font-bold block mb-1">Status</label>
+                  <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                    className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
                   >
-                    <option value="available" className="bg-palacio-black">Available</option>
-                    <option value="booked" className="bg-palacio-black">Booked</option>
-                    <option value="closed" className="bg-palacio-black">Closed</option>
-                    <option value="maintenance" className="bg-palacio-black">Maintenance</option>
+                    <option value="available" className="bg-palacio-obsidian">Available</option>
+                    <option value="booked" className="bg-palacio-obsidian">Booked</option>
+                    <option value="closed" className="bg-palacio-obsidian">Closed</option>
+                    <option value="maintenance" className="bg-palacio-obsidian">Maintenance</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className="text-gray-300 text-xs font-bold block mb-1">Image URL</label>
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Image URL</label>
                 <input
                   type="text"
                   value={formData.image_url}
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
-                  placeholder="https://..."
+                  className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
+                  placeholder="https://images.unsplash.com/..."
                 />
               </div>
               <div>
-                <label className="text-gray-300 text-xs font-bold block mb-1">Description</label>
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50 h-20 resize-none"
-                  placeholder="Description..."
+                  className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none h-20 resize-none"
+                  placeholder="Editorial description of the accommodation..."
                 />
               </div>
             </div>
@@ -1532,89 +1574,89 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           {modalType === 'menu' && (
             <div className="space-y-3">
               <div>
-                <label className="text-gray-300 text-xs font-bold block mb-1">Name</label>
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Dish / Beverage Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
-                  placeholder="Menu item name"
+                  className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
+                  placeholder="e.g. Lobster Paella Valenciana"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-gray-300 text-xs font-bold block mb-1">Price ($)</label>
+                  <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Price ($)</label>
                   <input
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                    className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="text-gray-300 text-xs font-bold block mb-1">Category</label>
+                  <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Category</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                    className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                    className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
                   >
-                    <option value="appetizers" className="bg-palacio-black">Appetizers</option>
-                    <option value="main_course" className="bg-palacio-black">Main Course</option>
-                    <option value="seafood" className="bg-palacio-black">Seafood</option>
-                    <option value="grilled" className="bg-palacio-black">Grilled</option>
-                    <option value="desserts" className="bg-palacio-black">Desserts</option>
-                    <option value="cocktails" className="bg-palacio-black">Cocktails</option>
-                    <option value="wine" className="bg-palacio-black">Wine</option>
-                    <option value="non_alcoholic" className="bg-palacio-black">Non-Alcoholic</option>
+                    <option value="appetizers" className="bg-palacio-obsidian">Appetizers</option>
+                    <option value="main_course" className="bg-palacio-obsidian">Main Course</option>
+                    <option value="seafood" className="bg-palacio-obsidian">Seafood</option>
+                    <option value="grilled" className="bg-palacio-obsidian">Grilled</option>
+                    <option value="desserts" className="bg-palacio-obsidian">Desserts</option>
+                    <option value="cocktails" className="bg-palacio-obsidian">Cocktails</option>
+                    <option value="wine" className="bg-palacio-obsidian">Wine</option>
+                    <option value="non_alcoholic" className="bg-palacio-obsidian">Refreshments</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className="text-gray-300 text-xs font-bold block mb-1">Image URL</label>
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Image URL</label>
                 <input
                   type="text"
                   value={formData.image_url}
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50"
+                  className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none"
                   placeholder="https://..."
                 />
               </div>
               <div>
-                <label className="text-gray-300 text-xs font-bold block mb-1">Description</label>
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block mb-1">Culinary Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-palacio-gold/50 h-20 resize-none"
-                  placeholder="Menu description..."
+                  className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none h-20 resize-none"
+                  placeholder="Ingredients and culinary notes..."
                 />
               </div>
-              <div className="flex items-center gap-4 pt-2">
+              <div className="flex items-center gap-6 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.available}
-                    onChange={(e) => setFormData({ ...formData, available: e.checked })}
-                    className="w-4 h-4 accent-palacio-gold"
+                    onChange={(e) => setFormData({ ...formData, available: e.target.checked })}
+                    className="w-4 h-4 accent-palacio-bronze"
                   />
-                  <span className="text-gray-300 text-sm">Available</span>
+                  <span className="text-palacio-alabaster text-xs">Available</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.is_featured}
-                    onChange={(e) => setFormData({ ...formData, is_featured: e.checked })}
-                    className="w-4 h-4 accent-palacio-gold"
+                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                    className="w-4 h-4 accent-palacio-bronze"
                   />
-                  <span className="text-gray-300 text-sm">Featured</span>
+                  <span className="text-palacio-alabaster text-xs">Chef's Special</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.is_bestseller}
-                    onChange={(e) => setFormData({ ...formData, is_bestseller: e.checked })}
-                    className="w-4 h-4 accent-palacio-gold"
+                    onChange={(e) => setFormData({ ...formData, is_bestseller: e.target.checked })}
+                    className="w-4 h-4 accent-palacio-bronze"
                   />
-                  <span className="text-gray-300 text-sm">Bestseller</span>
+                  <span className="text-palacio-alabaster text-xs">Bestseller</span>
                 </label>
               </div>
             </div>
@@ -1625,31 +1667,33 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}
-        title="Confirm Deletion"
+        title="Confirm Removal"
         footer={
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full">
             <button
               onClick={closeDeleteModal}
-              className="flex-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 smooth-transition"
+              className="flex-1 px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] text-palacio-alabaster/70 rounded-lg font-cinzel text-xs uppercase tracking-wider hover:bg-white/[0.08] smooth-transition"
             >
               Cancel
             </button>
             <button
               onClick={confirmDelete}
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded font-cinzel font-semibold hover:bg-red-700 smooth-transition"
+              className="flex-1 px-4 py-2.5 bg-rose-600 text-white rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-rose-700 smooth-transition shadow-md"
             >
-              Delete
+              Confirm Delete
             </button>
           </div>
         }
       >
         <div className="text-center py-4">
-          <AlertTriangle size={48} className="text-red-400 mx-auto mb-4" />
-          <p className="text-gray-200 mb-2 font-medium">
-            Are you sure you want to delete <span className="text-palacio-gold font-semibold">{deleteModal.itemName}</span>?
+          <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle size={26} className="text-rose-400" />
+          </div>
+          <p className="text-palacio-alabaster text-sm mb-2 font-medium">
+            Are you sure you wish to delete <span className="text-palacio-bronze font-semibold">"{deleteModal.itemName}"</span>?
           </p>
-          <p className="text-gray-400 text-sm">
-            This action cannot be undone.
+          <p className="text-palacio-alabaster/50 text-xs font-light">
+            This action will permanently remove this record from the database.
           </p>
         </div>
       </Modal>

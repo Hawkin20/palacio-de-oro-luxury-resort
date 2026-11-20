@@ -11,8 +11,15 @@ import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 
+const VALID_PAGES = ['home', 'rooms', 'menu', 'bookings', 'contact', 'admin', 'profile'];
+
+const getInitialPage = () => {
+  const path = window.location.pathname.replace(/^\//, '').toLowerCase();
+  return VALID_PAGES.includes(path) ? path : 'home';
+};
+
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string>();
   const [userEmail, setUserEmail] = useState<string>();
@@ -77,6 +84,23 @@ function App() {
     }
   };
 
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page);
+    const path = page === 'home' ? '/' : `/${page}`;
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace(/^\//, '').toLowerCase();
+      setCurrentPage(VALID_PAGES.includes(path) ? path : 'home');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsLoggedIn(false);
@@ -84,19 +108,19 @@ function App() {
     setUserEmail(undefined);
     setUserName(undefined);
     setUserRole(null);
-    setCurrentPage('home');
+    handleNavigate('home');
   };
 
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home onNavigate={setCurrentPage} />;
+        return <Home onNavigate={handleNavigate} />;
       case 'rooms':
-        return <Rooms userId={userId} isLoggedIn={isLoggedIn} onNavigate={setCurrentPage} />;
+        return <Rooms userId={userId} isLoggedIn={isLoggedIn} onNavigate={handleNavigate} />;
       case 'menu':
         return <Menu userId={userId} isLoggedIn={isLoggedIn} cart={cart} setCart={setCart} />;
       case 'bookings':
-        return <Bookings userId={userId} isLoggedIn={isLoggedIn} onNavigate={setCurrentPage} />;
+        return <Bookings userId={userId} isLoggedIn={isLoggedIn} onNavigate={handleNavigate} />;
       case 'contact':
         return <Contact />;
       case 'admin':
@@ -104,7 +128,7 @@ function App() {
       case 'profile':
         return <Profile />;
       default:
-        return <Home onNavigate={setCurrentPage} />;
+        return <Home onNavigate={handleNavigate} />;
     }
   };
 
@@ -116,7 +140,7 @@ function App() {
     <div className="min-h-screen bg-palacio-black flex flex-col">
       <Navbar
         currentPage={currentPage}
-        onNavigate={setCurrentPage}
+        onNavigate={handleNavigate}
         cartItemCount={cart.length}
         isLoggedIn={isLoggedIn}
         onLogout={handleLogout}
