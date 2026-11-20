@@ -62,8 +62,12 @@ BEGIN
   END IF;
 END $$;
 
--- 3. Create full_bookings view
-CREATE OR REPLACE VIEW public.full_bookings AS
+-- 3. Drop existing views first (avoids PostgreSQL ERROR 42P16 cannot drop columns from view)
+DROP VIEW IF EXISTS public.full_bookings CASCADE;
+DROP VIEW IF EXISTS public.full_order_tracking CASCADE;
+
+-- Create full_bookings view
+CREATE VIEW public.full_bookings AS
 SELECT 
   b.id,
   b.guest_id,
