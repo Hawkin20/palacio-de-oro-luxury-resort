@@ -1,208 +1,149 @@
-# Palacio de Oro - Luxury Resort & Fine Dining
+# Palacio de Oro — Private Island Sanctuary & Fine Dining
 
-A fullstack luxury resort and fine dining web application built with React, TypeScript, Tailwind CSS, and Supabase.
+An ultra-luxury European editorial resort web platform built with **React 18, TypeScript, Tailwind CSS, Vite 5, and Supabase**.
 
-## Features
+[![Production Deployment](https://img.shields.io/badge/Vercel-Deployed-success?style=flat&logo=vercel)](https://palacio-de-oro-luxury-resort.vercel.app/)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-181717?style=flat&logo=github)](https://github.com/Hawkin20/palacio-de-oro-luxury-resort)
+[![Aesthetic](https://img.shields.io/badge/Design_Direction-Quiet_Luxury-C5A880?style=flat)](https://palacio-de-oro-luxury-resort.vercel.app/)
 
-### 🏨 Resort Management
-- Browse and filter rooms and cottages (Standard, Deluxe, Suite, Luxury Villa, Small, Family, Barkada)
-- Real-time availability tracking
-- Online booking system with payment method selection (Cash, GCash, Card)
-- Downpayment options
-- Guest booking management
+---
 
-### 🍽️ Fine Dining
-- 8 menu categories: Appetizers, Main Course, Seafood, Grilled, Desserts, Cocktails, Wine, Non-Alcoholic
-- Featured items and bestsellers
-- Add to cart system with quantity management
-- Dine-in and room delivery options
-- Order tracking and status updates
+## 🏛️ Design Direction — Quiet Luxury: European Resort Editorial
 
-### 👤 User System
-- Email/password authentication via Supabase
-- Guest account management
-- Booking history and order tracking
-- Review and rating system for rooms and menu items
+Palacio de Oro embodies the **Quiet Luxury** aesthetic, marrying classical European architectural elegance with the warm tropical sanctuary of Boracay:
 
-### 🛠️ Admin Dashboard
-- Manage rooms and cottages (CRUD operations)
-- Manage menu items with categories and pricing
-- View and update booking statuses
-- View and update order statuses
-- Analytics dashboard with key metrics
+* **Obsidian Noir (`#080808`)**: Deep, restful foundation replacing harsh synthetic blacks.
+* **Champagne Bronze (`#C5A880`)**: Muted, metallic gold accents avoiding neon saturations.
+* **Alabaster Sand (`#F6F4EF`)**: Warm, breathable editorial typography for effortless readability.
+* **Warm Charcoal (`#292720`)**: Subtle contrast borders and secondary layers.
+* **Typography Hierarchy**: High-contrast `Playfair Display` serif headlines, `Cinzel` architectural badges, and clean `Poppins` sans-serif body.
+* **Hairline Glassmorphic Cards**: Ultra-subtle frosted glass (`bg-white/[0.03] border-white/[0.08]`) with refined bronze focus transitions.
 
-### 📞 Contact & Support
-- Support team information with social links
-- Developer contact highlighted as primary admin
-- Contact form for inquiries
-- FAQ section
+---
 
-## Tech Stack
+## 🌟 Key Features
 
-- **Frontend**: React 18 + TypeScript
-- **Styling**: Tailwind CSS with custom design system
-- **State Management**: React Hooks
-- **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
-- **UI Components**: Custom components with glassmorphism design
-- **Icons**: Lucide React
+### 🏰 Accommodations & Private Suites (`/rooms`)
+- **Curated Inventory**: Presidential Suite, Garden View Villa, Poolside Villa, Sunset Casita, Deluxe Suite, and Beach Cottages.
+- **Unique Imagery & Safe Fallbacks**: Dedicated distinct high-resolution editorial photography per accommodation with graceful offline fallbacks.
+- **Dynamic Integer Booking Engine**: Check-in to check-out calculation with strict integer validation, preventing zero or negative night bookings.
+- **Automatic Date Range Constraints**: Check-in locked to `today+`, and check-out dynamically auto-advances to `checkIn + 1 day`.
+- **Transparent Price Breakdown**: Itemized calculation showing nightly base rate, complimentary resort amenities, 50% deposit option, and total amount.
+- **Editorial Confirmation Screen**: Generates a persistent reservation modal with copy-to-clipboard booking reference `#BK...` and direct navigation to Guest Portal.
+- **Quick View & Side-by-Side Comparison**: Interactive modal inspector and 3-suite comparison dock.
 
-## Design System
+### 🍽️ Private Island Gastronomy (`/menu`)
+- **8 Culinary Categories**: Appetizers, Main Course, Seafood, Grilled, Desserts, Cocktails, Wine, and Refreshments.
+- **Chef's Recommendations**: Curated carousel showcasing bestsellers and chef specials.
+- **Selection Tray Drawer**: Slide-out cart drawer with live quantity adjustments, Order Type selection (Dine-in vs. Room Suite Delivery), and payment methods (Card, GCash, Cash).
+- **Search & Dynamic Filters**: Instant live text filtering across ingredients, descriptions, and categories.
 
-### Colors
-- **Black**: #0B0B0B (Primary background)
-- **Gold**: #D4AF37 (Accent)
-- **Dark Green**: #0F2A1D (Secondary)
-- **White**: #FFFFFF (Text/accents)
+### 📋 Guest Sanctuary Portal (`/bookings`)
+- **Chronicle of Stays**: Unified timeline of confirmed, pending, and past resort stays.
+- **Culinary Order Tracking**: Linked room service dining requests with real-time status badges.
+- **Direct Navigation**: Graceful empty-state prompts leading directly to accommodation reservations.
 
-### Typography
-- **Headings**: Playfair Display (serif)
-- **Accent**: Cinzel (serif)
-- **Body**: Poppins (sans-serif)
+### 🛡️ Executive Management Console (`/admin`)
+- **Gated Authorization**: Strict role-based verification against Supabase user metadata and `users` table, with a luxury Access Denied fallback.
+- **Real-Time Operations**: Live business analytics, occupancy rate bar, revenue trends, and metrics tracking.
+- **Inventory Management**: Create, edit, and delete suites, cottages, and culinary menu items with validated modals.
+- **Reservation & Order Workflows**: Dynamic status updates (`pending` → `confirmed` / `preparing` → `completed`) with toast alerts.
 
-### Animations
-- Fade-in on scroll
-- Hover lift effects on cards
-- Gold glow pulses
-- Smooth transitions throughout
-- Auto-sliding carousel
+### 📱 Progressive Web App (PWA) & Performance
+- **Full Icon Suite**: Pre-cached PWA icons from 72px up to 512px with brand monogram favicon.
+- **Service Worker Caching**: Offline manifest and Workbox precaching for sub-second repeat loads.
+- **URL Synchronization**: Direct URL navigation (`/`, `/rooms`, `/menu`, `/bookings`, `/admin`) synchronized with browser history and popstate events.
 
-## Getting Started
+---
 
-### Prerequisites
-- Node.js 16+
-- npm or yarn
-- Supabase account
+## 🛠️ Technology Stack
 
-### Installation
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Frontend Framework** | React 18.3.1 | Component-driven architecture |
+| **Language** | TypeScript 5.5.3 | Static typing, contract safety |
+| **Build Tool** | Vite 5.4.8 | Lightning-fast HMR and Rollup production bundling |
+| **Styling** | Tailwind CSS 3.4.1 | Utility-first design tokens and glassmorphism |
+| **Database & Auth** | Supabase (PostgreSQL) | Real-time database, auth, and Row Level Security |
+| **Icons** | Lucide React | Minimalist line icons |
+| **Hosting & CI/CD** | Vercel & GitHub | Continuous automated production deployments |
 
-1. Clone the repository:
+---
+
+## 🚀 Getting Started
+
+### 1. Clone & Install
 ```bash
-git clone <repository-url>
-cd project
-```
-
-2. Install dependencies:
-```bash
+git clone https://github.com/Hawkin20/palacio-de-oro-luxury-resort.git
+cd palacio-de-oro-luxury-resort
 npm install
 ```
 
-3. Set up environment variables in `.env`:
-```
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+### 2. Environment Variables
+Create a `.env` file in the root directory:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-4. Start the development server:
+### 3. Start Development Server
 ```bash
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-5. Open your browser and navigate to `http://localhost:5173`
-
-### Build for Production
-
+### 4. Build for Production
 ```bash
 npm run build
+npm run preview -- --port 4173
 ```
 
-The build output will be in the `dist` directory.
+---
 
-## Project Structure
+## 📁 Repository Structure
 
 ```
-src/
-├── components/          # Reusable UI components
-│   ├── Navbar.tsx
-│   ├── Footer.tsx
-│   ├── GlassCard.tsx
-│   ├── Modal.tsx
-│   ├── StarRating.tsx
-│   ├── StatusBadge.tsx
-│   ├── LoadingSpinner.tsx
-│   └── ReviewSection.tsx
-├── pages/              # Page components
-│   ├── Home.tsx
-│   ├── Rooms.tsx
-│   ├── Menu.tsx
-│   ├── Bookings.tsx
-│   ├── Contact.tsx
-│   ├── Admin.tsx
-│   └── Auth.tsx
-├── lib/                # Utilities and types
-│   ├── supabase.ts
-│   └── types.ts
-├── App.tsx             # Main app component
-├── main.tsx            # Entry point
-└── index.css           # Global styles
+palacio-de-oro-luxury-resort/
+├── public/                  # PWA icons (72–512px), manifest, SVG monogram favicon
+├── src/
+│   ├── components/          # Reusable quiet luxury components
+│   │   ├── Navbar.tsx       # Header, promo banner, navigation & auth modal triggers
+│   │   ├── PalacioLogo.tsx  # Royal Monogram 'P' vector emblem
+│   │   ├── Footer.tsx       # Editorial resort footer and links
+│   │   ├── GlassCard.tsx    # Glassmorphism container wrapper
+│   │   ├── Modal.tsx        # Accessible dialog backdrop & container
+│   │   ├── StatusBadge.tsx  # Color-coded reservation & order state pills
+│   │   └── LoadingSpinner.tsx
+│   ├── pages/               # Application views
+│   │   ├── Home.tsx         # Quiet luxury editorial homepage & hero
+│   │   ├── Rooms.tsx        # Accommodation suites, comparison, & reservation modal
+│   │   ├── Menu.tsx         # Dining menu, category pills, & cart tray drawer
+│   │   ├── Bookings.tsx     # Guest reservations and room service history
+│   │   ├── Admin.tsx        # Executive operations console & analytics
+│   │   ├── Auth.tsx         # Guest sign-in & registration
+│   │   └── Contact.tsx      # Concierge inquiry & resort information
+│   ├── lib/
+│   │   ├── supabase.ts      # Supabase client singleton
+│   │   ├── types.ts         # TypeScript schema definitions
+│   │   └── images.ts        # Accommodation image registry and fallback handlers
+│   ├── App.tsx              # URL routing synchronization and state management
+│   ├── main.tsx             # Application bootstrap
+│   └── index.css            # Custom design tokens, fonts, and animation keyframes
+├── tailwind.config.js       # Color tokens: obsidian, bronze, alabaster, charcoal
+└── vite.config.ts           # Vite configuration & PWA plugin setup
 ```
 
-## Database Schema
+---
 
-### Tables
-- **users** - Guest and admin accounts
-- **rooms** - Resort room inventory
-- **cottages** - Cottage inventory
-- **menu_items** - Restaurant menu
-- **bookings** - Guest reservations
-- **orders** - Restaurant orders
-- **order_items** - Line items for orders
-- **reviews** - Ratings and comments
+## 👥 Leadership & Development Team
 
-All tables have Row Level Security (RLS) enabled with appropriate policies for data protection.
+* **Lead Developer & Administrator**: Vincent Paul Ecaldre  
+  * Email: [vincentecaldre25@gmail.com](mailto:vincentecaldre25@gmail.com)  
+  * GitHub: [@Hawkin20](https://github.com/Hawkin20)
+* **Resort Operations & Support Lead**: Rommel Cabanza  
+* **Resort Concierge & Guest Services**: Palacio de Oro Support Team  
 
-## Key Features Implementation
+---
 
-### Authentication Flow
-1. Users sign up/login via Auth page
-2. Supabase Auth handles session management
-3. User data synced with `users` table
-4. Admin role restrictions on certain pages
-
-### Booking System
-1. Check availability for selected dates
-2. Choose room/cottage and guest count
-3. Select payment method and downpayment option
-4. Generate reference number
-5. Submit booking (pending status by default)
-
-### Restaurant Ordering
-1. Browse menu by category
-2. Add items to cart with quantity control
-3. Select order type (dine-in/room delivery)
-4. Proceed to checkout
-5. Place order with payment method selection
-
-### Admin Panel
-1. View analytics dashboard
-2. Manage accommodations (add/edit/delete)
-3. Manage menu items (add/edit/delete)
-4. Update booking and order statuses
-5. View all transactions
-
-## Support & Contact
-
-**Developer & Admin**
-- Name: Vincent Ecaldre
-- Email: vincentecaldre25@gmail.com
-- Facebook: https://www.facebook.com/Ilove.tomboybaddie
-
-**Support Lead**
-- Name: Rommel Cabanza
-- Facebook: https://www.facebook.com/rommel.cabanza.2025
-
-**Support Account**
-- Facebook: https://www.facebook.com/profile.php?id=61588094229904
-
-## License
-
-This project is proprietary and confidential.
-
-## Development Notes
-
-- Uses Supabase real-time subscriptions for live updates
-- Implements glassmorphism UI design pattern
-- Fully responsive from mobile to desktop
-- Optimized performance with lazy loading
-- Type-safe with full TypeScript coverage
-- Production-ready build configuration
+## 📄 License
+This project is proprietary and confidential. All rights reserved by **Palacio de Oro Resort & Sanctuary**.
