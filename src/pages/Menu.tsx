@@ -214,7 +214,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a]">
+    <div className="relative min-h-screen overflow-hidden bg-palacio-obsidian">
       <div className="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -222,69 +222,69 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
             backgroundImage: 'url("https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&q=80")',
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#0a0a0a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-palacio-obsidian" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80" />
         
         <div className="relative z-10 h-full flex flex-col justify-center items-center text-center px-4 pt-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-palacio-gold/10 border border-palacio-gold/30 rounded-full mb-6 backdrop-blur-sm">
-            <ChefHat size={16} className="text-palacio-gold" />
-            <span className="text-palacio-gold font-cinzel text-xs tracking-[0.3em] uppercase">Culinary Excellence</span>
+          <div className="inline-flex items-center gap-2.5 px-5 py-2 bg-black/40 border border-white/10 rounded-full mb-6 backdrop-blur-md">
+            <ChefHat size={14} className="text-palacio-bronze" />
+            <span className="text-palacio-alabaster/90 font-cinzel text-[11px] tracking-[0.25em] uppercase">Private Island Gastronomy</span>
           </div>
           
-          <h1 className="font-playfair text-5xl md:text-7xl text-palacio-gold mb-4 drop-shadow-2xl">
+          <h1 className="font-playfair font-normal text-5xl md:text-7xl text-palacio-alabaster mb-4 drop-shadow-2xl">
             Palacio Dining
           </h1>
-          <p className="text-gray-300 font-poppins text-lg md:text-xl italic max-w-2xl mb-8">
-            Savor the flavors of summer luxury
+          <p className="text-palacio-alabaster/70 font-poppins text-base md:text-lg italic max-w-2xl mb-8 font-light">
+            An exquisite synthesis of European culinary tradition and fresh island harvests.
           </p>
           
-          <div className="flex flex-wrap justify-center gap-6 md:gap-10 text-sm font-cinzel tracking-wider">
-            <div className="flex items-center gap-2 text-palacio-gold">
-              <Star size={16} className="fill-palacio-gold" />
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10 text-xs font-cinzel tracking-wider">
+            <div className="flex items-center gap-2 text-palacio-bronze">
+              <Star size={14} className="fill-palacio-bronze" />
               <span>4.9 Rating</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-400">
-              <Wine size={16} />
-              <span>50+ Wines</span>
+            <div className="flex items-center gap-2 text-palacio-alabaster/60">
+              <Wine size={14} />
+              <span>50+ Fine Wines</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-400">
-              <ChefHat size={16} />
-              <span>Award-Winning Chef</span>
+            <div className="flex items-center gap-2 text-palacio-alabaster/60">
+              <ChefHat size={14} />
+              <span>Master Culinary Chefs</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="sticky top-20 z-40 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/5 py-4">
+      <div className="sticky top-20 z-40 bg-[#080808]/90 backdrop-blur-xl border-b border-white/[0.08] py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="relative w-full md:max-w-md">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-bronze/60" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search menu items..."
-                className="w-full pl-12 pr-10 py-3 bg-white/5 border border-palacio-gold/20 rounded-full text-sm text-white placeholder-gray-500 focus:border-palacio-gold focus:outline-none focus:bg-white/10 smooth-transition focus:shadow-lg focus:shadow-palacio-gold/10"
+                placeholder="Search culinary offerings..."
+                className="w-full pl-11 pr-10 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-palacio-alabaster placeholder-gray-500 focus:border-palacio-bronze/50 focus:outline-none transition-all"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-palacio-gold smooth-transition"
                 >
-                  <X size={16} />
+                  <X size={15} />
                 </button>
               )}
             </div>
 
             <button
               onClick={() => setShowCart(true)}
-              className="relative flex items-center gap-3 px-6 py-3 bg-palacio-gold/10 border border-palacio-gold/30 rounded-full hover:bg-palacio-gold/20 hover:scale-105 smooth-transition group"
+              className="relative flex items-center gap-3 px-5 py-2.5 bg-white/[0.04] border border-white/[0.12] rounded-lg hover:border-palacio-bronze/50 hover:bg-white/[0.08] smooth-transition group"
             >
-              <ShoppingCart size={20} className="text-palacio-gold group-hover:scale-110 transition-transform" />
-              <span className="text-palacio-gold font-cinzel text-xs tracking-wider hidden sm:inline">Your Tray</span>
+              <ShoppingCart size={18} className="text-palacio-bronze group-hover:scale-110 transition-transform" />
+              <span className="text-palacio-alabaster font-cinzel text-xs tracking-wider hidden sm:inline">Your Selection</span>
               {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-xs font-bold text-palacio-black bg-palacio-gold rounded-full shadow-lg shadow-palacio-gold/30 animate-pulse">
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold text-palacio-obsidian bg-palacio-bronze rounded-full shadow-md">
                   {cartCount}
                 </span>
               )}
@@ -308,7 +308,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
               {featuredItems.map((item, index) => (
                 <div 
                   key={item.id} 
-                  className="group relative overflow-hidden rounded-2xl bg-white/5 border border-white/10 hover:border-palacio-gold/50 transition-all duration-500 cursor-pointer"
+                  className="group relative overflow-hidden rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08] hover:border-palacio-bronze/50 transition-all duration-500 cursor-pointer shadow-lg hover:shadow-2xl"
                   style={{ animationDelay: `${index * 100}ms` }}
                   onClick={() => addToCart(item)}
                 >
@@ -316,28 +316,28 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                     <img
                       src={getImageUrl(item)}
                       alt={item.name}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                       onError={(e) => handleImageError(e, item.category)}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
                     <div className="absolute top-3 left-3 flex gap-2">
                       {item.is_bestseller && (
-                        <span className="bg-palacio-gold text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-lg flex items-center gap-1">
-                          <Star size={10} className="fill-palacio-black" /> BESTSELLER
+                        <span className="bg-palacio-bronze text-palacio-obsidian px-2.5 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-md flex items-center gap-1">
+                          <Star size={10} className="fill-palacio-obsidian" /> BESTSELLER
                         </span>
                       )}
                       {item.is_featured && (
-                        <span className="bg-white/90 text-palacio-black px-3 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-lg">
-                          SUMMER SPECIAL
+                        <span className="bg-white/90 text-palacio-obsidian px-2.5 py-1 rounded-full text-[10px] font-cinzel font-bold shadow-md">
+                          CHEF'S SPECIAL
                         </span>
                       )}
                     </div>
                     <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="font-playfair text-lg text-white mb-1">{item.name}</h3>
+                      <h3 className="font-playfair text-lg text-palacio-alabaster mb-1">{item.name}</h3>
                       <div className="flex justify-between items-center">
-                        <span className="font-cinzel font-bold text-palacio-gold text-lg">${item.price.toFixed(2)}</span>
-                        <div className="w-8 h-8 rounded-full bg-palacio-gold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Plus size={16} className="text-palacio-black" />
+                        <span className="font-cinzel font-bold text-palacio-bronze text-lg">${item.price.toFixed(2)}</span>
+                        <div className="w-8 h-8 rounded-full bg-palacio-bronze flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Plus size={15} className="text-palacio-obsidian" />
                         </div>
                       </div>
                     </div>
@@ -349,7 +349,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
         )}
 
         <div ref={categoryRef} className="mb-12">
-          <div className="flex flex-wrap justify-center gap-3 pb-4">
+          <div className="flex flex-wrap justify-center gap-2.5 pb-4">
             {CATEGORIES.map((cat) => {
               const Icon = cat.icon;
               const isActive = selectedCategory === cat.value && !searchQuery;
@@ -357,13 +357,13 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                 <button
                   key={cat.value}
                   onClick={() => scrollToCategory(cat.value)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-full font-cinzel text-xs tracking-widest smooth-transition border ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-cinzel text-xs tracking-wider smooth-transition border ${
                     isActive
-                      ? 'bg-palacio-gold text-palacio-black border-palacio-gold shadow-lg shadow-palacio-gold/20 scale-105'
-                      : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-palacio-gold hover:border-palacio-gold/30'
+                      ? 'bg-palacio-bronze text-palacio-obsidian font-semibold border-palacio-bronze shadow-md scale-105'
+                      : 'bg-white/[0.03] text-palacio-alabaster/70 border-white/[0.08] hover:bg-white/[0.08] hover:text-palacio-alabaster hover:border-palacio-bronze/40'
                   }`}
                 >
-                  <Icon size={14} />
+                  <Icon size={13} />
                   {cat.label}
                 </button>
               );
@@ -400,29 +400,29 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
             {filteredItems.length > 0 ? (
               filteredItems.map((item, index) => (
-                <GlassCard 
+                <div 
                   key={item.id} 
-                  className="overflow-hidden group hover:border-palacio-gold/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-palacio-gold/5"
+                  className="overflow-hidden group rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08] hover:border-palacio-bronze/50 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl flex flex-col h-full"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="relative h-64 overflow-hidden">
                     <img
                       src={getImageUrl(item)}
                       alt={item.name}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                       onError={(e) => handleImageError(e, item.category)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                     
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                       {item.is_bestseller && (
-                        <span className="bg-palacio-gold text-palacio-black px-3 py-1.5 rounded-full text-[10px] font-cinzel font-bold shadow-xl flex items-center gap-1 animate-pulse">
-                          <Star size={10} className="fill-palacio-black" /> BESTSELLER
+                        <span className="bg-palacio-bronze text-palacio-obsidian px-3 py-1.5 rounded-full text-[10px] font-cinzel font-bold shadow-xl flex items-center gap-1">
+                          <Star size={10} className="fill-palacio-obsidian" /> BESTSELLER
                         </span>
                       )}
                       {item.is_featured && (
-                        <span className="bg-white/90 text-palacio-black px-3 py-1.5 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
-                          SUMMER SPECIAL
+                        <span className="bg-white/90 text-palacio-obsidian px-3 py-1.5 rounded-full text-[10px] font-cinzel font-bold shadow-xl">
+                          CHEF'S SPECIAL
                         </span>
                       )}
                       {item.is_new && (
@@ -435,38 +435,38 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <button
                         onClick={() => addToCart(item)}
-                        className={`px-6 py-3 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-xs font-bold transform transition-all duration-300 flex items-center gap-2 shadow-xl ${
-                          addedItemId === item.id ? 'scale-110 bg-white' : 'hover:scale-105'
+                        className={`px-6 py-3 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold tracking-wider uppercase transform transition-all duration-300 flex items-center gap-2 shadow-xl ${
+                          addedItemId === item.id ? 'scale-105 bg-white' : 'hover:bg-palacio-gold'
                         }`}
                       >
                         {addedItemId === item.id ? (
                           <>✓ ADDED</>
                         ) : (
-                          <><Plus size={16} /> ADD TO CART</>
+                          <><Plus size={15} /> ADD TO CART</>
                         )}
                       </button>
                     </div>
                   </div>
 
-                  <div className="p-6">
+                  <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star 
                             key={i} 
                             size={12} 
-                            className={i < 4 ? "fill-palacio-gold text-palacio-gold" : "text-gray-600"} 
+                            className={i < 4 ? "fill-palacio-bronze text-palacio-bronze" : "text-gray-600"} 
                           />
                         ))}
                       </div>
-                      <span className="text-xs text-gray-400 font-cinzel">4.9</span>
+                      <span className="text-xs text-palacio-alabaster/60 font-cinzel">4.9</span>
                     </div>
 
-                    <h3 className="font-playfair text-2xl text-palacio-gold mb-2 group-hover:text-white transition-colors duration-300">
+                    <h3 className="font-playfair text-xl text-palacio-alabaster mb-2 group-hover:text-palacio-bronze transition-colors duration-300">
                       {item.name}
                     </h3>
                     
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2 italic leading-relaxed">
+                    <p className="text-palacio-alabaster/60 text-xs mb-4 line-clamp-2 italic leading-relaxed font-light">
                       {item.description}
                     </p>
 
@@ -479,7 +479,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                           return (
                             <span 
                               key={tag} 
-                              className={`flex items-center gap-1 text-[10px] font-cinzel px-2 py-1 rounded-full bg-white/5 border border-white/10 ${config.color}`}
+                              className={`flex items-center gap-1 text-[10px] font-cinzel px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] ${config.color}`}
                               title={config.label}
                             >
                               <TagIcon size={10} />
@@ -490,34 +490,34 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center border-t border-white/10 pt-4">
+                    <div className="flex justify-between items-center border-t border-white/[0.08] pt-4 mt-auto">
                       <div className="flex flex-col">
                         {item.original_price && item.original_price > item.price && (
                           <span className="text-gray-500 text-xs line-through font-cinzel">
                             ${item.original_price.toFixed(2)}
                           </span>
                         )}
-                        <span className="font-cinzel font-bold text-palacio-gold text-2xl tracking-tighter">
+                        <span className="font-cinzel font-bold text-palacio-bronze text-2xl tracking-tight">
                           ${item.price.toFixed(2)}
                         </span>
                       </div>
                       <button
                         onClick={() => addToCart(item)}
-                        className={`flex items-center gap-2 px-5 py-2.5 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-[10px] font-bold smooth-transition shadow-lg shadow-palacio-gold/10 ${
+                        className={`flex items-center gap-2 px-5 py-2.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold tracking-wider uppercase smooth-transition shadow-md shadow-palacio-bronze/10 ${
                           addedItemId === item.id 
-                            ? 'bg-white scale-110' 
-                            : 'hover:bg-white hover:scale-105 hover:shadow-palacio-gold/20'
+                            ? 'bg-white scale-105' 
+                            : 'hover:bg-palacio-gold hover:shadow-palacio-bronze/20'
                         }`}
                       >
                         {addedItemId === item.id ? (
-                          <><span className="text-lg">✓</span> ADDED</>
+                          <><span className="text-sm">✓</span> ADDED</>
                         ) : (
                           <><Plus size={14} /> ADD</>
                         )}
                       </button>
                     </div>
                   </div>
-                </GlassCard>
+                </div>
               ))
             ) : (
               <div className="col-span-full text-center py-20">
@@ -551,14 +551,14 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
         />
         
         <div 
-          className={`absolute right-0 top-0 h-full w-full max-w-md bg-[#0f0f0f] border-l border-white/10 shadow-2xl transform transition-transform duration-500 ease-out ${
+          className={`absolute right-0 top-0 h-full w-full max-w-md bg-palacio-obsidian border-l border-white/[0.08] shadow-2xl transform transition-transform duration-500 ease-out ${
             showCart ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          <div className="flex items-center justify-between p-6 border-b border-white/10 bg-[#0f0f0f]">
+          <div className="flex items-center justify-between p-6 border-b border-white/[0.08] bg-palacio-obsidian">
             <div>
-              <h2 className="font-playfair text-2xl text-palacio-gold">Your Selection</h2>
-              <p className="text-gray-500 text-xs font-cinzel mt-1">{cartCount} {cartCount === 1 ? 'item' : 'items'}</p>
+              <h2 className="font-playfair text-2xl text-palacio-alabaster">Your Selection</h2>
+              <p className="text-palacio-alabaster/50 text-xs font-cinzel mt-1 tracking-wider">{cartCount} {cartCount === 1 ? 'item' : 'items'}</p>
             </div>
             <button
               onClick={() => {
@@ -568,35 +568,35 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
               }}
               className="p-2 hover:bg-white/5 rounded-full transition-colors"
             >
-              <X size={24} className="text-gray-400" />
+              <X size={20} className="text-palacio-alabaster/60 hover:text-palacio-alabaster" />
             </button>
           </div>
 
           <div className="flex flex-col h-[calc(100%-180px)] overflow-hidden">
             {orderSuccess ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-24 h-24 rounded-full bg-palacio-gold/10 flex items-center justify-center mb-6 animate-bounce">
-                  <span className="text-5xl">🌊</span>
+                <div className="w-20 h-20 rounded-full bg-palacio-bronze/10 border border-palacio-bronze/30 flex items-center justify-center mb-6">
+                  <ChefHat size={36} className="text-palacio-bronze" />
                 </div>
-                <h3 className="font-playfair text-3xl text-palacio-gold mb-3">Order Confirmed!</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
-                  Sit back and relax. Your summer feast is being prepared with love.
+                <h3 className="font-playfair text-3xl text-palacio-alabaster mb-3">Order Confirmed</h3>
+                <p className="text-palacio-alabaster/70 text-sm leading-relaxed font-light max-w-xs">
+                  Your culinary selection has been received and is being prepared with utmost care.
                 </p>
-                <div className="mt-6 w-16 h-1 bg-palacio-gold/30 rounded-full" />
+                <div className="mt-6 w-16 h-px bg-palacio-bronze/40" />
               </div>
             ) : cart.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
-                  <ShoppingCart size={40} className="text-gray-700" />
+                <div className="w-20 h-20 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-6">
+                  <ShoppingCart size={32} className="text-palacio-alabaster/30" />
                 </div>
-                <h3 className="font-playfair text-xl text-gray-400 mb-2">Your tray is empty</h3>
-                <p className="text-gray-600 text-xs font-cinzel">Add some delicious items to get started</p>
+                <h3 className="font-playfair text-xl text-palacio-alabaster/80 mb-2">Your selection is empty</h3>
+                <p className="text-palacio-alabaster/40 text-xs font-cinzel tracking-wider">Explore our menu and add items to your tray</p>
               </div>
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
                   {orderError && (
-                    <div className="p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-300 text-xs uppercase font-bold tracking-widest flex items-center gap-2">
+                    <div className="p-4 bg-red-950/40 border border-red-500/30 rounded-xl text-red-300 text-xs uppercase font-bold tracking-widest flex items-center gap-2">
                       <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                       {orderError}
                     </div>
@@ -605,7 +605,7 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                   {cart.map((item) => (
                     <div 
                       key={item.id} 
-                      className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-palacio-gold/20 transition-colors group"
+                      className="flex gap-4 p-4 bg-white/[0.02] rounded-xl border border-white/[0.06] hover:border-palacio-bronze/30 transition-colors group"
                     >
                       <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                         <img
@@ -616,31 +616,31 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-playfair text-white text-sm truncate mb-1">{item.menuItem.name}</h4>
-                        <p className="text-palacio-gold font-cinzel text-xs font-bold mb-3">
+                        <h4 className="font-playfair text-palacio-alabaster text-sm truncate mb-1">{item.menuItem.name}</h4>
+                        <p className="text-palacio-bronze font-cinzel text-xs font-bold mb-3">
                           ${item.menuItem.price.toFixed(2)}
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center bg-black/40 rounded-full px-2 py-1 border border-white/10">
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity - 1)} 
-                              className="p-1.5 hover:text-palacio-gold transition-colors"
+                              className="p-1.5 hover:text-palacio-bronze transition-colors text-palacio-alabaster/70"
                             >
-                              <Minus size={14} />
+                              <Minus size={13} />
                             </button>
-                            <span className="w-10 text-center text-sm font-cinzel text-white">{item.quantity}</span>
+                            <span className="w-8 text-center text-xs font-cinzel text-palacio-alabaster">{item.quantity}</span>
                             <button 
                               onClick={() => updateQuantity(item.id, item.quantity + 1)} 
-                              className="p-1.5 hover:text-palacio-gold transition-colors"
+                              className="p-1.5 hover:text-palacio-bronze transition-colors text-palacio-alabaster/70"
                             >
-                              <Plus size={14} />
+                              <Plus size={13} />
                             </button>
                           </div>
                           <button 
                             onClick={() => removeFromCart(item.id)} 
-                            className="p-2 text-gray-600 hover:text-red-400 transition-colors"
+                            className="p-2 text-palacio-alabaster/40 hover:text-red-400 transition-colors"
                           >
-                            <X size={16} />
+                            <X size={15} />
                           </button>
                         </div>
                       </div>
@@ -648,49 +648,49 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
                   ))}
                 </div>
 
-                <div className="p-6 border-t border-white/10 bg-[#0a0a0a] space-y-4">
+                <div className="p-6 border-t border-white/[0.08] bg-black/40 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Order Type</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase">Order Type</label>
                       <select
                         value={orderData.orderType}
                         onChange={(e) => setOrderData({ ...orderData, orderType: e.target.value as any })}
-                        className="w-full px-3 py-2.5 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold focus:outline-none smooth-transition"
+                        className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 focus:outline-none smooth-transition"
                       >
-                        <option value="dine_in">🍽️ Dine-in</option>
-                        <option value="room_delivery">🚪 Room Delivery</option>
+                        <option value="dine_in" className="bg-palacio-obsidian text-palacio-alabaster">🍽️ Dine-in</option>
+                        <option value="room_delivery" className="bg-palacio-obsidian text-palacio-alabaster">🚪 Room Delivery</option>
                       </select>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Payment</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase">Payment</label>
                       <select
                         value={orderData.paymentMethod}
                         onChange={(e) => setOrderData({ ...orderData, paymentMethod: e.target.value as any })}
-                        className="w-full px-3 py-2.5 bg-black/40 border border-white/10 rounded-lg text-xs text-white focus:border-palacio-gold focus:outline-none smooth-transition"
+                        className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 focus:outline-none smooth-transition"
                       >
-                        <option value="card">💳 Card</option>
-                        <option value="gcash">📱 GCash</option>
-                        <option value="cash">💵 Cash</option>
+                        <option value="card" className="bg-palacio-obsidian text-palacio-alabaster">💳 Card</option>
+                        <option value="gcash" className="bg-palacio-obsidian text-palacio-alabaster">📱 GCash</option>
+                        <option value="cash" className="bg-palacio-obsidian text-palacio-alabaster">💵 Cash</option>
                       </select>
                     </div>
                   </div>
                   
                   {orderData.orderType === 'room_delivery' && (
-                    <div className="animate-fade-in">
-                      <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase mb-2 block">Room Number</label>
+                    <div className="animate-fade-in space-y-1.5">
+                      <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase block">Room Suite / Number</label>
                       <input
                         type="text"
                         value={orderData.roomId}
                         onChange={(e) => setOrderData({ ...orderData, roomId: e.target.value })}
-                        placeholder="e.g., 204"
-                        className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-lg text-sm text-white focus:border-palacio-gold outline-none smooth-transition"
+                        placeholder="e.g. Suite 204"
+                        className="w-full px-3 py-2 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none smooth-transition"
                       />
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center pt-4 border-t border-white/10">
-                    <span className="text-gray-400 font-cinzel text-sm">Total</span>
-                    <span className="font-cinzel font-bold text-palacio-gold text-2xl">${cartTotal.toFixed(2)}</span>
+                  <div className="flex justify-between items-center pt-3 border-t border-white/[0.08]">
+                    <span className="text-palacio-alabaster/60 font-cinzel text-xs tracking-wider uppercase">Estimated Total</span>
+                    <span className="font-cinzel font-bold text-palacio-bronze text-2xl">${cartTotal.toFixed(2)}</span>
                   </div>
                 </div>
               </>
@@ -698,13 +698,13 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
           </div>
 
           {!orderSuccess && cart.length > 0 && (
-            <div className="absolute bottom-0 left-0 right-0 p-6 bg-[#0f0f0f] border-t border-white/10">
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-palacio-obsidian border-t border-white/[0.08]">
               <button
                 onClick={handleCheckout}
                 disabled={cart.length === 0}
-                className="w-full py-4 bg-palacio-gold text-palacio-black rounded-xl font-cinzel text-sm font-bold hover:bg-white disabled:opacity-50 smooth-transition shadow-xl shadow-palacio-gold/20 flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold tracking-widest uppercase hover:bg-palacio-alabaster disabled:opacity-50 smooth-transition shadow-xl flex items-center justify-center gap-2"
               >
-                <ShoppingCart size={18} />
+                <ShoppingCart size={16} />
                 Place Order — ${cartTotal.toFixed(2)}
               </button>
             </div>
@@ -714,9 +714,9 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
 
       {addedItemId && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
-          <div className="px-6 py-3 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-xs font-bold shadow-2xl shadow-palacio-gold/30 flex items-center gap-2">
-            <Plus size={16} />
-            Item added to your tray
+          <div className="px-5 py-2.5 bg-palacio-bronze text-palacio-obsidian rounded-full font-cinzel text-xs font-semibold tracking-wider shadow-2xl flex items-center gap-2">
+            <Plus size={14} />
+            Item added to your selection
           </div>
         </div>
       )}
