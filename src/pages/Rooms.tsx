@@ -11,6 +11,7 @@ import GlassCard from '../components/GlassCard';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusBadge from '../components/StatusBadge';
+import { handleImageFallback } from '../lib/images';
 
 interface RoomsProps {
   userId?: string;
@@ -271,7 +272,12 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
           <div className="flex gap-2">
             {compareList.map(room => (
               <div key={room.id} className="relative w-12 h-12 rounded-lg overflow-hidden border border-palacio-gold/30">
-                <img src={room.image_url} className="w-full h-full object-cover" />
+                <img 
+                  src={room.image_url} 
+                  alt={room.name}
+                  onError={(e) => handleImageFallback(e, 'room')}
+                  className="w-full h-full object-cover" 
+                />
                 <button 
                   onClick={() => setCompareList(prev => prev.filter(r => r.id !== room.id))}
                   className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px]"
@@ -439,6 +445,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                             <img
                               src={item.image_url}
                               alt={item.name}
+                              onError={(e) => handleImageFallback(e, item.type === 'cottage' ? 'cottage' : 'room')}
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
@@ -597,7 +604,12 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
         {quickViewRoom && (
           <div className="grid md:grid-cols-2 gap-6">
             <div className="rounded-xl overflow-hidden">
-              <img src={quickViewRoom.image_url} className="w-full h-64 md:h-full object-cover" />
+              <img 
+                src={quickViewRoom.image_url} 
+                alt={quickViewRoom.name}
+                onError={(e) => handleImageFallback(e, 'room')}
+                className="w-full h-64 md:h-full object-cover" 
+              />
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-start">
@@ -663,7 +675,12 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                 <th className="text-left py-4 px-4 text-gray-400 font-cinzel text-xs">Feature</th>
                 {compareList.map(room => (
                   <th key={room.id} className="py-4 px-4 text-center min-w-[200px]">
-                    <img src={room.image_url} className="w-full h-32 object-cover rounded-lg mb-2" />
+                    <img 
+                      src={room.image_url} 
+                      alt={room.name}
+                      onError={(e) => handleImageFallback(e, 'room')}
+                      className="w-full h-32 object-cover rounded-lg mb-2" 
+                    />
                     <p className="text-palacio-gold font-playfair text-sm">{room.name}</p>
                   </th>
                 ))}
@@ -772,7 +789,12 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
             {/* Room Summary */}
             {selectedRoom && (
               <div className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                <img src={selectedRoom.image_url} className="w-20 h-20 rounded-lg object-cover" />
+                <img 
+                  src={selectedRoom.image_url} 
+                  alt={selectedRoom.name}
+                  onError={(e) => handleImageFallback(e, 'room')}
+                  className="w-20 h-20 rounded-lg object-cover" 
+                />
                 <div>
                   <h4 className="text-palacio-gold font-playfair">{selectedRoom.name}</h4>
                   <p className="text-gray-400 text-xs">${selectedRoom.price_per_night}/night • {selectedRoom.capacity} guests</p>

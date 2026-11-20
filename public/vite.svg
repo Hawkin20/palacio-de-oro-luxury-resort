@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="palacioGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5E6BE" />
+      <stop offset="50%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#997A15" />
+    </linearGradient>
+    <linearGradient id="darkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141414" />
+      <stop offset="100%" stop-color="#080808" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="url(#darkBg)" stroke="url(#palacioGold)" stroke-width="2"/>
+  <circle cx="50" cy="50" r="38" fill="none" stroke="url(#palacioGold)" stroke-width="1" stroke-dasharray="2,3"/>
+  <text x="50" y="65" font-family="'Cinzel', 'Playfair Display', serif" font-size="44" font-weight="700" fill="url(#palacioGold)" text-anchor="middle">P</text>
+</svg>

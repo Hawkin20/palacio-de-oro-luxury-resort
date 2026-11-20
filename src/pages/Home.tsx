@@ -8,6 +8,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
+import { handleImageFallback } from '../lib/images';
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 interface HomeProps {
@@ -371,24 +372,6 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-palacio-black">
-      {/* Announcement Bar */}
-      <motion.div 
-        className="sticky top-0 z-50 bg-gradient-to-r from-palacio-gold via-yellow-500 to-palacio-gold text-palacio-black py-2.5 px-4 text-center font-cinzel shadow-lg"
-        initial={{ y: -50 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Sparkles size={16} />
-          <span className="font-bold text-sm md:text-base">SUMMER EXCLUSIVE:</span>
-          <span className="text-sm hidden sm:inline">Book 3 nights, get the 4th FREE + complimentary spa session</span>
-          <div className="flex items-center gap-1.5 bg-palacio-black/20 px-3 py-1 rounded-full text-xs font-mono">
-            <Clock size={12} />
-            <span>{countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s</span>
-          </div>
-        </div>
-      </motion.div>
-
       {/* ===== HERO SECTION ===== */}
       <motion.div 
         ref={heroRef}
@@ -901,6 +884,7 @@ export default function Home({ onNavigate }: HomeProps) {
                     <img 
                       src={testimonials[activeTestimonial].avatar} 
                       alt={testimonials[activeTestimonial].name} 
+                      onError={(e) => handleImageFallback(e, 'avatar')}
                       className="w-16 h-16 rounded-full object-cover border-2 border-palacio-gold/50"
                       loading="lazy"
                     />
@@ -955,6 +939,7 @@ export default function Home({ onNavigate }: HomeProps) {
                   <img 
                     src={photo.url} 
                     alt={`Instagram ${photo.id}`} 
+                    onError={(e) => handleImageFallback(e, 'poolOcean')}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"
                   />

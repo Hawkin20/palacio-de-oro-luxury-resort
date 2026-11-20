@@ -130,6 +130,6 @@ export default defineConfig({
     sourcemap: false,
   },
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    include: ['lucide-react'],
   },
 });

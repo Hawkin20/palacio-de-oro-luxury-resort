@@ -17,8 +17,30 @@ function App() {
   const [userId, setUserId] = useState<string>();
   const [userEmail, setUserEmail] = useState<string>();
   const [userName, setUserName] = useState<string>();
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showAuth, setShowAuth] = useState(false);
+
+  const fetchRole = async (uid: string, email?: string) => {
+    if (email === 'vincentecaldre25@gmail.com') {
+      setUserRole('admin');
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', uid)
+        .single();
+      if (!error && data?.role) {
+        setUserRole(data.role);
+      } else {
+        setUserRole('guest');
+      }
+    } catch {
+      setUserRole('guest');
+    }
+  };
 
   useEffect(() => {
     checkAuth();
@@ -29,11 +51,13 @@ function App() {
           setUserId(session.user.id);
           setUserEmail(session.user.email);
           setUserName(session.user.user_metadata?.full_name);
+          fetchRole(session.user.id, session.user.email);
         } else {
           setIsLoggedIn(false);
           setUserId(undefined);
           setUserEmail(undefined);
           setUserName(undefined);
+          setUserRole(null);
         }
       }
     );
@@ -49,6 +73,7 @@ function App() {
       setUserId(session.user.id);
       setUserEmail(session.user.email);
       setUserName(session.user.user_metadata?.full_name);
+      fetchRole(session.user.id, session.user.email);
     }
   };
 
@@ -58,6 +83,7 @@ function App() {
     setUserId(undefined);
     setUserEmail(undefined);
     setUserName(undefined);
+    setUserRole(null);
     setCurrentPage('home');
   };
 
@@ -74,7 +100,7 @@ function App() {
       case 'contact':
         return <Contact />;
       case 'admin':
-        return <Admin isLoggedIn={isLoggedIn} />;
+        return <Admin isLoggedIn={isLoggedIn} userRole={userRole} />;
       case 'profile':
         return <Profile />;
       default:
@@ -97,6 +123,7 @@ function App() {
         onShowAuth={() => setShowAuth(true)}
         userEmail={userEmail}
         userName={userName}
+        userRole={userRole}
       />
       <main className="flex-1">
         {renderPage()}
