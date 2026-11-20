@@ -233,25 +233,25 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-palacio-black" />
       
       <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-palacio-gold/10 border border-palacio-gold/30 rounded-full px-4 py-1.5 mb-6 animate-fade-in">
-          <Sparkles size={14} className="text-palacio-gold" />
-          <span className="text-palacio-gold text-xs font-cinzel tracking-widest">LUXURY ACCOMMODATIONS</span>
+        <div className="inline-flex items-center gap-2.5 bg-black/40 border border-white/10 rounded-full px-5 py-2 mb-6 animate-fade-in backdrop-blur-md">
+          <Sparkles size={14} className="text-palacio-bronze" />
+          <span className="text-palacio-alabaster/90 text-[11px] font-cinzel tracking-[0.25em] uppercase">ESTATE & SANCTUARY SUITES</span>
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-playfair text-palacio-gold mb-4 drop-shadow-2xl animate-slide-up">
+        <h1 className="text-5xl md:text-7xl font-playfair font-normal text-palacio-alabaster mb-4 drop-shadow-2xl animate-slide-up">
           Accommodations
         </h1>
         
-        <p className="text-lg md:text-xl text-white/80 font-poppins italic mb-8 animate-slide-up-delay">
-          From majestic villas to cozy beachside cottages, discover your perfect sanctuary under the golden sun.
+        <p className="text-base md:text-lg text-palacio-alabaster/70 font-poppins font-light italic mb-8 max-w-xl mx-auto leading-relaxed animate-slide-up-delay">
+          From majestic private villas to serene beachside cottages, discover your quiet sanctuary under the golden sun.
         </p>
 
         {/* Trust badges */}
         <div className="flex flex-wrap justify-center gap-6 md:gap-10 animate-fade-in">
           {featuredAmenities.map((item, i) => (
-            <div key={i} className="flex items-center gap-2 text-white/60">
-              <span className="text-palacio-gold">{item.icon}</span>
-              <span className="text-xs font-cinzel">{item.label}</span>
+            <div key={i} className="flex items-center gap-2 text-palacio-alabaster/60">
+              <span className="text-palacio-bronze">{item.icon}</span>
+              <span className="text-xs font-cinzel tracking-wider">{item.label}</span>
             </div>
           ))}
         </div>
@@ -264,23 +264,23 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
     if (compareList.length === 0) return null;
     
     return (
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-palacio-black/95 border border-palacio-gold/30 rounded-2xl px-6 py-4 shadow-gold-glow-lg backdrop-blur-xl animate-slide-up">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#080808]/95 border border-white/[0.12] rounded-xl px-6 py-4 shadow-2xl backdrop-blur-xl animate-slide-up">
         <div className="flex items-center gap-6">
-          <span className="text-palacio-gold font-cinzel text-sm">
-            Compare ({compareList.length}/3)
+          <span className="text-palacio-bronze font-cinzel text-xs tracking-wider">
+            COMPARE ({compareList.length}/3)
           </span>
           <div className="flex gap-2">
             {compareList.map(room => (
-              <div key={room.id} className="relative w-12 h-12 rounded-lg overflow-hidden border border-palacio-gold/30">
+              <div key={room.id} className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/20">
                 <img 
                   src={room.image_url} 
                   alt={room.name}
-                  onError={(e) => handleImageFallback(e, 'room')}
+                  onError={(e) => handleImageFallback(e, room.name, room.type)}
                   className="w-full h-full object-cover" 
                 />
                 <button 
                   onClick={() => setCompareList(prev => prev.filter(r => r.id !== room.id))}
-                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px]"
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center text-white text-[10px]"
                 >
                   <X size={10} />
                 </button>
@@ -289,13 +289,13 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
           </div>
           <button 
             onClick={() => setShowCompare(true)}
-            className="px-6 py-2 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-xs font-bold hover:bg-white transition-colors"
+            className="px-5 py-2 bg-palacio-bronze text-palacio-obsidian rounded-md font-cinzel text-xs font-semibold tracking-wider uppercase hover:bg-palacio-gold transition-colors"
           >
             Compare Now
           </button>
           <button 
             onClick={() => setCompareList([])}
-            className="text-gray-500 hover:text-white text-xs"
+            className="text-gray-400 hover:text-white text-xs font-cinzel tracking-wider"
           >
             Clear
           </button>
@@ -332,15 +332,15 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                 <button
                   key={btn.value}
                   onClick={() => setFilter(btn.value)}
-                  className={`relative px-6 py-2.5 rounded-full font-cinzel text-xs tracking-widest transition-all duration-300 border ${
+                  className={`relative px-5 py-2.5 rounded-full font-cinzel text-xs tracking-wider transition-all duration-300 border ${
                     filter === btn.value
-                      ? 'bg-palacio-gold text-palacio-black border-palacio-gold shadow-gold-glow'
-                      : 'bg-white/5 text-palacio-gold border-palacio-gold/30 hover:bg-palacio-gold/20 hover:border-palacio-gold/60'
+                      ? 'bg-palacio-bronze text-palacio-obsidian font-semibold border-palacio-bronze shadow-md'
+                      : 'bg-white/[0.03] text-palacio-alabaster/70 border-white/[0.08] hover:border-palacio-bronze/40 hover:text-palacio-alabaster'
                   }`}
                 >
                   {btn.label}
                   <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[10px] ${
-                    filter === btn.value ? 'bg-palacio-black/20' : 'bg-white/10'
+                    filter === btn.value ? 'bg-black/20' : 'bg-white/10'
                   }`}>
                     {btn.count}
                   </span>
@@ -352,13 +352,13 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
             <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
               {/* Search */}
               <div className="relative flex-1 sm:flex-initial">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-gold/60" />
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-palacio-bronze/60" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search accommodations..."
-                  className="w-full sm:w-64 pl-11 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:border-palacio-gold/50 focus:outline-none focus:bg-white/10 transition-all"
+                  className="w-full sm:w-64 pl-11 pr-10 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-palacio-alabaster placeholder-gray-500 focus:border-palacio-bronze/50 focus:outline-none transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -374,11 +374,11 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-gray-300 focus:border-palacio-gold/50 focus:outline-none cursor-pointer hover:bg-white/10 transition-all"
+                className="px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-sm text-palacio-alabaster/80 focus:border-palacio-bronze/50 focus:outline-none cursor-pointer hover:bg-white/[0.06] transition-all font-cinzel text-xs tracking-wider"
               >
-                <option value="popular">Sort by: Popular</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
+                <option value="popular" className="bg-[#080808]">Sort by: Popular</option>
+                <option value="price-asc" className="bg-[#080808]">Price: Low to High</option>
+                <option value="price-desc" className="bg-[#080808]">Price: High to Low</option>
               </select>
             </div>
           </div>
@@ -431,9 +431,9 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                         onMouseEnter={() => setHoveredCard(item.id)}
                         onMouseLeave={() => setHoveredCard(null)}
                       >
-                        <GlassCard
-                          className={`overflow-hidden transition-all duration-500 flex flex-col h-full cursor-pointer ${
-                            isHovered ? 'border-palacio-gold/50 shadow-gold-glow' : ''
+                        <div
+                          className={`overflow-hidden transition-all duration-500 flex flex-col h-full rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08] cursor-pointer hover:border-palacio-bronze/50 hover:shadow-2xl ${
+                            isHovered ? 'border-palacio-bronze/50 shadow-[0_15px_40px_rgba(197,168,128,0.12)] -translate-y-1' : ''
                           }`}
                           onClick={() => {
                             setSelectedRoom(item);
@@ -445,8 +445,8 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                             <img
                               src={item.image_url}
                               alt={item.name}
-                              onError={(e) => handleImageFallback(e, item.type === 'cottage' ? 'cottage' : 'room')}
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                              onError={(e) => handleImageFallback(e, item.name, item.type)}
+                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
                             
@@ -454,7 +454,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                             <div className="absolute top-4 left-4 flex gap-2">
                               <StatusBadge status={item.status} size="sm" />
                               {item.status === 'available' && (
-                                <span className="px-2 py-1 bg-green-500/80 text-white text-[10px] font-cinzel rounded-full animate-pulse-slow">
+                                <span className="px-2.5 py-1 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-cinzel rounded-full">
                                   AVAILABLE NOW
                                 </span>
                               )}
@@ -464,58 +464,51 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                             <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
                               <button
                                 onClick={(e) => toggleFavorite(e, item.id)}
-                                className={`w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all ${
-                                  isFav ? 'bg-red-500 text-white' : 'bg-black/50 text-white hover:bg-palacio-gold hover:text-palacio-black'
+                                className={`w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all ${
+                                  isFav ? 'bg-rose-500 text-white' : 'bg-black/60 border border-white/20 text-white hover:border-palacio-bronze hover:text-palacio-bronze'
                                 }`}
                               >
-                                <Heart size={18} fill={isFav ? 'currentColor' : 'none'} />
+                                <Heart size={15} fill={isFav ? 'currentColor' : 'none'} />
                               </button>
                               <button
                                 onClick={(e) => openQuickView(e, item)}
-                                className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md text-white flex items-center justify-center hover:bg-palacio-gold hover:text-palacio-black transition-all"
+                                className="w-9 h-9 rounded-full bg-black/60 border border-white/20 backdrop-blur-md text-white flex items-center justify-center hover:border-palacio-bronze hover:text-palacio-bronze transition-all"
                               >
-                                <Info size={18} />
+                                <Info size={15} />
                               </button>
                               <button
                                 onClick={(e) => toggleCompare(e, item)}
-                                className={`w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all ${
-                                  isCompared ? 'bg-palacio-gold text-palacio-black' : 'bg-black/50 text-white hover:bg-palacio-gold hover:text-palacio-black'
+                                className={`w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all ${
+                                  isCompared ? 'bg-palacio-bronze text-palacio-obsidian font-bold' : 'bg-black/60 border border-white/20 text-white hover:border-palacio-bronze hover:text-palacio-bronze'
                                 }`}
                               >
-                                <Check size={18} />
+                                <Check size={15} />
                               </button>
                             </div>
 
                             {/* Price Tag */}
                             <div className="absolute bottom-4 right-4 text-right">
-                              <p className="text-[10px] text-gray-400 uppercase font-cinzel tracking-tighter">Starts at</p>
-                              <p className="text-palacio-gold font-cinzel font-bold text-2xl drop-shadow-lg">
+                              <p className="text-[9px] text-palacio-alabaster/60 uppercase font-cinzel tracking-wider">Starts at</p>
+                              <p className="text-palacio-bronze font-cinzel font-bold text-2xl drop-shadow-lg">
                                 ${item.price_per_night}
-                                <span className="text-sm text-gray-400 font-normal">/night</span>
+                                <span className="text-xs text-palacio-alabaster/60 font-normal"> /night</span>
                               </p>
-                            </div>
-
-                            {/* Quick Book Button (hover) */}
-                            <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0">
-                              <span className="px-4 py-2 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-xs font-bold shadow-lg">
-                                Book Now →
-                              </span>
                             </div>
                           </div>
 
                           {/* Content */}
                           <div className="p-6 flex-grow flex flex-col">
                             <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-playfair text-xl text-white group-hover:text-palacio-gold transition-colors line-clamp-1">
+                              <h3 className="font-playfair text-xl text-palacio-alabaster group-hover:text-palacio-bronze transition-colors line-clamp-1">
                                 {item.name}
                               </h3>
                               <div className="flex items-center gap-1 text-yellow-400">
-                                <Star size={14} fill="currentColor" />
-                                <span className="text-xs font-bold">4.9</span>
+                                <Star size={13} fill="currentColor" />
+                                <span className="text-xs font-bold text-palacio-alabaster/90">4.9</span>
                               </div>
                             </div>
                             
-                            <p className="text-gray-400 text-xs mb-4 line-clamp-2 italic leading-relaxed">
+                            <p className="text-palacio-alabaster/60 text-xs mb-4 line-clamp-2 italic leading-relaxed font-light">
                               {item.description}
                             </p>
 
@@ -524,32 +517,37 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                               {item.amenities?.slice(0, 4).map((amenity: string) => (
                                 <span 
                                   key={amenity} 
-                                  className="flex items-center gap-1.5 text-[10px] font-cinzel tracking-wider bg-white/5 text-gray-400 px-3 py-1.5 rounded-full border border-white/10 hover:border-palacio-gold/30 transition-colors"
+                                  className="flex items-center gap-1.5 text-[10px] font-cinzel tracking-wider bg-white/[0.04] text-palacio-alabaster/70 px-3 py-1.5 rounded-full border border-white/[0.08] hover:border-palacio-bronze/40 transition-colors"
                                 >
-                                  {amenityIcons[amenity.toLowerCase()] || <Sparkles size={12} />}
+                                  {amenityIcons[amenity.toLowerCase()] || <Sparkles size={11} />}
                                   {amenity}
                                 </span>
                               ))}
                             </div>
 
                             {/* Footer Info */}
-                            <div className="mt-auto pt-4 border-t border-white/5">
+                            <div className="mt-auto pt-4 border-t border-white/[0.08]">
                               <div className="flex justify-between items-center mb-4">
                                 <div className="flex items-center gap-4">
-                                  <span className="flex items-center gap-1.5 text-gray-400 text-xs">
-                                    <Users size={14} className="text-palacio-gold" />
+                                  <span className="flex items-center gap-1.5 text-palacio-alabaster/60 text-xs">
+                                    <Users size={14} className="text-palacio-bronze" />
                                     {item.capacity} Guests
                                   </span>
-                                  <span className="flex items-center gap-1.5 text-gray-400 text-xs">
-                                    <MapPin size={14} className="text-palacio-gold" />
-                                    {item.type === 'room' ? 'Ocean View' : 'Garden'}
+                                  <span className="flex items-center gap-1.5 text-palacio-alabaster/60 text-xs">
+                                    <MapPin size={14} className="text-palacio-bronze" />
+                                    {item.type === 'room' ? 'Ocean View' : 'Garden Sanctuary'}
                                   </span>
                                 </div>
                               </div>
 
                               <button
                                 disabled={item.status !== 'available'}
-                                className="w-full py-3.5 bg-palacio-gold text-palacio-black rounded-xl font-cinzel text-xs font-bold tracking-widest hover:bg-white transition-all shadow-lg shadow-palacio-gold/10 disabled:opacity-30 disabled:cursor-not-allowed group/btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedRoom(item);
+                                  setShowBookingModal(true);
+                                }}
+                                className="w-full py-3.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold tracking-[0.2em] uppercase hover:bg-palacio-gold transition-all duration-300 shadow-md shadow-palacio-bronze/10 disabled:opacity-30 disabled:cursor-not-allowed group/btn"
                               >
                                 <span className="flex items-center justify-center gap-2">
                                   {item.status === 'available' ? (
@@ -564,7 +562,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                               </button>
                             </div>
                           </div>
-                        </GlassCard>
+                        </div>
                       </div>
                     );
                   })
@@ -607,30 +605,30 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
               <img 
                 src={quickViewRoom.image_url} 
                 alt={quickViewRoom.name}
-                onError={(e) => handleImageFallback(e, 'room')}
+                onError={(e) => handleImageFallback(e, quickViewRoom.name, quickViewRoom.type)}
                 className="w-full h-64 md:h-full object-cover" 
               />
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-2xl font-playfair text-palacio-gold">{quickViewRoom.name}</h3>
+                  <h3 className="text-2xl font-playfair text-palacio-alabaster">{quickViewRoom.name}</h3>
                   <p className="text-gray-400 text-sm italic">{quickViewRoom.description}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-playfair text-palacio-gold">${quickViewRoom.price_per_night}</p>
+                  <p className="text-3xl font-playfair text-palacio-bronze">${quickViewRoom.price_per_night}</p>
                   <p className="text-gray-500 text-xs">per night</p>
                 </div>
               </div>
 
               <div className="flex gap-4 text-sm text-gray-400">
-                <span className="flex items-center gap-1"><Users size={14} className="text-palacio-gold" /> {quickViewRoom.capacity} Guests</span>
+                <span className="flex items-center gap-1"><Users size={14} className="text-palacio-bronze" /> {quickViewRoom.capacity} Guests</span>
                 <span className="flex items-center gap-1"><Star size={14} className="text-yellow-400" /> 4.9 (128 reviews)</span>
               </div>
 
               <div className="flex flex-wrap gap-2">
                 {quickViewRoom.amenities?.map((a: string) => (
-                  <span key={a} className="text-xs bg-white/5 text-gray-300 px-3 py-1.5 rounded-full border border-white/10">
+                  <span key={a} className="text-xs bg-white/5 text-gray-300 px-3 py-1.5 rounded-full border border-white/10 font-cinzel text-[10px]">
                     {a}
                   </span>
                 ))}
@@ -643,15 +641,15 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                     setSelectedRoom(quickViewRoom);
                     setShowBookingModal(true);
                   }}
-                  className="flex-1 py-3 bg-palacio-gold text-palacio-black rounded-xl font-cinzel font-bold text-sm hover:bg-white transition-colors"
+                  className="flex-1 py-3.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel font-semibold text-xs tracking-[0.2em] uppercase hover:bg-palacio-gold transition-colors"
                 >
-                  Book Now
+                  Reserve Suite
                 </button>
                 <button
                   onClick={() => toggleCompare({ stopPropagation: () => {} } as any, quickViewRoom)}
-                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-300 hover:border-palacio-gold/50 transition-colors"
+                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-gray-300 hover:border-palacio-bronze/50 transition-colors"
                 >
-                  <Check size={20} />
+                  <Check size={18} />
                 </button>
               </div>
             </div>
@@ -678,40 +676,40 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                     <img 
                       src={room.image_url} 
                       alt={room.name}
-                      onError={(e) => handleImageFallback(e, 'room')}
+                      onError={(e) => handleImageFallback(e, room.name, room.type)}
                       className="w-full h-32 object-cover rounded-lg mb-2" 
                     />
-                    <p className="text-palacio-gold font-playfair text-sm">{room.name}</p>
+                    <p className="text-palacio-alabaster font-playfair text-sm">{room.name}</p>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="text-sm">
               <tr className="border-b border-white/5">
-                <td className="py-3 px-4 text-gray-400">Price/Night</td>
+                <td className="py-3 px-4 text-gray-400 font-cinzel text-xs">Price/Night</td>
                 {compareList.map(room => (
-                  <td key={room.id} className="py-3 px-4 text-center text-palacio-gold font-bold">${room.price_per_night}</td>
+                  <td key={room.id} className="py-3 px-4 text-center text-palacio-bronze font-bold font-cinzel">${room.price_per_night}</td>
                 ))}
               </tr>
               <tr className="border-b border-white/5">
-                <td className="py-3 px-4 text-gray-400">Capacity</td>
+                <td className="py-3 px-4 text-gray-400 font-cinzel text-xs">Capacity</td>
                 {compareList.map(room => (
                   <td key={room.id} className="py-3 px-4 text-center text-white">{room.capacity} Guests</td>
                 ))}
               </tr>
               <tr className="border-b border-white/5">
-                <td className="py-3 px-4 text-gray-400">Type</td>
+                <td className="py-3 px-4 text-gray-400 font-cinzel text-xs">Type</td>
                 {compareList.map(room => (
                   <td key={room.id} className="py-3 px-4 text-center text-white capitalize">{'room_type' in room ? 'Room' : 'Cottage'}</td>
                 ))}
               </tr>
               <tr className="border-b border-white/5">
-                <td className="py-3 px-4 text-gray-400">Amenities</td>
+                <td className="py-3 px-4 text-gray-400 font-cinzel text-xs">Amenities</td>
                 {compareList.map(room => (
                   <td key={room.id} className="py-3 px-4 text-center">
                     <div className="flex flex-wrap justify-center gap-1">
                       {room.amenities?.slice(0, 3).map((a: string) => (
-                        <span key={a} className="text-[10px] bg-white/5 px-2 py-1 rounded-full">{a}</span>
+                        <span key={a} className="text-[10px] bg-white/5 px-2 py-1 rounded-full font-cinzel">{a}</span>
                       ))}
                     </div>
                   </td>
@@ -727,7 +725,7 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
                         setSelectedRoom(room);
                         setShowBookingModal(true);
                       }}
-                      className="px-6 py-2 bg-palacio-gold text-palacio-black rounded-full font-cinzel text-xs font-bold hover:bg-white transition-colors"
+                      className="px-6 py-2 bg-palacio-bronze text-palacio-obsidian rounded-md font-cinzel text-xs font-semibold tracking-wider uppercase hover:bg-palacio-gold transition-colors"
                     >
                       Book This
                     </button>
