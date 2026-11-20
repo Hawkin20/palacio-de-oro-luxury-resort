@@ -14,6 +14,7 @@ import {
 interface BookingsProps {
   userId?: string;
   isLoggedIn: boolean;
+  onNavigate?: (page: string) => void;
 }
 
 const STATUS_CONFIG: Record<string, { 
@@ -24,36 +25,36 @@ const STATUS_CONFIG: Record<string, {
   label: string;
 }> = {
   pending: { 
-    color: 'text-amber-400', 
-    bg: 'bg-amber-400/10', 
-    border: 'border-amber-400/20',
+    color: 'text-amber-300', 
+    bg: 'bg-amber-500/10', 
+    border: 'border-amber-500/20',
     icon: Timer,
-    label: 'Pending'
+    label: 'Pending Confirmation'
   },
   confirmed: { 
     color: 'text-emerald-400', 
-    bg: 'bg-emerald-400/10', 
-    border: 'border-emerald-400/20',
+    bg: 'bg-emerald-500/10', 
+    border: 'border-emerald-500/20',
     icon: CheckCircle2,
     label: 'Confirmed'
   },
   completed: { 
-    color: 'text-blue-400', 
-    bg: 'bg-blue-400/10', 
-    border: 'border-blue-400/20',
+    color: 'text-palacio-bronze', 
+    bg: 'bg-palacio-bronze/10', 
+    border: 'border-palacio-bronze/20',
     icon: CheckCircle2,
     label: 'Completed'
   },
   cancelled: { 
-    color: 'text-red-400', 
-    bg: 'bg-red-400/10', 
-    border: 'border-red-400/20',
+    color: 'text-rose-400', 
+    bg: 'bg-rose-500/10', 
+    border: 'border-rose-500/20',
     icon: XCircle,
     label: 'Cancelled'
   },
 };
 
-export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
+export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsProps) {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,32 +118,32 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
   const getStayDuration = (checkIn: string, checkOut: string) => {
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const nights = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
     return nights;
   };
 
   if (!isLoggedIn) {
     return (
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0a]">
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-palacio-obsidian">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{ 
             backgroundImage: 'url("https://images.unsplash.com/photo-1544124499-58912cbddaad?auto=format&fit=crop&q=80")',
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-transparent to-[#0a0a0a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-palacio-obsidian via-transparent to-palacio-obsidian" />
         
-        <GlassCard className="relative z-10 p-10 text-center max-w-md border border-palacio-gold/30 backdrop-blur-xl">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-palacio-gold/10 flex items-center justify-center">
-            <Home size={28} className="text-palacio-gold" />
+        <GlassCard className="relative z-10 p-10 text-center max-w-md border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-palacio-bronze/10 border border-palacio-bronze/30 flex items-center justify-center">
+            <Home size={28} className="text-palacio-bronze" />
           </div>
-          <h2 className="font-playfair text-3xl text-palacio-gold mb-3">
-            Welcome Back
+          <h2 className="font-playfair text-3xl text-palacio-alabaster mb-3">
+            Welcome to Palacio de Oro
           </h2>
-          <p className="text-gray-400 mb-6 leading-relaxed">
-            Please log in to view your reservations and order history.
+          <p className="text-palacio-alabaster/70 mb-6 leading-relaxed font-light text-sm">
+            Please sign in to view your reservation details and private resort requests.
           </p>
-          <div className="w-16 h-0.5 bg-palacio-gold/30 mx-auto rounded-full" />
+          <div className="w-16 h-px bg-palacio-bronze/40 mx-auto" />
         </GlassCard>
       </div>
     );
@@ -152,44 +153,44 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
   const hasContent = bookings.length > 0 || standaloneOrders.length > 0;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a]">
+    <div className="relative min-h-screen overflow-hidden bg-palacio-obsidian">
       {/* Hero Section */}
-      <div className="relative h-[40vh] min-h-[350px] w-full overflow-hidden">
+      <div className="relative h-[45vh] min-h-[360px] w-full overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{ 
             backgroundImage: 'url("https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80")',
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#0a0a0a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-palacio-obsidian" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80" />
         
         <div className="relative z-10 h-full flex flex-col justify-center items-center text-center px-4 pt-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-palacio-gold/10 border border-palacio-gold/30 rounded-full mb-6 backdrop-blur-sm">
-            <ClipboardCheck size={16} className="text-palacio-gold" />
-            <span className="text-palacio-gold font-cinzel text-xs tracking-[0.3em] uppercase">Guest Portal</span>
+          <div className="inline-flex items-center gap-2.5 px-5 py-2 bg-black/40 border border-white/10 rounded-full mb-6 backdrop-blur-md">
+            <ClipboardCheck size={14} className="text-palacio-bronze" />
+            <span className="text-palacio-alabaster/90 font-cinzel text-[11px] tracking-[0.25em] uppercase">Guest Sanctuary Portal</span>
           </div>
           
-          <h1 className="font-playfair text-5xl md:text-6xl text-palacio-gold mb-4 drop-shadow-2xl">
+          <h1 className="font-playfair font-normal text-5xl md:text-6xl text-palacio-alabaster mb-4 drop-shadow-2xl">
             My Reservations
           </h1>
-          <p className="text-gray-300 font-poppins text-lg italic max-w-xl">
-            Your journey at Palacio de Oro, all in one place
+          <p className="text-palacio-alabaster/70 font-poppins text-base md:text-lg italic max-w-xl font-light">
+            A chronicle of your stays, culinary orders, and experiences at Palacio de Oro.
           </p>
           
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 mt-8 text-sm font-cinzel tracking-wider">
-            <div className="flex items-center gap-2 text-palacio-gold">
-              <BedDouble size={16} />
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10 mt-8 text-xs font-cinzel tracking-wider">
+            <div className="flex items-center gap-2 text-palacio-bronze">
+              <BedDouble size={14} />
               <span>{bookings.length} {bookings.length === 1 ? 'Stay' : 'Stays'}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-400">
-              <UtensilsCrossed size={16} />
+            <div className="flex items-center gap-2 text-palacio-alabaster/60">
+              <UtensilsCrossed size={14} />
               <span>{orders.length} {orders.length === 1 ? 'Order' : 'Orders'}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-400">
-              <Sparkles size={16} />
-              <span>VIP Guest</span>
+            <div className="flex items-center gap-2 text-palacio-alabaster/60">
+              <Sparkles size={14} className="text-palacio-bronze" />
+              <span>Sanctuary Guest</span>
             </div>
           </div>
         </div>
@@ -199,24 +200,24 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
         {/* Filter Tabs */}
         {hasContent && (
           <div className="flex justify-center mb-10">
-            <div className="inline-flex bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-sm">
+            <div className="inline-flex bg-white/[0.03] border border-white/[0.08] rounded-full p-1.5 backdrop-blur-md">
               {[
                 { key: 'all', label: 'All Activity', count: bookings.length + standaloneOrders.length },
                 { key: 'bookings', label: 'Stays', count: bookings.length },
-                { key: 'orders', label: 'Orders', count: standaloneOrders.length },
+                { key: 'orders', label: 'Culinary Orders', count: standaloneOrders.length },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`px-6 py-2.5 rounded-full font-cinzel text-xs tracking-wider smooth-transition flex items-center gap-2 ${
+                  className={`px-5 py-2 rounded-full font-cinzel text-xs tracking-wider smooth-transition flex items-center gap-2 border ${
                     activeTab === tab.key
-                      ? 'bg-palacio-gold text-palacio-black shadow-lg shadow-palacio-gold/20'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'bg-palacio-bronze text-palacio-obsidian font-semibold border-palacio-bronze shadow-md'
+                      : 'border-transparent text-palacio-alabaster/70 hover:text-palacio-alabaster hover:bg-white/[0.04]'
                   }`}
                 >
                   {tab.label}
                   <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                    activeTab === tab.key ? 'bg-palacio-black/20' : 'bg-white/10'
+                    activeTab === tab.key ? 'bg-palacio-obsidian/20' : 'bg-white/10'
                   }`}>
                     {tab.count}
                   </span>
@@ -232,15 +233,22 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
           </div>
         ) : !hasContent ? (
           /* Empty State */
-          <div className="text-center py-20">
-            <div className="w-24 h-24 mx-auto mb-8 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-              <BedDouble size={40} className="text-gray-600" />
+          <div className="text-center py-20 px-4">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/[0.03] border border-white/[0.08] flex items-center justify-center">
+              <BedDouble size={32} className="text-palacio-alabaster/40" />
             </div>
-            <h3 className="font-playfair text-2xl text-gray-400 mb-3">No Bookings Yet</h3>
-            <p className="text-gray-500 font-poppins italic mb-8 max-w-md mx-auto">
-              Your summer story at Palacio de Oro starts here. Explore our luxury accommodations and begin your journey.
+            <h3 className="font-playfair text-2xl text-palacio-alabaster mb-3">No Reservations Recorded</h3>
+            <p className="text-palacio-alabaster/60 font-poppins text-sm italic mb-8 max-w-md mx-auto font-light">
+              Your private island sanctuary awaits. Discover our collection of oceanfront villas and private suites.
             </p>
-            <div className="w-24 h-0.5 bg-palacio-gold/30 mx-auto rounded-full" />
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('rooms')}
+                className="px-6 py-3 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold tracking-wider uppercase hover:bg-palacio-gold transition-colors shadow-lg"
+              >
+                Explore Accommodations
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-6 pb-20">
@@ -255,7 +263,7 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
               return (
                 <div 
                   key={booking.id} 
-                  className="group relative overflow-hidden rounded-2xl bg-white/[0.03] border border-white/10 hover:border-palacio-gold/30 transition-all duration-500"
+                  className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/40 transition-all duration-500 shadow-xl"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   {/* Status Ribbon */}
@@ -270,19 +278,19 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
                     {/* Header */}
                     <div className="flex items-start justify-between mb-6 pr-20">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-palacio-gold/10 border border-palacio-gold/20 flex items-center justify-center">
-                          <BedDouble size={24} className="text-palacio-gold" />
+                        <div className="w-12 h-12 rounded-xl bg-palacio-bronze/10 border border-palacio-bronze/20 flex items-center justify-center">
+                          <BedDouble size={22} className="text-palacio-bronze" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-playfair text-xl text-white">
-                              Booking #{booking.reference_number}
+                            <h3 className="font-playfair text-xl text-palacio-alabaster">
+                              Reservation #{booking.reference_number}
                             </h3>
                           </div>
-                          <p className="text-gray-500 text-xs font-cinzel tracking-wider">
-                            {booking.created_at ? new Date(booking.created_at).toLocaleDateString(undefined, { 
-                              month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                            }) : 'Just now'}
+                          <p className="text-palacio-alabaster/50 text-xs font-cinzel tracking-wider">
+                            Booked on {booking.created_at ? new Date(booking.created_at).toLocaleDateString(undefined, { 
+                              month: 'long', day: 'numeric', year: 'numeric' 
+                            }) : 'Recently'}
                           </p>
                         </div>
                       </div>
@@ -290,77 +298,77 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
 
                     {/* Main Info Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar size={14} className="text-palacio-gold/60" />
-                          <span className="text-gray-500 text-[10px] font-cinzel uppercase tracking-wider">Check-in</span>
+                      <div className="bg-white/[0.02] rounded-lg p-3.5 border border-white/[0.06]">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Calendar size={13} className="text-palacio-bronze/60" />
+                          <span className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Check-in</span>
                         </div>
-                        <p className="text-white font-poppins text-sm">
+                        <p className="text-palacio-alabaster font-mono text-sm">
                           {new Date(booking.check_in_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
                       
-                      <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar size={14} className="text-palacio-gold/60" />
-                          <span className="text-gray-500 text-[10px] font-cinzel uppercase tracking-wider">Check-out</span>
+                      <div className="bg-white/[0.02] rounded-lg p-3.5 border border-white/[0.06]">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Calendar size={13} className="text-palacio-bronze/60" />
+                          <span className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Check-out</span>
                         </div>
-                        <p className="text-white font-poppins text-sm">
+                        <p className="text-palacio-alabaster font-mono text-sm">
                           {new Date(booking.check_out_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </div>
                       
-                      <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Clock size={14} className="text-palacio-gold/60" />
-                          <span className="text-gray-500 text-[10px] font-cinzel uppercase tracking-wider">Duration</span>
+                      <div className="bg-white/[0.02] rounded-lg p-3.5 border border-white/[0.06]">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Clock size={13} className="text-palacio-bronze/60" />
+                          <span className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Duration</span>
                         </div>
-                        <p className="text-white font-poppins text-sm">
+                        <p className="text-palacio-alabaster font-cinzel text-sm">
                           {nights} {nights === 1 ? 'Night' : 'Nights'}
                         </p>
                       </div>
                       
-                      <div className="bg-black/20 rounded-xl p-4 border border-white/5">
-                        <div className="flex items-center gap-2 mb-2">
-                          <DollarSign size={14} className="text-palacio-gold/60" />
-                          <span className="text-gray-500 text-[10px] font-cinzel uppercase tracking-wider">Total</span>
+                      <div className="bg-white/[0.02] rounded-lg p-3.5 border border-white/[0.06]">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <DollarSign size={13} className="text-palacio-bronze/60" />
+                          <span className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider">Total</span>
                         </div>
-                        <p className="font-cinzel font-bold text-palacio-gold text-lg">
+                        <p className="font-cinzel font-bold text-palacio-bronze text-lg">
                           ${booking.total_price?.toFixed(2)}
                         </p>
                       </div>
                     </div>
 
                     {/* Guest & Payment Info */}
-                    <div className="flex flex-wrap items-center gap-6 mb-6 text-sm">
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <User size={14} className="text-palacio-gold/60" />
+                    <div className="flex flex-wrap items-center gap-6 mb-6 text-xs text-palacio-alabaster/70">
+                      <div className="flex items-center gap-2">
+                        <User size={13} className="text-palacio-bronze/60" />
                         <span>{booking.guest_count} {booking.guest_count === 1 ? 'Guest' : 'Guests'}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <CreditCard size={14} className="text-palacio-gold/60" />
+                      <div className="flex items-center gap-2">
+                        <CreditCard size={13} className="text-palacio-bronze/60" />
                         <span className="capitalize">{booking.payment_method}</span>
                       </div>
                       {booking.downpayment_amount > 0 && (
-                        <div className="flex items-center gap-2 text-palacio-gold">
-                          <Receipt size={14} />
-                          <span>Downpayment: ${booking.downpayment_amount.toFixed(2)}</span>
+                        <div className="flex items-center gap-2 text-palacio-bronze">
+                          <Receipt size={13} />
+                          <span>Deposit Paid: ${booking.downpayment_amount.toFixed(2)}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Expandable Orders Section */}
                     {bookingOrders.length > 0 && (
-                      <div className="border-t border-white/10 pt-4">
+                      <div className="border-t border-white/[0.08] pt-4">
                         <button
                           onClick={() => toggleExpand(booking.id)}
-                          className="flex items-center gap-2 text-palacio-gold hover:text-white transition-colors mb-4"
+                          className="flex items-center gap-2 text-palacio-bronze hover:text-palacio-alabaster transition-colors mb-4"
                         >
-                          <UtensilsCrossed size={16} />
+                          <UtensilsCrossed size={14} />
                           <span className="font-cinzel text-xs tracking-wider uppercase">
-                            Your Orders ({bookingOrders.length})
+                            Room Orders ({bookingOrders.length})
                           </span>
-                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </button>
 
                         <div className={`overflow-hidden transition-all duration-500 ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -372,26 +380,26 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
                               return (
                                 <div 
                                   key={order.order_id} 
-                                  className="flex items-center justify-between bg-black/30 rounded-xl p-4 border border-white/5 hover:border-palacio-gold/20 transition-colors"
+                                  className="flex items-center justify-between bg-black/40 rounded-lg p-3.5 border border-white/[0.06] hover:border-palacio-bronze/20 transition-colors"
                                 >
-                                  <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-palacio-gold/10 flex items-center justify-center">
-                                      <UtensilsCrossed size={18} className="text-palacio-gold" />
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-lg bg-palacio-bronze/10 flex items-center justify-center">
+                                      <UtensilsCrossed size={16} className="text-palacio-bronze" />
                                     </div>
                                     <div>
-                                      <p className="text-white font-poppins text-sm">{order.product_name}</p>
-                                      <p className="text-gray-500 text-xs capitalize">
+                                      <p className="text-palacio-alabaster font-poppins text-xs">{order.product_name}</p>
+                                      <p className="text-palacio-alabaster/50 text-[11px] capitalize">
                                         {order.category} × {order.quantity}
                                       </p>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-4">
-                                    <span className="font-cinzel font-bold text-palacio-gold">
+                                    <span className="font-cinzel font-bold text-palacio-bronze text-sm">
                                       ${order.total_amount?.toFixed(2)}
                                     </span>
-                                    <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${orderStatus.bg} ${orderStatus.border} border`}>
-                                      <OrderStatusIcon size={12} className={orderStatus.color} />
-                                      <span className={`text-[10px] font-cinzel font-bold uppercase ${orderStatus.color}`}>
+                                    <div className={`flex items-center gap-1 px-2.5 py-0.5 rounded-full ${orderStatus.bg} ${orderStatus.border} border`}>
+                                      <OrderStatusIcon size={10} className={orderStatus.color} />
+                                      <span className={`text-[9px] font-cinzel font-bold uppercase ${orderStatus.color}`}>
                                         {orderStatus.label}
                                       </span>
                                     </div>
@@ -405,23 +413,23 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
                     )}
 
                     {/* Footer */}
-                    <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/10">
+                    <div className="flex justify-between items-center mt-6 pt-4 border-t border-white/[0.08]">
                       <div className="flex items-center gap-2">
-                        <Package size={12} className="text-gray-600" />
-                        <span className="text-gray-600 text-[10px] font-mono">
-                          {booking.id.slice(0, 12)}...
+                        <Package size={12} className="text-palacio-alabaster/40" />
+                        <span className="text-palacio-alabaster/40 text-[10px] font-mono">
+                          ID: {booking.id.slice(0, 12)}...
                         </span>
                       </div>
                       {booking.status === 'pending' && (
-                        <div className="flex items-center gap-2 text-amber-400">
-                          <Loader2 size={14} className="animate-spin" />
-                          <span className="text-xs font-cinzel">Awaiting confirmation...</span>
+                        <div className="flex items-center gap-2 text-amber-300">
+                          <Loader2 size={13} className="animate-spin" />
+                          <span className="text-xs font-cinzel">Awaiting concierge confirmation...</span>
                         </div>
                       )}
                       {booking.status === 'confirmed' && (
                         <div className="flex items-center gap-2 text-emerald-400">
-                          <CheckCircle2 size={14} />
-                          <span className="text-xs font-cinzel">Ready for your stay</span>
+                          <CheckCircle2 size={13} />
+                          <span className="text-xs font-cinzel">Reservation confirmed — we await your arrival</span>
                         </div>
                       )}
                     </div>
@@ -435,29 +443,29 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
               <div className="pt-4">
                 {activeTab === 'all' && (
                   <div className="flex items-center gap-3 mb-8">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-palacio-gold/30 to-transparent" />
-                    <h2 className="font-cinzel text-palacio-gold text-sm tracking-[0.3em] uppercase whitespace-nowrap">
-                      Additional Orders
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-palacio-bronze/30 to-transparent" />
+                    <h2 className="font-cinzel text-palacio-bronze text-xs tracking-[0.3em] uppercase whitespace-nowrap">
+                      Culinary Dining Orders
                     </h2>
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-palacio-gold/30 to-transparent" />
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-palacio-bronze/30 to-transparent" />
                   </div>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {standaloneOrders.map((order, index) => {
+                  {standaloneOrders.map((order) => {
                     const orderStatus = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
                     const OrderStatusIcon = orderStatus.icon;
 
                     return (
                       <div 
                         key={order.order_id} 
-                        className="group relative overflow-hidden rounded-2xl bg-white/[0.03] border border-white/10 hover:border-palacio-gold/30 transition-all duration-500 hover:-translate-y-1"
+                        className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/30 transition-all duration-500"
                       >
                         {/* Status Badge */}
-                        <div className={`absolute top-0 right-0 px-3 py-1.5 rounded-bl-xl ${orderStatus.bg} ${orderStatus.border} border-b border-l`}>
+                        <div className={`absolute top-0 right-0 px-3 py-1 rounded-bl-xl ${orderStatus.bg} ${orderStatus.border} border-b border-l`}>
                           <div className="flex items-center gap-1.5">
                             <OrderStatusIcon size={10} className={orderStatus.color} />
-                            <span className={`font-cinzel text-[10px] font-bold uppercase ${orderStatus.color}`}>
+                            <span className={`font-cinzel text-[9px] font-bold uppercase ${orderStatus.color}`}>
                               {orderStatus.label}
                             </span>
                           </div>
@@ -465,48 +473,48 @@ export default function Bookings({ userId, isLoggedIn }: BookingsProps) {
 
                         <div className="p-6">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-palacio-gold/10 border border-palacio-gold/20 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-lg bg-palacio-bronze/10 border border-palacio-bronze/20 flex items-center justify-center">
                               {order.order_type === 'dine_in' ? (
-                                <UtensilsCrossed size={20} className="text-palacio-gold" />
+                                <UtensilsCrossed size={18} className="text-palacio-bronze" />
                               ) : (
-                                <MapPin size={20} className="text-palacio-gold" />
+                                <MapPin size={18} className="text-palacio-bronze" />
                               )}
                             </div>
                             <div>
-                              <h3 className="font-playfair text-lg text-white">
-                                {order.order_type === 'dine_in' ? 'Dine-in Order' : 'Room Delivery'}
+                              <h3 className="font-playfair text-base text-palacio-alabaster">
+                                {order.order_type === 'dine_in' ? 'Restaurant Dine-in' : 'Room Suite Delivery'}
                               </h3>
-                              <p className="text-gray-500 text-xs font-cinzel">
+                              <p className="text-palacio-alabaster/50 text-xs font-cinzel">
                                 {order.created_at ? new Date(order.created_at).toLocaleDateString(undefined, { 
                                   month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                                }) : 'Just now'}
+                                }) : 'Recently'}
                               </p>
                             </div>
                           </div>
 
-                          <div className="bg-black/20 rounded-xl p-4 border border-white/5 mb-4">
+                          <div className="bg-white/[0.02] rounded-lg p-3.5 border border-white/[0.06] mb-4">
                             <div className="flex justify-between items-start mb-2">
                               <div>
-                                <p className="text-gray-500 text-[10px] font-cinzel uppercase tracking-wider mb-1">Item</p>
-                                <p className="text-white font-poppins text-sm">{order.product_name}</p>
+                                <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Item</p>
+                                <p className="text-palacio-alabaster font-poppins text-xs">{order.product_name}</p>
                               </div>
-                              <span className="font-cinzel font-bold text-palacio-gold text-lg">
+                              <span className="font-cinzel font-bold text-palacio-bronze text-base">
                                 ${order.total_amount?.toFixed(2)}
                               </span>
                             </div>
-                            <p className="text-gray-500 text-xs capitalize">
+                            <p className="text-palacio-alabaster/50 text-xs capitalize">
                               {order.category} × {order.quantity}
                             </p>
                           </div>
 
-                          <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                          <div className="flex justify-between items-center pt-3 border-t border-white/[0.08]">
                             <div className="flex items-center gap-2">
-                              <Receipt size={12} className="text-gray-600" />
-                              <span className="text-gray-600 text-[10px] font-mono">
-                                {order.reference_number}
+                              <Receipt size={12} className="text-palacio-alabaster/40" />
+                              <span className="text-palacio-alabaster/40 text-[10px] font-mono">
+                                #{order.reference_number}
                               </span>
                             </div>
-                            <span className="text-gray-500 text-xs capitalize flex items-center gap-1">
+                            <span className="text-palacio-alabaster/60 text-xs capitalize flex items-center gap-1">
                               <CreditCard size={12} />
                               {order.payment_method}
                             </span>

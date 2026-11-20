@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, Users, X, Info, Search, MapPin, Star, 
   Wifi, Wind, Droplets, Tv, Coffee, Car, Waves,
-  ChevronLeft, ChevronRight, Heart, Share2, Check,
+  ChevronLeft, ChevronRight, Heart, Share2, Check, Copy,
   ArrowRight, Sparkles, Shield, Clock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -65,6 +65,28 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
   });
   const [bookingError, setBookingError] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [confirmedRef, setConfirmedRef] = useState<string | null>(null);
+  const [confirmedNights, setConfirmedNights] = useState<number>(1);
+  const [confirmedTotal, setConfirmedTotal] = useState<number>(0);
+  const [copiedRef, setCopiedRef] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const getNextDay = (dateStr: string) => {
+    if (!dateStr) return today;
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  };
+
+  const calculateNights = (checkIn: string, checkOut: string): number => {
+    if (!checkIn || !checkOut) return 1;
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(1, diffDays);
+  };
 
   // ─── DATA FETCHING ─────────────────────────────────────────────────
   useEffect(() => {
@@ -179,13 +201,15 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       setBookingError('Please select both check-in and check-out dates');
       return;
     }
-    if (new Date(bookingData.checkOut) <= new Date(bookingData.checkIn)) {
-      setBookingError('Check-out date must be after check-in date');
+    const checkInDate = new Date(bookingData.checkIn);
+    const checkOutDate = new Date(bookingData.checkOut);
+    if (checkOutDate <= checkInDate) {
+      setBookingError('Check-out date must be at least one day after check-in date');
       return;
     }
 
     try {
-      const nights = (new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / (1000 * 60 * 60 * 24);
+      const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
       const room = selectedRoom as Room | Cottage;
       const totalPrice = nights * room.price_per_night;
       const refNumber = `BK${Date.now()}`;
@@ -208,14 +232,11 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       const { error } = await supabase.from('bookings').insert([bookingPayload]);
       if (error) throw error;
 
+      setConfirmedRef(refNumber);
+      setConfirmedNights(nights);
+      setConfirmedTotal(totalPrice);
       setBookingSuccess(true);
-      setBookingData({ checkIn: '', checkOut: '', guestCount: 1, paymentMethod: 'card', downpayment: false });
-
-      setTimeout(() => {
-        setShowBookingModal(false);
-        setSelectedRoom(null);
-        setBookingSuccess(false);
-      }, 2000);
+      setBookingError('');
     } catch (error: any) {
       setBookingError(error.message || 'Failed to create booking');
     }
@@ -738,148 +759,267 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
       </Modal>
 
       {/* ═══════════════════════════════════════════════════════════════
-          BOOKING MODAL (existing, polished)
+          BOOKING MODAL (Quiet Luxury Editorial)
           ═══════════════════════════════════════════════════════════════ */}
       <Modal
         isOpen={showBookingModal}
         onClose={() => {
-          setShowBookingModal(false); setSelectedRoom(null); setBookingError(''); setBookingSuccess(false);
+          setShowBookingModal(false); 
+          setSelectedRoom(null); 
+          setBookingError(''); 
+          setBookingSuccess(false);
+          setConfirmedRef(null);
         }}
         title={selectedRoom ? `Reserve ${selectedRoom.name}` : 'Reservation'}
         footer={
-          <div className="flex gap-3 w-full">
-            <button
-              onClick={() => { setShowBookingModal(false); setSelectedRoom(null); }}
-              className="flex-1 px-4 py-3 bg-white/5 text-gray-400 rounded-lg font-cinzel text-xs hover:bg-white/10 transition-colors"
-            >
-              Back
-            </button>
-            <button
-              onClick={handleBooking}
-              disabled={bookingSuccess}
-              className="flex-1 px-4 py-3 bg-palacio-gold text-palacio-black rounded-lg font-cinzel text-xs font-bold hover:bg-white shadow-xl shadow-palacio-gold/20 transition-all disabled:opacity-50"
-            >
-              {bookingSuccess ? 'Confirmed!' : 'Confirm Reservation'}
-            </button>
-          </div>
+          bookingSuccess ? (
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => {
+                  setShowBookingModal(false);
+                  setSelectedRoom(null);
+                  setBookingSuccess(false);
+                  setConfirmedRef(null);
+                  setBookingData({ checkIn: '', checkOut: '', guestCount: 1, paymentMethod: 'card', downpayment: false });
+                }}
+                className="flex-1 px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-palacio-alabaster/70 rounded-lg font-cinzel text-xs uppercase tracking-wider hover:bg-white/[0.08] hover:text-palacio-alabaster transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setShowBookingModal(false);
+                  setSelectedRoom(null);
+                  setBookingSuccess(false);
+                  setConfirmedRef(null);
+                  setBookingData({ checkIn: '', checkOut: '', guestCount: 1, paymentMethod: 'card', downpayment: false });
+                  onNavigate('bookings');
+                }}
+                className="flex-1 px-4 py-3 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-palacio-gold shadow-xl transition-all"
+              >
+                View in My Bookings
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3 w-full">
+              <button
+                onClick={() => { setShowBookingModal(false); setSelectedRoom(null); setBookingError(''); }}
+                className="flex-1 px-4 py-3 bg-white/[0.04] border border-white/[0.08] text-palacio-alabaster/70 rounded-lg font-cinzel text-xs uppercase tracking-wider hover:bg-white/[0.08] hover:text-palacio-alabaster transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBooking}
+                className="flex-1 px-4 py-3 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold uppercase tracking-widest hover:bg-palacio-gold shadow-xl shadow-palacio-bronze/10 transition-all"
+              >
+                Confirm Reservation
+              </button>
+            </div>
+          )
         }
       >
         {bookingSuccess ? (
-          <div className="text-center py-12 animate-fade-in">
-            <div className="text-6xl mb-6 animate-bounce-slow">🌞</div>
-            <h3 className="font-playfair text-3xl text-palacio-gold mb-3">Reservation Placed!</h3>
-            <p className="text-gray-400 text-sm italic max-w-md mx-auto">
-              Get your beach gear ready, we'll see you soon at Palacio de Oro.
+          <div className="text-center py-6 px-2 animate-fade-in">
+            <div className="w-16 h-16 rounded-full bg-palacio-bronze/10 border border-palacio-bronze/30 flex items-center justify-center mx-auto mb-5">
+              <Check size={28} className="text-palacio-bronze" />
+            </div>
+            
+            <span className="text-[10px] font-cinzel tracking-[0.25em] uppercase text-palacio-bronze block mb-1">
+              Confirmed Reservation
+            </span>
+            <h3 className="font-playfair text-2xl md:text-3xl text-palacio-alabaster mb-2">
+              Your Sanctuary Awaits
+            </h3>
+            <p className="text-palacio-alabaster/70 text-xs italic max-w-sm mx-auto mb-6 leading-relaxed font-light">
+              Your stay at Palacio de Oro is secured. A confirmation notice has been recorded in your guest account.
             </p>
-            <div className="mt-6 p-4 bg-palacio-gold/10 rounded-xl border border-palacio-gold/30">
-              <p className="text-palacio-gold font-cinzel text-xs">Reference Number</p>
-              <p className="text-white font-mono text-lg">BK{Date.now()}</p>
+
+            {/* Reference Card */}
+            <div className="bg-white/[0.03] rounded-xl border border-white/[0.08] p-4 mb-6 text-left space-y-3">
+              <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+                <span className="text-[10px] font-cinzel uppercase tracking-wider text-palacio-alabaster/60">
+                  Booking Reference
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-palacio-bronze text-sm">
+                    #{confirmedRef}
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (confirmedRef) {
+                        navigator.clipboard.writeText(confirmedRef);
+                        setCopiedRef(true);
+                        setTimeout(() => setCopiedRef(false), 2000);
+                      }
+                    }}
+                    className="p-1 rounded bg-white/[0.06] hover:bg-white/[0.12] text-palacio-alabaster/60 hover:text-palacio-alabaster transition-colors"
+                    title="Copy reference"
+                  >
+                    {copiedRef ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] text-palacio-alabaster/50 font-cinzel block uppercase">Suite / Room</span>
+                  <span className="text-palacio-alabaster font-medium">{selectedRoom?.name}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-palacio-alabaster/50 font-cinzel block uppercase">Duration</span>
+                  <span className="text-palacio-alabaster">{confirmedNights} night{confirmedNights > 1 ? 's' : ''}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-palacio-alabaster/50 font-cinzel block uppercase">Dates</span>
+                  <span className="text-palacio-alabaster font-mono text-[11px]">{bookingData.checkIn} → {bookingData.checkOut}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-palacio-alabaster/50 font-cinzel block uppercase">Total Amount</span>
+                  <span className="text-palacio-bronze font-cinzel font-bold text-sm">${confirmedTotal.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {bookingError && (
-              <div className="p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-300 text-xs font-bold tracking-widest uppercase text-center animate-shake">
+              <div className="p-3.5 bg-red-950/40 border border-red-500/30 rounded-xl text-red-300 text-xs font-semibold tracking-wider uppercase text-center animate-shake">
                 {bookingError}
               </div>
             )}
 
-            {/* Room Summary */}
+            {/* Room Summary Header */}
             {selectedRoom && (
-              <div className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+              <div className="flex gap-4 p-3.5 bg-white/[0.02] rounded-xl border border-white/[0.06]">
                 <img 
                   src={selectedRoom.image_url} 
                   alt={selectedRoom.name}
                   onError={(e) => handleImageFallback(e, 'room')}
-                  className="w-20 h-20 rounded-lg object-cover" 
+                  className="w-16 h-16 rounded-lg object-cover" 
                 />
-                <div>
-                  <h4 className="text-palacio-gold font-playfair">{selectedRoom.name}</h4>
-                  <p className="text-gray-400 text-xs">${selectedRoom.price_per_night}/night • {selectedRoom.capacity} guests</p>
+                <div className="flex flex-col justify-center">
+                  <h4 className="text-palacio-alabaster font-playfair text-base">{selectedRoom.name}</h4>
+                  <p className="text-palacio-alabaster/60 text-xs">
+                    <span className="text-palacio-bronze font-cinzel font-bold">${selectedRoom.price_per_night}</span> / night • Max {selectedRoom.capacity} guests
+                  </p>
                 </div>
               </div>
             )}
 
+            {/* Date Pickers */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Check-in</label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase">Check-in</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-gold/60" size={16} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" size={15} />
                   <input
                     type="date"
+                    min={today}
                     value={bookingData.checkIn}
-                    onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:border-palacio-gold outline-none transition-all"
+                    onChange={(e) => {
+                      const newIn = e.target.value;
+                      let newOut = bookingData.checkOut;
+                      if (!newOut || newOut <= newIn) {
+                        newOut = getNextDay(newIn);
+                      }
+                      setBookingData({ ...bookingData, checkIn: newIn, checkOut: newOut });
+                    }}
+                    className="w-full pl-9 pr-3 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none transition-all"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Check-out</label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase">Check-out</label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-gold/60" size={16} />
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" size={15} />
                   <input
                     type="date"
+                    min={getNextDay(bookingData.checkIn)}
                     value={bookingData.checkOut}
                     onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:border-palacio-gold outline-none transition-all"
+                    className="w-full pl-9 pr-3 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none transition-all"
                   />
                 </div>
               </div>
             </div>
 
+            {/* Guests & Payment Method */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Guests</label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase">Guests</label>
                 <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-gold/60" size={16} />
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" size={15} />
                   <input
                     type="number"
                     min="1"
                     max={selectedRoom?.capacity || 10}
                     value={bookingData.guestCount}
-                    onChange={(e) => setBookingData({ ...bookingData, guestCount: parseInt(e.target.value) || 1 })}
-                    className="w-full pl-10 pr-4 py-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:border-palacio-gold outline-none transition-all"
+                    onChange={(e) => setBookingData({ ...bookingData, guestCount: Math.max(1, parseInt(e.target.value) || 1) })}
+                    className="w-full pl-9 pr-3 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none transition-all"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-cinzel text-palacio-gold tracking-widest uppercase">Payment</label>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-cinzel text-palacio-bronze tracking-widest uppercase">Payment Method</label>
                 <select
                   value={bookingData.paymentMethod}
                   onChange={(e) => setBookingData({ ...bookingData, paymentMethod: e.target.value as any })}
-                  className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:border-palacio-gold outline-none transition-all"
+                  className="w-full px-3 py-2.5 bg-white/[0.04] border border-white/[0.1] rounded-lg text-xs text-palacio-alabaster focus:border-palacio-bronze/50 outline-none transition-all"
                 >
-                  <option value="card">💳 Credit Card</option>
-                  <option value="gcash">📱 GCash</option>
-                  <option value="cash">💵 Cash</option>
+                  <option value="card" className="bg-palacio-obsidian text-palacio-alabaster">💳 Credit / Debit Card</option>
+                  <option value="gcash" className="bg-palacio-obsidian text-palacio-alabaster">📱 GCash</option>
+                  <option value="cash" className="bg-palacio-obsidian text-palacio-alabaster">💵 Cash upon Arrival</option>
                 </select>
               </div>
             </div>
 
-            {/* Price Calculation */}
+            {/* Transparent Price Calculation */}
             {bookingData.checkIn && bookingData.checkOut && selectedRoom && (
-              <div className="p-4 bg-palacio-gold/10 rounded-xl border border-palacio-gold/30">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">${selectedRoom.price_per_night} × {Math.max(1, (new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / (1000 * 60 * 60 * 24))} nights</span>
-                  <span className="text-white">${selectedRoom.price_per_night * Math.max(1, (new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / (1000 * 60 * 60 * 24))}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t border-palacio-gold/20 pt-2">
-                  <span className="text-palacio-gold">Total</span>
-                  <span className="text-palacio-gold">${selectedRoom.price_per_night * Math.max(1, (new Date(bookingData.checkOut).getTime() - new Date(bookingData.checkIn).getTime()) / (1000 * 60 * 60 * 24))}</span>
-                </div>
+              <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.08] space-y-2">
+                {(() => {
+                  const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
+                  const subtotal = selectedRoom.price_per_night * nights;
+                  const downpaymentAmount = subtotal * 0.5;
+
+                  return (
+                    <>
+                      <div className="flex justify-between text-xs text-palacio-alabaster/70">
+                        <span>${selectedRoom.price_per_night.toFixed(2)} × {nights} night{nights > 1 ? 's' : ''}</span>
+                        <span className="font-mono text-palacio-alabaster">${subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-palacio-alabaster/70">
+                        <span>Resort Services & Amenities</span>
+                        <span className="text-emerald-400 font-cinzel text-[10px] uppercase">Complimentary</span>
+                      </div>
+                      
+                      {bookingData.downpayment && (
+                        <div className="pt-2 border-t border-white/[0.06] flex justify-between text-xs text-palacio-bronze">
+                          <span>Deposit Due Now (50%)</span>
+                          <span className="font-mono font-semibold">${downpaymentAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between text-base font-semibold border-t border-white/[0.08] pt-2">
+                        <span className="font-cinzel text-palacio-alabaster text-xs tracking-wider uppercase">Estimated Total</span>
+                        <span className="font-cinzel text-palacio-bronze text-xl">${subtotal.toFixed(2)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
 
-            <label className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all">
+            {/* Downpayment Checkbox */}
+            <label className="flex items-start gap-3 p-3.5 bg-white/[0.02] rounded-xl border border-white/[0.06] cursor-pointer hover:bg-white/[0.04] transition-all">
               <input
                 type="checkbox"
                 checked={bookingData.downpayment}
                 onChange={(e) => setBookingData({ ...bookingData, downpayment: e.target.checked })}
-                className="w-5 h-5 rounded accent-palacio-gold"
+                className="mt-0.5 w-4 h-4 rounded accent-palacio-bronze"
               />
               <div className="flex flex-col">
-                <span className="text-sm font-cinzel text-white tracking-wider">Secure with Downpayment</span>
-                <span className="text-xs text-gray-500 uppercase tracking-tighter italic">Pay 50% now to confirm your slot</span>
+                <span className="text-xs font-cinzel text-palacio-alabaster tracking-wider">Secure with 50% Downpayment</span>
+                <span className="text-[11px] text-palacio-alabaster/50 leading-relaxed font-light">Pay half today to guarantee your reservation, pay remaining upon arrival</span>
               </div>
             </label>
           </div>

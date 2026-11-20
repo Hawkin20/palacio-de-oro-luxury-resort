@@ -96,7 +96,7 @@ function App() {
       case 'menu':
         return <Menu userId={userId} isLoggedIn={isLoggedIn} cart={cart} setCart={setCart} />;
       case 'bookings':
-        return <Bookings userId={userId} isLoggedIn={isLoggedIn} />;
+        return <Bookings userId={userId} isLoggedIn={isLoggedIn} onNavigate={setCurrentPage} />;
       case 'contact':
         return <Contact />;
       case 'admin':
