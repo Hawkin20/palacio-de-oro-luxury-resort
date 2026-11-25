@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { User, Mail, Phone, Calendar, Award, MapPin, Edit2, Camera, Save, X, Sparkles, Crown, Star } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Award, MapPin, Edit2, Camera, Save, X, Sparkles, Crown, Star, LogOut, Sliders } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import VipPassCard from '../components/VipPassCard';
 import SanctuaryPreferences from '../components/SanctuaryPreferences';
+import ThemeToggle from '../components/ThemeToggle';
+import Soundscape from '../components/Soundscape';
+import CurrencySelector from '../components/CurrencySelector';
 
-export default function Profile() {
+interface ProfileProps {
+  onLogout?: () => void;
+}
+
+export default function Profile({ onLogout }: ProfileProps) {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -504,6 +511,80 @@ export default function Profile() {
         {/* Bespoke Sanctuary Preferences Atelier */}
         <SanctuaryPreferences />
 
+        {/* Sanctuary Ambiance & Global Settings */}
+        <motion.div 
+          className="bg-[#0f0f1e]/60 backdrop-blur-xl border border-[#FFD700]/15 rounded-2xl p-6 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 100, delay: 0.25 }}
+        >
+          <div className="flex items-center justify-between mb-6 border-b border-[#FFD700]/10 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-palacio-bronze/10 border border-palacio-bronze/30 flex items-center justify-center text-palacio-bronze">
+                <Sliders size={20} />
+              </div>
+              <div>
+                <h3 className="font-playfair text-xl text-palacio-alabaster">
+                  Sanctuary Experience & Ambiance Settings
+                </h3>
+                <p className="text-palacio-alabaster/60 text-xs font-poppins">
+                  Personalize your sensory, atmospheric lighting, and financial currency preferences
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Atmospheric Lighting */}
+            <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-palacio-bronze/30 transition-all flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-cinzel tracking-wider text-palacio-bronze uppercase block mb-1 font-semibold">
+                  Lighting Scheme
+                </span>
+                <h4 className="text-sm font-semibold text-palacio-alabaster mb-1">Atmospheric Mode</h4>
+                <p className="text-xs text-palacio-alabaster/60 mb-5 font-light leading-relaxed">
+                  Toggle between Nocturne obsidian noir and warm Golden Hour ambient glow.
+                </p>
+              </div>
+              <div className="pt-2">
+                <ThemeToggle />
+              </div>
+            </div>
+
+            {/* Ocean Soundscape */}
+            <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-palacio-bronze/30 transition-all flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-cinzel tracking-wider text-palacio-bronze uppercase block mb-1 font-semibold">
+                  Acoustic Sanctuary
+                </span>
+                <h4 className="text-sm font-semibold text-palacio-alabaster mb-1">Ambient Soundscape</h4>
+                <p className="text-xs text-palacio-alabaster/60 mb-5 font-light leading-relaxed">
+                  Relaxing procedural ocean tides, coastal breeze, and tranquil island fauna.
+                </p>
+              </div>
+              <div className="pt-2">
+                <Soundscape />
+              </div>
+            </div>
+
+            {/* Currency Preference */}
+            <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-palacio-bronze/30 transition-all flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-cinzel tracking-wider text-palacio-bronze uppercase block mb-1 font-semibold">
+                  Financial Engine
+                </span>
+                <h4 className="text-sm font-semibold text-palacio-alabaster mb-1">Currency Preference</h4>
+                <p className="text-xs text-palacio-alabaster/60 mb-5 font-light leading-relaxed">
+                  Universal conversion across Philippine Peso, US Dollar, Euro, and Japanese Yen.
+                </p>
+              </div>
+              <div className="pt-2">
+                <CurrencySelector />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         <motion.div 
           className="bg-[#0f0f1e]/60 backdrop-blur-xl border border-[#FFD700]/15 rounded-2xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
           initial={{ opacity: 0, y: 30 }}
@@ -561,6 +642,19 @@ export default function Profile() {
             ))}
           </motion.div>
         </motion.div>
+
+        {/* Direct Sanctuary Sign Out */}
+        {onLogout && (
+          <div className="pt-2 pb-6 flex justify-center">
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-2.5 px-8 py-3.5 rounded-xl border border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-cinzel text-xs font-semibold tracking-[0.2em] uppercase transition-all shadow-xl hover:shadow-rose-500/20 active:scale-95"
+            >
+              <LogOut size={16} />
+              <span>Sign Out of Sanctuary</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

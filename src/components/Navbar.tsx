@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 import { Menu, X, ShoppingCart, LogOut, LogIn, User, ChevronDown, Calendar, Heart, Settings, Sparkles } from 'lucide-react';
 import Auth from '../pages/Auth';
 import PalacioLogo from './PalacioLogo';
-import Soundscape from './Soundscape';
-import CurrencySelector from './CurrencySelector';
-import ThemeToggle from './ThemeToggle';
 
 interface NavbarProps {
   currentPage: string;
@@ -158,110 +155,63 @@ export default function Navbar({
                 ))}
               </div>
 
-              <div className="hidden lg:flex items-center space-x-2.5">
-                <ThemeToggle />
-                <Soundscape />
-                <CurrencySelector />
+              <div className="hidden lg:flex items-center space-x-3">
                 {userRole === 'admin' && (
                   <button
                     onClick={() => onNavigate('admin')}
-                    className="text-sm font-cinzel text-gray-300 hover:text-palacio-gold smooth-transition"
+                    className="text-xs font-cinzel font-semibold tracking-wider text-palacio-bronze border border-palacio-bronze/40 px-3 py-1.5 rounded-lg hover:bg-palacio-bronze/10 smooth-transition"
                   >
-                    Admin
+                    Admin Portal
                   </button>
                 )}
-              <button
-                onClick={() => onNavigate('menu')}
-                className="relative p-2 text-gray-300 hover:text-palacio-gold smooth-transition"
-              >
-                <ShoppingCart size={20} />
-                {cartItemCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-palacio-black bg-palacio-gold rounded-full">
-                    {cartItemCount}
-                  </span>
-                )}
-              </button>
 
-              {isLoggedIn ? (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-full border border-palacio-gold/30 bg-white/5 hover:bg-white/10 smooth-transition"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-palacio-gold to-orange-400 flex items-center justify-center text-palacio-black font-bold text-sm">
-                      {initial}
-                    </div>
-                    <span className="text-palacio-gold text-sm hidden lg:block max-w-[80px] truncate">
-                      {displayName}
-                    </span>
-                    <ChevronDown size={16} className="text-palacio-gold" />
-                  </button>
-
-                  {showDropdown && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
-                      <div className="absolute right-0 top-12 w-60 bg-palacio-black border border-palacio-gold/20 rounded-xl shadow-2xl z-50 overflow-hidden">
-                        <div className="p-4 bg-gradient-to-r from-palacio-gold/10 to-transparent border-b border-palacio-gold/10">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-palacio-gold to-orange-400 flex items-center justify-center text-palacio-black font-bold">
-                              {initial}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-palacio-gold font-semibold text-sm truncate">{displayName}</p>
-                              <p className="text-gray-400 text-xs truncate">{userEmail}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <nav className="p-2">
-                          <button
-                            onClick={() => { onNavigate('profile'); setShowDropdown(false); }}
-                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/10 smooth-transition text-sm"
-                          >
-                            <User size={16} /> My Profile
-                          </button>
-                          <button
-                            onClick={() => { onNavigate('bookings'); setShowDropdown(false); }}
-                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/10 smooth-transition text-sm"
-                          >
-                            <Calendar size={16} /> My Bookings
-                          </button>
-                          <button
-                            onClick={() => { onNavigate('favorites'); setShowDropdown(false); }}
-                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/10 smooth-transition text-sm"
-                          >
-                            <Heart size={16} /> Saved Rooms
-                          </button>
-                          <button
-                            onClick={() => { onNavigate('settings'); setShowDropdown(false); }}
-                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-gray-300 hover:text-palacio-gold hover:bg-palacio-gold/10 smooth-transition text-sm"
-                          >
-                            <Settings size={16} /> Settings
-                          </button>
-                        </nav>
-
-                        <div className="p-2 border-t border-palacio-gold/10">
-                          <button
-                            onClick={handleLogoutClick}
-                            className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 smooth-transition text-sm"
-                          >
-                            <LogOut size={16} /> Logout
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              ) : (
                 <button
-                  onClick={onShowAuth}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm font-cinzel text-gray-300 hover:text-palacio-gold smooth-transition"
+                  onClick={() => onNavigate('menu')}
+                  className="relative p-2 text-gray-300 hover:text-palacio-gold smooth-transition"
+                  title="Selection Tray"
                 >
-                  <LogIn size={18} />
-                  <span>Login</span>
+                  <ShoppingCart size={19} />
+                  {cartItemCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold leading-none text-palacio-black bg-palacio-gold rounded-full">
+                      {cartItemCount}
+                    </span>
+                  )}
                 </button>
-              )}
-            </div>
+
+                {isLoggedIn ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onNavigate('profile')}
+                      className="flex items-center space-x-2 px-3 py-1.5 rounded-full border border-palacio-gold/30 bg-white/5 hover:bg-white/10 smooth-transition"
+                      title="Profile & Sanctuary Settings"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-palacio-gold to-orange-400 flex items-center justify-center text-palacio-black font-bold text-xs">
+                        {initial}
+                      </div>
+                      <span className="text-palacio-gold text-xs font-cinzel tracking-wider max-w-[100px] truncate">
+                        {displayName}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={handleLogoutClick}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-cinzel tracking-wider uppercase font-semibold smooth-transition shadow-sm"
+                      title="Sign Out of Sanctuary"
+                    >
+                      <LogOut size={13} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={onShowAuth}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-palacio-bronze text-palacio-obsidian font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-palacio-gold smooth-transition shadow-md shadow-palacio-bronze/20"
+                  >
+                    <LogIn size={15} />
+                    <span>Login</span>
+                  </button>
+                )}
+              </div>
 
             {/* Mobile & Tablet actions (Cart + Hamburger) */}
             <div className="lg:hidden flex items-center space-x-2">
@@ -380,9 +330,10 @@ export default function Navbar({
                   </button>
                   <button
                     onClick={handleLogoutClick}
-                    className="block w-full text-left px-4 py-2.5 rounded-lg text-xs font-cinzel text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
+                    className="w-full text-center py-2.5 rounded-lg text-xs font-cinzel font-semibold tracking-wider uppercase text-rose-300 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 mt-2 transition flex items-center justify-center gap-2"
                   >
-                    Logout
+                    <LogOut size={14} />
+                    <span>Logout</span>
                   </button>
                 </>
               ) : (

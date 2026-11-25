@@ -128,7 +128,7 @@ function App() {
       case 'admin':
         return <Admin isLoggedIn={isLoggedIn} userRole={userRole} />;
       case 'profile':
-        return <Profile />;
+        return <Profile onLogout={handleLogout} />;
       default:
         return <Home onNavigate={handleNavigate} />;
     }
