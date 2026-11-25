@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { CartItem } from './lib/types';
 import { CurrencyProvider } from './lib/currency';
+import { ThemeProvider } from './lib/theme';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Rooms from './pages/Rooms';
@@ -138,24 +139,26 @@ function App() {
   }
 
   return (
-    <CurrencyProvider>
-      <div className="min-h-screen bg-palacio-black flex flex-col">
-        <Navbar
-          currentPage={currentPage}
-          onNavigate={handleNavigate}
-          cartItemCount={cart.length}
-          isLoggedIn={isLoggedIn}
-          onLogout={handleLogout}
-          onShowAuth={() => setShowAuth(true)}
-          userEmail={userEmail}
-          userName={userName}
-          userRole={userRole}
-        />
-        <main className="flex-1">
-          {renderPage()}
-        </main>
-      </div>
-    </CurrencyProvider>
+    <ThemeProvider>
+      <CurrencyProvider>
+        <div className="min-h-screen bg-palacio-black flex flex-col transition-colors duration-500">
+          <Navbar
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            cartItemCount={cart.length}
+            isLoggedIn={isLoggedIn}
+            onLogout={handleLogout}
+            onShowAuth={() => setShowAuth(true)}
+            userEmail={userEmail}
+            userName={userName}
+            userRole={userRole}
+          />
+          <main className="flex-1">
+            {renderPage()}
+          </main>
+        </div>
+      </CurrencyProvider>
+    </ThemeProvider>
   );
 }
 

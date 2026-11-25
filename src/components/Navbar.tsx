@@ -4,6 +4,7 @@ import Auth from '../pages/Auth';
 import PalacioLogo from './PalacioLogo';
 import Soundscape from './Soundscape';
 import CurrencySelector from './CurrencySelector';
+import ThemeToggle from './ThemeToggle';
 
 interface NavbarProps {
   currentPage: string;
@@ -157,7 +158,8 @@ export default function Navbar({
                 ))}
               </div>
 
-              <div className="hidden lg:flex items-center space-x-3">
+              <div className="hidden lg:flex items-center space-x-2.5">
+                <ThemeToggle />
                 <Soundscape />
                 <CurrencySelector />
                 {userRole === 'admin' && (
@@ -287,7 +289,8 @@ export default function Navbar({
 
           {isOpen && (
             <div className="lg:hidden px-6 py-6 space-y-3 bg-[#0a0a0a] border-b border-palacio-bronze/30 shadow-2xl">
-              <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+              <div className="flex items-center justify-between gap-2 pb-3 border-b border-white/[0.08]">
+                <ThemeToggle />
                 <Soundscape />
                 <CurrencySelector />
               </div>

@@ -724,3 +724,51 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   GOLDEN HOUR / TRAVERTINE DAWN ATMOSPHERIC THEME
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="golden-hour"] body,
+[data-theme="golden-hour"] .bg-palacio-black,
+[data-theme="golden-hour"] .bg-palacio-obsidian {
+  background-color: #F6F2E9 !important;
+  color: #1D1A16 !important;
+}
+
+[data-theme="golden-hour"] .text-palacio-alabaster,
+[data-theme="golden-hour"] .text-gray-100,
+[data-theme="golden-hour"] .text-gray-200 {
+  color: #1D1A16 !important;
+}
+
+[data-theme="golden-hour"] .text-palacio-alabaster\/70,
+[data-theme="golden-hour"] .text-palacio-alabaster\/60,
+[data-theme="golden-hour"] .text-gray-300,
+[data-theme="golden-hour"] .text-gray-400 {
+  color: #4A433A !important;
+}
+
+[data-theme="golden-hour"] .text-palacio-bronze,
+[data-theme="golden-hour"] .text-palacio-gold {
+  color: #8C6D3F !important;
+}
+
+[data-theme="golden-hour"] .bg-white\/\[0\.03\],
+[data-theme="golden-hour"] .bg-white\/\[0\.02\],
+[data-theme="golden-hour"] .bg-white\/\[0\.04\],
+[data-theme="golden-hour"] .glass-card {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+  border-color: rgba(140, 109, 63, 0.25) !important;
+  box-shadow: 0 10px 30px rgba(29, 26, 22, 0.06) !important;
+}
+
+[data-theme="golden-hour"] .border-white\/\[0\.08\],
+[data-theme="golden-hour"] .border-white\/\[0\.06\] {
+  border-color: rgba(140, 109, 63, 0.2) !important;
+}
+
+[data-theme="golden-hour"] nav.bg-\[\#080808\]\/90 {
+  background-color: rgba(246, 242, 233, 0.92) !important;
+  border-bottom-color: rgba(140, 109, 63, 0.2) !important;
+}
+
+
