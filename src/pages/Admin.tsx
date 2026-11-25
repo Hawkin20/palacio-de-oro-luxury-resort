@@ -24,6 +24,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchCatalogResilient } from '../lib/resilientFetch';
 import { Room, Cottage, MenuItem, Booking, Order } from '../lib/types';
 import GlassCard from '../components/GlassCard';
 import Modal from '../components/Modal';
@@ -169,17 +170,17 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
       setLoading(true);
       setUpdateError(null);
 
-      // Fetch base tables first
-      const [roomsRes, cottagesRes, menuRes, usersRes] = await Promise.all([
-        supabase.from('rooms').select('*'),
-        supabase.from('cottages').select('*'),
-        supabase.from('menu_items').select('*'),
+      // Fetch base tables first with resilient fallbacks
+      const [roomsData, cottagesData, menuData, usersRes] = await Promise.all([
+        fetchCatalogResilient<Room>('rooms'),
+        fetchCatalogResilient<Cottage>('cottages'),
+        fetchCatalogResilient<MenuItem>('menu_items'),
         supabase.from('users').select('id, name, email'),
       ]);
 
-      if (roomsRes.data) setRooms(roomsRes.data);
-      if (cottagesRes.data) setCottages(cottagesRes.data);
-      if (menuRes.data) setMenu(menuRes.data);
+      if (roomsData.length > 0) setRooms(roomsData);
+      if (cottagesData.length > 0) setCottages(cottagesData);
+      if (menuData.length > 0) setMenu(menuData);
 
       const usersMap = new Map();
       if (usersRes.data) {
@@ -228,8 +229,8 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
         }
 
         const menuMap = new Map();
-        if (menuRes.data) {
-          menuRes.data.forEach((m: any) => menuMap.set(m.id, m));
+        if (menuData) {
+          menuData.forEach((m: any) => menuMap.set(m.id, m));
         }
 
         const processedOrders = ordersData.map((o: any) => {

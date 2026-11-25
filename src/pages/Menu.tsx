@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, X, Plus, Minus, Search, Star, Flame, Leaf, ChefHat, Wine, Coffee, UtensilsCrossed, Fish, Beef, CakeSlice, GlassWater } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchCatalogResilient } from '../lib/resilientFetch';
 import { MenuItem, CartItem } from '../lib/types';
 import GlassCard from '../components/GlassCard';
 import Modal from '../components/Modal';
@@ -68,19 +69,16 @@ export default function Menu({ userId, isLoggedIn, cart, setCart }: MenuProps) {
 
   useEffect(() => {
     fetchMenuItems();
-  }, []);
+  }, [isLoggedIn]);
 
   const fetchMenuItems = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select('*')
-        .eq('available', true)
-        .order('name');
-
-      if (error) throw error;
-      setMenuItems(data || []);
+      const items = await fetchCatalogResilient<MenuItem>('menu_items', {
+        filter: 'available=eq.true&order=name.asc',
+        supabaseQuery: (q) => q.select('*').eq('available', true).order('name')
+      });
+      setMenuItems(items);
     } catch (error) {
       console.error('Error fetching menu:', error);
     } finally {

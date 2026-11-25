@@ -6,6 +6,7 @@ import {
   ChevronRight, Play, Pause, Zap, Diamond, Crown
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchCatalogResilient } from '../lib/resilientFetch';
 import { Room, Cottage, MenuItem } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
 import { handleImageFallback } from '../lib/images';
@@ -314,14 +315,17 @@ export default function Home({ onNavigate }: HomeProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [roomsRes, cottagesRes, menuRes] = await Promise.all([
-        supabase.from('rooms').select('*'),
-        supabase.from('cottages').select('*'),
-        supabase.from('menu_items').select('*').eq('is_featured', true).limit(8),
+      const [roomsData, cottagesData, menuData] = await Promise.all([
+        fetchCatalogResilient<Room>('rooms'),
+        fetchCatalogResilient<Cottage>('cottages'),
+        fetchCatalogResilient<MenuItem>('menu_items', {
+          filter: 'is_featured=eq.true&limit=8',
+          supabaseQuery: (q) => q.select('*').eq('is_featured', true).limit(8),
+        }),
       ]);
-      if (roomsRes.data) setRooms(roomsRes.data);
-      if (cottagesRes.data) setCottages(cottagesRes.data);
-      if (menuRes.data) setMenuItems(menuRes.data);
+      if (roomsData.length > 0) setRooms(roomsData);
+      if (cottagesData.length > 0) setCottages(cottagesData);
+      if (menuData.length > 0) setMenuItems(menuData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {

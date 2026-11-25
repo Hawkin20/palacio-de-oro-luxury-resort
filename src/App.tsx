@@ -40,7 +40,7 @@ function App() {
         .from('users')
         .select('role')
         .eq('id', uid)
-        .single();
+        .maybeSingle();
       if (!error && data?.role) {
         setUserRole(data.role);
       } else {

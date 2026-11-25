@@ -6,6 +6,7 @@ import {
   ArrowRight, Sparkles, Shield, Clock
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchCatalogResilient } from '../lib/resilientFetch';
 import { Room, Cottage, Booking } from '../lib/types';
 import GlassCard from '../components/GlassCard';
 import Modal from '../components/Modal';
@@ -93,18 +94,18 @@ export default function Rooms({ userId, isLoggedIn, onNavigate }: RoomsProps) {
   // ─── DATA FETCHING ─────────────────────────────────────────────────
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [isLoggedIn]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [roomsRes, cottagesRes] = await Promise.all([
-        supabase.from('rooms').select('*'),
-        supabase.from('cottages').select('*'),
+      const [roomsData, cottagesData] = await Promise.all([
+        fetchCatalogResilient<Room>('rooms'),
+        fetchCatalogResilient<Cottage>('cottages'),
       ]);
 
-      if (roomsRes.data) setRooms(roomsRes.data);
-      if (cottagesRes.data) setCottages(cottagesRes.data);
+      if (roomsData.length > 0) setRooms(roomsData);
+      if (cottagesData.length > 0) setCottages(cottagesData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
