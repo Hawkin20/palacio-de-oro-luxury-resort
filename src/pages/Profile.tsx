@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, Mail, Phone, Calendar, Award, MapPin, Edit2, Camera, Save, X, Sparkles, Crown, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import VipPassCard from '../components/VipPassCard';
+import SanctuaryPreferences from '../components/SanctuaryPreferences';
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
@@ -212,8 +214,18 @@ export default function Profile() {
         transition={{ duration: 10, repeat: Infinity }}
       />
       
-      <div className="max-w-3xl mx-auto relative z-10">
+      <div className="max-w-3xl mx-auto relative z-10 space-y-8">
         
+        {/* Digital VIP Sanctuary Keycard */}
+        <div className="mb-6">
+          <VipPassCard 
+            guestName={getDisplayName()} 
+            guestEmail={user?.email || ''} 
+            memberSince={user?.created_at ? new Date(user.created_at).getFullYear().toString() : '2026'}
+            role={profile?.role || user?.user_metadata?.role}
+          />
+        </div>
+
         <motion.div 
           className="bg-[#0f0f1e]/60 backdrop-blur-xl border border-[#FFD700]/15 rounded-2xl overflow-hidden mb-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
           initial={{ opacity: 0, y: 30 }}
@@ -488,6 +500,9 @@ export default function Profile() {
             </AnimatePresence>
           </div>
         </motion.div>
+
+        {/* Bespoke Sanctuary Preferences Atelier */}
+        <SanctuaryPreferences />
 
         <motion.div 
           className="bg-[#0f0f1e]/60 backdrop-blur-xl border border-[#FFD700]/15 rounded-2xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"

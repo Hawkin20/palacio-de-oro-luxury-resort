@@ -5,11 +5,12 @@ import GlassCard from '../components/GlassCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusBadge from '../components/StatusBadge';
 import { useCurrency } from '../lib/currency';
+import ReservationFolioModal from '../components/ReservationFolioModal';
 import { 
   Bell, Calendar, Clock, User, DollarSign, Home, UtensilsCrossed, 
   Package, MapPin, CreditCard, ChevronDown, ChevronUp, Sparkles, 
   ArrowRight, BedDouble, Receipt, ClipboardCheck, Loader2, CheckCircle2,
-  XCircle, AlertCircle, Timer, Eye
+  XCircle, AlertCircle, Timer, Eye, Printer
 } from 'lucide-react';
 
 interface BookingsProps {
@@ -62,6 +63,7 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
   const [loading, setLoading] = useState(true);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'bookings' | 'orders'>('all');
+  const [selectedFolioBooking, setSelectedFolioBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     if (isLoggedIn && userId) {
@@ -373,22 +375,33 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
                       </div>
                     </div>
 
-                    {/* Guest & Payment Info */}
-                    <div className="flex flex-wrap items-center gap-6 mb-6 text-xs text-palacio-alabaster/70">
-                      <div className="flex items-center gap-2">
-                        <User size={13} className="text-palacio-bronze/60" />
-                        <span>{booking.guest_count} {booking.guest_count === 1 ? 'Guest' : 'Guests'}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CreditCard size={13} className="text-palacio-bronze/60" />
-                        <span className="capitalize">{booking.payment_method}</span>
-                      </div>
-                      {booking.downpayment_amount > 0 && (
-                        <div className="flex items-center gap-2 text-palacio-bronze">
-                          <Receipt size={13} />
-                          <span>Deposit Paid: {formatPrice(booking.downpayment_amount || 0)}</span>
+                    {/* Guest & Payment Info + Folio Button */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 mb-6 text-xs text-palacio-alabaster/70">
+                      <div className="flex flex-wrap items-center gap-6">
+                        <div className="flex items-center gap-2">
+                          <User size={13} className="text-palacio-bronze/60" />
+                          <span>{booking.guest_count} {booking.guest_count === 1 ? 'Guest' : 'Guests'}</span>
                         </div>
-                      )}
+                        <div className="flex items-center gap-2">
+                          <CreditCard size={13} className="text-palacio-bronze/60" />
+                          <span className="capitalize">{booking.payment_method}</span>
+                        </div>
+                        {booking.downpayment_amount > 0 && (
+                          <div className="flex items-center gap-2 text-palacio-bronze">
+                            <Receipt size={13} />
+                            <span>Deposit Paid: {formatPrice(booking.downpayment_amount || 0)}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedFolioBooking(booking)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-palacio-bronze/10 border border-palacio-bronze/30 text-palacio-bronze hover:bg-palacio-bronze hover:text-palacio-obsidian font-cinzel text-[11px] font-semibold uppercase tracking-wider transition-all"
+                        title="Print Official Sanctuary Confirmation Folio"
+                      >
+                        <Printer size={13} />
+                        <span>Sanctuary Folio</span>
+                      </button>
                     </div>
 
                     {/* Expandable Orders Section */}
@@ -563,6 +576,13 @@ export default function Bookings({ userId, isLoggedIn, onNavigate }: BookingsPro
           </div>
         )}
       </div>
+
+      {/* Official Sanctuary Reservation Folio Modal */}
+      <ReservationFolioModal
+        isOpen={!!selectedFolioBooking}
+        onClose={() => setSelectedFolioBooking(null)}
+        booking={selectedFolioBooking}
+      />
     </div>
   );
 }
