@@ -18,7 +18,7 @@ export default function ThemeToggle() {
       ) : (
         <Moon size={14} className="text-palacio-bronze/80" />
       )}
-      <span className="hidden xl:inline text-[10px] tracking-wider uppercase">
+      <span className="hidden 2xl:inline text-[10px] tracking-wider uppercase">
         {isGolden ? 'Golden Hour' : 'Nocturne'}
       </span>
     </button>

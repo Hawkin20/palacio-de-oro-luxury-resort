@@ -740,11 +740,13 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
   color: #1D1A16 !important;
 }
 
+[data-theme="golden-hour"] .text-palacio-alabaster\/90,
+[data-theme="golden-hour"] .text-palacio-alabaster\/80,
 [data-theme="golden-hour"] .text-palacio-alabaster\/70,
 [data-theme="golden-hour"] .text-palacio-alabaster\/60,
 [data-theme="golden-hour"] .text-gray-300,
 [data-theme="golden-hour"] .text-gray-400 {
-  color: #4A433A !important;
+  color: #3D362D !important;
 }
 
 [data-theme="golden-hour"] .text-palacio-bronze,

@@ -147,7 +147,7 @@ export default function Navbar({
                       onNavigate(item.value);
                       setIsOpen(false);
                     }}
-                    className={`px-3.5 py-1.5 rounded text-xs font-cinzel tracking-[0.2em] uppercase smooth-transition ${
+                    className={`px-2.5 xl:px-3.5 py-1.5 rounded text-xs font-cinzel tracking-[0.15em] xl:tracking-[0.2em] uppercase smooth-transition whitespace-nowrap ${
                       currentPage === item.value
                         ? 'text-palacio-gold bg-palacio-gold/10 font-bold border-b border-palacio-gold/50'
                         : 'text-palacio-alabaster/70 hover:text-palacio-gold hover:bg-white/[0.03]'

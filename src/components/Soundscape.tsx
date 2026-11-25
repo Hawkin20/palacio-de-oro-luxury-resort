@@ -147,7 +147,7 @@ export default function Soundscape() {
           )}
         </button>
 
-        <span className="hidden sm:inline text-[10px] font-cinzel tracking-[0.18em] uppercase text-palacio-alabaster/70 group-hover:text-palacio-alabaster transition-colors select-none">
+        <span className="hidden 2xl:inline text-[10px] font-cinzel tracking-[0.18em] uppercase text-palacio-alabaster/70 group-hover:text-palacio-alabaster transition-colors select-none">
           {isPlaying ? 'Ocean Surf' : 'Soundscape'}
         </span>
 

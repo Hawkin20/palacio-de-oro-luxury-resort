@@ -50,7 +50,7 @@ const ZONES: Zone[] = [
     category: 'wellness',
     x: 68,
     y: 32,
-    image: 'https://images.pexels.com/photos/1454496/pexels-photo-1454496.jpeg?auto=compress&cs=tinysrgb&w=600',
+    image: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=800&q=80',
     description: 'Expansive private white-sand beach featuring bespoke cabanas, hydrotherapy spa pools, and open-air sunset cocktail rituals.',
     highlights: ['Heated Hydrotherapy', 'Sunset Libation Ritual', 'Private Cabanas'],
     actionLabel: 'Reserve Sanctuary',
