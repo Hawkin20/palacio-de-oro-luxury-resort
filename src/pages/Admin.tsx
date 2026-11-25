@@ -20,7 +20,8 @@ import {
   BarChart3,
   Trash,
   Star,
-  Shield
+  Shield,
+  CalendarDays
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Room, Cottage, MenuItem, Booking, Order } from '../lib/types';
@@ -28,6 +29,7 @@ import GlassCard from '../components/GlassCard';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusBadge from '../components/StatusBadge';
+import OccupancyMatrix from '../components/OccupancyMatrix';
 
 interface AdminProps {
   isLoggedIn: boolean;
@@ -44,7 +46,7 @@ type TimeRange = 'today' | 'week' | 'month' | 'year';
 type ModalType = 'room' | 'cottage' | 'menu' | null;
 
 export default function Admin({ isLoggedIn, userRole }: AdminProps) {
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'rooms' | 'menu' | 'bookings' | 'orders'>('dashboard');
+  const [currentTab, setCurrentTab] = useState<'dashboard' | 'matrix' | 'rooms' | 'menu' | 'bookings' | 'orders'>('dashboard');
   const [rooms, setRooms] = useState<Room[]>([]);
   const [cottages, setCottages] = useState<Cottage[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
@@ -715,6 +717,7 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           >
             {[
               { value: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+              { value: 'matrix', label: 'Occupancy Matrix', icon: CalendarDays },
               { value: 'rooms', label: 'Suites & Villas', icon: BedDouble },
               { value: 'menu', label: 'Culinary Menu', icon: UtensilsCrossed },
               { value: 'bookings', label: 'Reservations', icon: Calendar },
@@ -957,6 +960,14 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   )}
                 </div>
               </div>
+            )}
+
+            {currentTab === 'matrix' && (
+              <OccupancyMatrix
+                rooms={rooms}
+                cottages={cottages}
+                bookings={bookings}
+              />
             )}
 
             {currentTab === 'rooms' && (

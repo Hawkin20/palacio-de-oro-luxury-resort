@@ -10,6 +10,7 @@ import { Room, Cottage, MenuItem } from '../lib/types';
 import StatusBadge from '../components/StatusBadge';
 import { handleImageFallback } from '../lib/images';
 import { useCurrency } from '../lib/currency';
+import ResortMap from '../components/ResortMap';
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 
 interface HomeProps {
@@ -830,6 +831,9 @@ export default function Home({ onNavigate }: HomeProps) {
           </div>
         </div>
       </div>
+
+      {/* ===== INTERACTIVE SANCTUARY MAP ===== */}
+      <ResortMap onNavigate={onNavigate} />
 
       {/* ===== TESTIMONIALS - CAROUSEL ===== */}
       <div className="py-28 bg-gradient-to-b from-palacio-black via-orange-900/5 to-palacio-black relative overflow-hidden">
