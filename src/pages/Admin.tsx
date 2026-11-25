@@ -31,6 +31,11 @@ import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusBadge from '../components/StatusBadge';
 import OccupancyMatrix from '../components/OccupancyMatrix';
+import RadialOccupancyGauge from '../components/admin/RadialOccupancyGauge';
+import RevenueSplineChart from '../components/admin/RevenueSplineChart';
+import CategoryDonutChart from '../components/admin/CategoryDonutChart';
+import IslandTelemetryBadge from '../components/admin/IslandTelemetryBadge';
+import RoomTelemetryGrid from '../components/admin/RoomTelemetryGrid';
 
 interface AdminProps {
   isLoggedIn: boolean;
@@ -138,7 +143,30 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
     if (!isAdmin) return;
     fetchAllData();
     const interval = setInterval(fetchAllData, 30000);
-    return () => clearInterval(interval);
+
+    // Live Real-Time Telemetry Subscription
+    const channel = supabase
+      .channel('palacio-admin-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        fetchAllData();
+        showToast('Live telemetry: Sanctuary bookings updated', 'info');
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchAllData();
+        showToast('Live telemetry: New dining order received', 'info');
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms' }, () => {
+        fetchAllData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cottages' }, () => {
+        fetchAllData();
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [isAdmin]);
 
   useEffect(() => {
@@ -639,6 +667,56 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
   const canDeleteOrder = (status: string) => status === 'completed' || status === 'cancelled';
   const bestsellerIds = getTopBestsellers();
 
+  const splineData = useMemo(() => {
+    return analytics.chartData.map(d => ({
+      date: d.fullDate,
+      label: d.date,
+      suitesRevenue: d.bookings,
+      diningRevenue: d.orders,
+      total: d.total,
+    }));
+  }, [analytics.chartData]);
+
+  const categoryBreakdown = useMemo(() => {
+    const catMap: Record<string, { amount: number; count: number; label: string; color: string }> = {
+      main_course: { amount: 0, count: 0, label: 'Main Courses', color: '#C5A880' },
+      wine: { amount: 0, count: 0, label: 'Vintage Cellar', color: '#E5C9A3' },
+      seafood: { amount: 0, count: 0, label: 'Island Seafood', color: '#10B981' },
+      appetizers: { amount: 0, count: 0, label: 'Appetizers & Tapas', color: '#F6F4EF' },
+      grilled: { amount: 0, count: 0, label: 'Grilled Specialties', color: '#F59E0B' },
+      desserts: { amount: 0, count: 0, label: 'Artisan Desserts', color: '#EC4899' },
+      cocktails: { amount: 0, count: 0, label: 'Signature Cocktails', color: '#8B5CF6' },
+      non_alcoholic: { amount: 0, count: 0, label: 'Refreshments', color: '#06B6D4' },
+    };
+
+    orders.forEach(o => {
+      const cat = o.category || 'main_course';
+      if (!catMap[cat]) {
+        catMap[cat] = {
+          amount: 0,
+          count: 0,
+          label: cat.charAt(0).toUpperCase() + cat.slice(1).replace('_', ' '),
+          color: '#C5A880'
+        };
+      }
+      catMap[cat].amount += (o.total_amount || 0);
+      catMap[cat].count += 1;
+    });
+
+    return Object.entries(catMap)
+      .filter(([_, data]) => data.amount > 0 || data.count > 0)
+      .map(([cat, data]) => ({
+        category: cat,
+        label: data.label,
+        amount: data.amount,
+        ordersCount: data.count,
+        color: data.color
+      }));
+  }, [orders]);
+
+  const activeBookingsCount = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').length;
+  const totalGuestCount = bookings.filter(b => b.status === 'confirmed').reduce((sum, b) => sum + (b.guest_count || 1), 0);
+
   if (!isLoggedIn || !isAdmin) {
     return (
       <div className="min-h-screen pt-24 pb-16 flex items-center justify-center bg-palacio-obsidian px-4">
@@ -749,6 +827,10 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
           <>
             {currentTab === 'dashboard' && (
               <div className="space-y-6">
+                {/* 1. Island Infrastructure Telemetry Badge */}
+                <IslandTelemetryBadge />
+
+                {/* 2. Top-Level Metric Tiles */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
                     { val: rooms.length + cottages.length, label: 'Accommodations' },
@@ -763,129 +845,48 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                   ))}
                 </div>
 
-                <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6 shadow-xl">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <BarChart3 size={18} className="text-palacio-bronze" />
-                      <h3 className="font-playfair text-xl text-palacio-alabaster">Executive Analytics</h3>
-                    </div>
-                    <div className="flex gap-2">
-                      {(['today','week','month','year'] as TimeRange[]).map(r => (
-                        <button key={r} onClick={() => setAnalyticsRange(r)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-cinzel tracking-wider uppercase smooth-transition ${
-                            analyticsRange === r 
-                              ? 'bg-palacio-bronze text-palacio-obsidian font-bold shadow-md' 
-                              : 'bg-white/[0.04] text-palacio-alabaster/60 hover:text-palacio-alabaster border border-white/[0.06]'
-                          }`}>
-                          {r === 'today' ? 'Today' : r === 'week' ? '7D' : r === 'month' ? '30D' : '1Y'}
-                        </button>
-                      ))}
-                    </div>
+                {/* 3. Dual Dynamic SVG Visualizers: Radial Occupancy Gauge & Culinary Donut */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <RadialOccupancyGauge
+                    totalRooms={rooms.length}
+                    totalCottages={cottages.length}
+                    activeBookings={activeBookingsCount}
+                    guestCount={totalGuestCount}
+                  />
+                  <CategoryDonutChart
+                    slices={categoryBreakdown}
+                    totalRevenue={analytics.totalRevenue}
+                  />
+                </div>
+
+                {/* 4. Smooth Bezier Spline Dual-Yield Curve */}
+                <RevenueSplineChart
+                  data={splineData}
+                  title="Executive Dual-Yield Spline (Suites vs Gastronomy)"
+                />
+
+                {/* 5. Revenue Breakdown & Financial Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-black/40 rounded-xl p-5 border border-white/[0.06]">
+                    <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Gross Total Revenue</p>
+                    <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.totalRevenue.toLocaleString()}</p>
+                    <p className={`text-xs font-medium mt-1 ${analytics.revenueChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {analytics.revenueChange >= 0 ? '▲' : '▼'} {Math.abs(analytics.revenueChange).toFixed(1)}% vs previous
+                    </p>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-black/30 rounded-lg p-4 border border-white/[0.06]">
-                      <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Total Revenue</p>
-                      <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.totalRevenue.toLocaleString()}</p>
-                      <p className={`text-xs font-medium mt-1 ${analytics.revenueChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {analytics.revenueChange >= 0 ? '▲' : '▼'} {Math.abs(analytics.revenueChange).toFixed(1)}% vs previous
-                      </p>
-                    </div>
-                    <div className="bg-black/30 rounded-lg p-4 border border-white/[0.06]">
-                      <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Booking Revenue</p>
-                      <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.bookingRevenue.toLocaleString()}</p>
-                      <p className="text-palacio-alabaster/50 text-xs mt-1">{analytics.totalBookings} reservations</p>
-                    </div>
-                    <div className="bg-black/30 rounded-lg p-4 border border-white/[0.06]">
-                      <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Dining Orders Revenue</p>
-                      <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.orderRevenue.toLocaleString()}</p>
-                      <p className="text-palacio-alabaster/50 text-xs mt-1">{analytics.totalOrders} dining orders</p>
-                    </div>
+                  <div className="bg-black/40 rounded-xl p-5 border border-white/[0.06]">
+                    <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Booking Revenue</p>
+                    <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.bookingRevenue.toLocaleString()}</p>
+                    <p className="text-palacio-alabaster/50 text-xs mt-1">{analytics.totalBookings} reservations recorded</p>
                   </div>
-
-                  {analytics.chartData.length > 0 && (
-                    <div className="mb-6">
-                      <p className="text-palacio-alabaster/60 font-cinzel text-xs uppercase tracking-wider mb-3">Revenue Trend (Last 7 Days)</p>
-                      <div className="flex items-end gap-2 h-28 pt-2">
-                        {analytics.chartData.map((day, i) => {
-                          const maxVal = Math.max(...analytics.chartData.map(d => d.total), 1);
-                          const h = maxVal > 0 ? (day.total / maxVal) * 100 : 0;
-                          return (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                              <div className="text-[10px] text-palacio-bronze font-mono font-medium">${Math.round(day.total)}</div>
-                              <div className="w-full bg-white/[0.06] rounded-t-sm relative h-full flex items-end">
-                                <div 
-                                  className="w-full bg-palacio-bronze rounded-t-sm hover:brightness-110 transition-all" 
-                                  style={{ height: `${Math.max(h, 6)}%` }} 
-                                />
-                              </div>
-                              <div className="text-[9px] text-palacio-alabaster/50 font-cinzel">{day.date.split(' ')[0]}</div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/[0.08]">
-                    <div className="flex justify-between items-center">
-                      <span className="text-palacio-alabaster/60 font-cinzel text-xs uppercase">Avg Booking Value</span>
-                      <span className="text-palacio-bronze font-cinzel font-bold text-sm">${analytics.avgBookingValue.toFixed(0)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-palacio-alabaster/60 font-cinzel text-xs uppercase">Avg Order Value</span>
-                      <span className="text-palacio-bronze font-cinzel font-bold text-sm">${analytics.avgOrderValue.toFixed(0)}</span>
-                    </div>
+                  <div className="bg-black/40 rounded-xl p-5 border border-white/[0.06]">
+                    <p className="text-palacio-alabaster/50 text-[10px] font-cinzel uppercase tracking-wider mb-1">Dining Orders Revenue</p>
+                    <p className="text-2xl font-cinzel text-palacio-bronze font-bold">${analytics.orderRevenue.toLocaleString()}</p>
+                    <p className="text-palacio-alabaster/50 text-xs mt-1">{analytics.totalOrders} dining orders fulfilled</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6 shadow-xl">
-                    <div className="flex items-center gap-2 mb-4">
-                      <DollarSign size={18} className="text-palacio-bronze" />
-                      <h3 className="font-playfair text-lg text-palacio-alabaster">Revenue Overview</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {[
-                        { label: "Today's Revenue", val: todayRevenue },
-                        { label: 'This Month (Bookings)', val: analytics.bookingRevenue },
-                        { label: 'This Month (Orders)', val: analytics.orderRevenue },
-                      ].map((r, i) => (
-                        <div key={i} className="flex justify-between items-center text-xs">
-                          <span className="text-palacio-alabaster/70 font-cinzel uppercase tracking-wider">{r.label}</span>
-                          <span className="text-palacio-bronze font-bold font-cinzel text-sm">${r.val.toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-6 shadow-xl">
-                    <div className="flex items-center gap-2 mb-4">
-                      <BedDouble size={18} className="text-palacio-bronze" />
-                      <h3 className="font-playfair text-lg text-palacio-alabaster">Occupancy Rate</h3>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-palacio-alabaster/70 font-cinzel uppercase tracking-wider">Occupied Suites</span>
-                        <span className="text-palacio-bronze font-bold font-cinzel text-sm">
-                          {bookings.filter(b => b.status === 'confirmed').length} / {rooms.length + cottages.length}
-                        </span>
-                      </div>
-                      <div className="w-full bg-white/[0.06] rounded-full h-2">
-                        <div className="bg-palacio-bronze h-2 rounded-full transition-all duration-700" style={{
-                          width: `${Math.min(100, (bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100)}%`
-                        }} />
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-palacio-alabaster/50 font-cinzel uppercase">Capacity Utilization</span>
-                        <span className="text-palacio-bronze font-bold font-cinzel">
-                          {((bookings.filter(b => b.status === 'confirmed').length / (rooms.length + cottages.length || 1)) * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+                {/* 6. Recent Reservations Feed */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-playfair text-xl text-palacio-alabaster flex items-center gap-2">
@@ -910,49 +911,12 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
                               <p className="text-palacio-alabaster/40 font-mono text-xs">{b.check_in_date} → {b.check_out_date}</p>
                             </div>
                             <div className="text-right">
-                              <StatusBadge status={b.status} size="sm" />
-                              <p className="text-palacio-bronze font-cinzel font-bold text-sm mt-1.5">${b.total_price}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-playfair text-xl text-palacio-alabaster flex items-center gap-2">
-                      <ShoppingBag size={16} className="text-palacio-bronze" /> Recent Culinary Orders
-                    </h3>
-                    <button onClick={() => setCurrentTab('orders')} className="text-palacio-bronze text-xs font-cinzel tracking-wider uppercase hover:text-palacio-alabaster transition-colors">
-                      View All →
-                    </button>
-                  </div>
-                  {recentOrders.length === 0 ? (
-                    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-8 text-center">
-                      <p className="text-palacio-alabaster/50 text-xs font-cinzel uppercase">No recent dining orders recorded</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {recentOrders.map(o => (
-                        <div key={o.id} className="bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/30 rounded-xl p-4 transition-all">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <p className="text-palacio-alabaster font-medium text-sm">
-                                {o.product_name || o.reference_number || 'Order'}
-                              </p>
-                              <p className="text-palacio-alabaster/60 text-xs mt-0.5">
-                                {o.username || o.user_email || 'Guest'}
-                              </p>
-                              <p className="text-palacio-alabaster/40 text-xs">
-                                Qty: {o.quantity || 1} · ${o.total_amount}
-                                {o.order_type && ` · ${o.order_type === 'dine_in' ? 'Dine-in' : 'Room Delivery'}`}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <StatusBadge status={o.status} size="sm" />
-                              <p className="text-palacio-gold font-bold text-sm mt-1">${o.total_amount}</p>
+                              <span className="font-cinzel text-sm font-bold text-palacio-bronze">
+                                ${b.total_price?.toLocaleString()}
+                              </span>
+                              <div className="mt-1">
+                                <StatusBadge status={b.status} size="sm" />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -972,100 +936,13 @@ export default function Admin({ isLoggedIn, userRole }: AdminProps) {
             )}
 
             {currentTab === 'rooms' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => openAddModal('room')} 
-                      className="px-4 py-2.5 bg-palacio-bronze text-palacio-obsidian rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-palacio-gold shadow-md flex items-center gap-2 transition-all"
-                    >
-                      <Plus size={15} />
-                      Add Room
-                    </button>
-                    <button 
-                      onClick={() => openAddModal('cottage')} 
-                      className="px-4 py-2.5 bg-white/[0.04] border border-white/[0.1] text-palacio-alabaster rounded-lg font-cinzel text-xs font-semibold uppercase tracking-wider hover:bg-white/[0.08] hover:border-palacio-bronze/50 shadow-md flex items-center gap-2 transition-all"
-                    >
-                      <Plus size={15} />
-                      Add Cottage
-                    </button>
-                  </div>
-                  
-                  <div className="relative w-full sm:w-64">
-                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-palacio-bronze/60" />
-                    <input
-                      type="text"
-                      placeholder="Search suites & villas..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-white/[0.03] border border-white/[0.08] rounded-lg text-palacio-alabaster text-xs placeholder-palacio-alabaster/40 focus:border-palacio-bronze/50 outline-none transition-all"
-                    />
-                    {searchQuery && (
-                      <button 
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-palacio-alabaster/40 hover:text-palacio-alabaster"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {filteredRooms.length === 0 ? (
-                  <div className="p-12 text-center rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                    <BedDouble size={36} className="text-palacio-alabaster/30 mx-auto mb-3" />
-                    <p className="text-palacio-alabaster text-base mb-1 font-playfair">No accommodations found</p>
-                    <p className="text-palacio-alabaster/50 text-xs font-cinzel">
-                      {searchQuery ? 'Try adjusting your search criteria' : 'Create your first luxury suite or villa to get started'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {filteredRooms.map((item) => (
-                      <div key={item.id} className="p-5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-palacio-bronze/40 transition-all shadow-md">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <h3 className="font-playfair text-lg text-palacio-alabaster">
-                                {item.name}
-                              </h3>
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-cinzel font-semibold uppercase ${
-                                (item.quantity || 0) > 0 
-                                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
-                                  : 'bg-rose-500/10 border border-rose-500/20 text-rose-400'
-                              }`}>
-                                {(item.quantity || 0) > 0 ? `${item.quantity} available` : 'Fully Reserved'}
-                              </span>
-                            </div>
-                            <p className="text-palacio-alabaster/60 text-xs">
-                              <span className="text-palacio-bronze font-cinzel font-bold text-sm">${item.price_per_night}</span> / night • Capacity: {item.capacity} guests
-                            </p>
-                            <div className="mt-2.5">
-                              <StatusBadge status={item.status} size="sm" />
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openEditModal(item, 'room')}
-                              className="p-2 hover:bg-white/[0.08] text-palacio-bronze hover:text-palacio-alabaster rounded-lg smooth-transition"
-                              title="Edit Accommodation"
-                            >
-                              <Edit2 size={16} />
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(item.id, item.name, 'room')}
-                              className="p-2 hover:bg-rose-950/40 text-rose-400 rounded-lg smooth-transition"
-                              title="Delete Accommodation"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <RoomTelemetryGrid
+                rooms={rooms}
+                cottages={cottages}
+                onRefresh={fetchAllData}
+                onEdit={(item, type) => openEditModal(item, type)}
+                onAddNew={() => openAddModal('room')}
+              />
             )}
 
             {currentTab === 'menu' && (
